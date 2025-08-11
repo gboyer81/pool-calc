@@ -2177,7 +2177,7 @@ const PoolCalculator: React.FC = () => {
               </p>
               <div className='grid grid-cols-2 gap-4 mt-4'>
                 <div className='bg-gray-200 p-4 rounde9-lg text-center10shadow-md'>
-                  blue{' '}
+                  {' '}
                   <div className='text-2xl font-bold text-blue-800'>
                     {results.data.gallons.toLocaleString()}
                   </div>
