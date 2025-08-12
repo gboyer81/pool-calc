@@ -1040,6 +1040,49 @@ const PoolCalculator: React.FC = () => {
               </>
             )}
 
+            {calculationModes.salt === 'effect' && (
+              <>
+                <div className='mb-5'>
+                  <label className='block mb-2 font-semibold text-gray-800'>
+                    Current Salt Level (ppm):
+                  </label>
+                  <input
+                    type='number'
+                    value={formData.currentPpmEffect}
+                    onChange={(e) =>
+                      handleInputChange('currentPpmEffect', e.target.value)
+                    }
+                    className='w-full px-3 py-3 border-2 border-gray-300 rounded-lg text-base transition-colors duration-300 focus:outline-none focus:border-blue-500'
+                    placeholder='e.g., 2000'
+                  />
+                </div>
+                <div className='mb-5'>
+                  <label className='block mb-2 font-semibold text-gray-800'>
+                    Salt Amount to Add:
+                  </label>
+                  <input
+                    type='number'
+                    value={formData.saltAmount}
+                    onChange={(e) =>
+                      handleInputChange('saltAmount', e.target.value)
+                    }
+                    className='w-full px-3 py-3 border-2 border-gray-300 rounded-lg text-base transition-colors duration-300 focus:outline-none focus:border-blue-500'
+                    placeholder='e.g., 40'
+                    step='0.1'
+                  />
+                  <select
+                    value={formData.saltUnit}
+                    onChange={(e) =>
+                      handleInputChange('saltUnit', e.target.value)
+                    }
+                    className='w-full mt-2 px-3 py-3 border-2 border-gray-300 rounded-lg text-base transition-colors duration-300 focus:outline-none focus:border-blue-500'>
+                    <option value='pounds'>Pounds</option>
+                    <option value='bags'>40lb Bags</option>
+                  </select>
+                </div>
+              </>
+            )}
+
             <div className='text-center text-md text-gray-600 py-2 my-3'>
               <span className='px-3 py-1 rounded'>
                 {usePreciseCalculation
