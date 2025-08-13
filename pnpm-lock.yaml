@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      mongodb:
+        specifier: ^6.18.0
+        version: 6.18.0
       mongoose:
         specifier: ^8.17.1
         version: 8.17.1
