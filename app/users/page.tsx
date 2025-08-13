@@ -174,7 +174,9 @@ export default function UserManagement(): React.ReactElement {
 
   return (
     <div className='p-5 max-w-4xl mx-auto font-sans'>
-      <h1 className='text-gray-800 mb-8 text-3xl font-bold'>User Management</h1>
+      <h1 className='text-gray-800 mb-8 text-2xl font-bold'>
+        👤 User Management
+      </h1>
 
       {/* Message */}
       {message && (

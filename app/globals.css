@@ -18,6 +18,15 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --primarybg: #210cae;
+  --secondarybg: #4dc9e6;
+  --input-outline: #667eea;
+  --main-gradient: linear-gradient(
+    135deg,
+    var(--secondarybg) 0%,
+    var(--primarybg) 100%
+  );
+  --breakpoint-lg: 800px;
 }
 
 @media (prefers-color-scheme: dark) {

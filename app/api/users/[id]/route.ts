@@ -5,11 +5,11 @@ import { User, UserInput, UserResponse, ApiResponse } from '@/types/user'
 
 // GET /api/users/[id] - Get a specific user
 export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ): Promise<NextResponse<UserResponse>> {
   try {
-    const { id } = params
+    const { id } = await params
 
     if (!ObjectId.isValid(id)) {
       return NextResponse.json(
@@ -22,7 +22,7 @@ export async function GET(
     }
 
     const client = await clientPromise
-    const db = client.db('myapp')
+    const db = client.db('poolCalc')
     const user = await db
       .collection<User>('users')
       .findOne({ _id: new ObjectId(id) })
@@ -58,10 +58,10 @@ export async function GET(
 // PUT /api/users/[id] - Update a specific user
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ): Promise<NextResponse<ApiResponse>> {
   try {
-    const { id } = params
+    const { id } = await params
     const body: UserInput = await request.json()
     const { name, email } = body
 
@@ -98,7 +98,7 @@ export async function PUT(
     }
 
     const client = await clientPromise
-    const db = client.db('myapp')
+    const db = client.db('poolCalc')
 
     // Check if email is already taken by another user
     const existingUser = await db.collection<User>('users').findOne({
@@ -158,10 +158,10 @@ export async function PUT(
 // DELETE /api/users/[id] - Delete a specific user
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ): Promise<NextResponse<ApiResponse>> {
   try {
-    const { id } = params
+    const { id } = await params
 
     if (!ObjectId.isValid(id)) {
       return NextResponse.json(
@@ -174,7 +174,7 @@ export async function DELETE(
     }
 
     const client = await clientPromise
-    const db = client.db('myapp')
+    const db = client.db('poolCalc')
 
     const result = await db
       .collection<User>('users')

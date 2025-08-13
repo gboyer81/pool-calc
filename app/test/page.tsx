@@ -37,23 +37,23 @@ export default function TestPage(): React.ReactElement {
   }
 
   return (
-    <div
-      style={{
+    <div className='p-5 max-w-[800px] mx-auto'>
+      {/* style={{
         padding: '20px',
         fontFamily: 'Arial',
         maxWidth: '800px',
         margin: '0 auto',
-      }}>
-      <h1 style={{ color: '#333', marginBottom: '20px' }}>
-        MongoDB Connection Test
+      }}> */}
+      <h1 className='text-gray-900 font-bold mb-5'>
+        💾 MongoDB Connection Test
       </h1>
 
-      <p style={{ color: '#666', marginBottom: '30px' }}>
+      <p className='text-gray-500 mb-7'>
         Click the button below to test your MongoDB Atlas connection. This will
         attempt to:
       </p>
 
-      <ul style={{ color: '#666', marginBottom: '30px', lineHeight: 1.6 }}>
+      <ul className='mb-7 text-gray-500 text-md/6 list-disc pl-5'>
         <li>Connect to your MongoDB Atlas cluster</li>
         <li>Ping the database to verify connectivity</li>
         <li>Insert a test document</li>
