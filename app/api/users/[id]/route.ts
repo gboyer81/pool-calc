@@ -3,6 +3,8 @@ import clientPromise from '@/lib/mongodb'
 import { ObjectId } from 'mongodb'
 import { User, UserInput, UserResponse, ApiResponse } from '@/types/user'
 
+const dbName = process.env.DATABASE_NAME || 'dbName'
+
 // GET /api/users/[id] - Get a specific user
 export async function GET(
   _request: NextRequest,
@@ -22,7 +24,7 @@ export async function GET(
     }
 
     const client = await clientPromise
-    const db = client.db('myapp')
+    const db = client.db(dbName)
     const user = await db
       .collection<User>('users')
       .findOne({ _id: new ObjectId(id) })
@@ -98,7 +100,7 @@ export async function PUT(
     }
 
     const client = await clientPromise
-    const db = client.db('myapp')
+    const db = client.db(dbName)
 
     // Check if email is already taken by another user
     const existingUser = await db.collection<User>('users').findOne({
@@ -174,7 +176,7 @@ export async function DELETE(
     }
 
     const client = await clientPromise
-    const db = client.db('myapp')
+    const db = client.db(dbName)
 
     const result = await db
       .collection<User>('users')

@@ -1,15 +1,17 @@
 import { NextResponse } from 'next/server'
-import clientPromise from '../../../lib/mongodb'
-import { ApiResponse } from '../../../types/user'
+import clientPromise from '@/lib/mongodb'
+import { ApiResponse } from '@/types/user'
 
 interface TestResponse extends ApiResponse {
   insertedId?: string
 }
 
+const dbName = process.env.DATABASE_NAME || 'dbName'
+
 export async function GET(): Promise<NextResponse<TestResponse>> {
   try {
     const client = await clientPromise
-    const db = client.db('testdb')
+    const db = client.db(dbName)
 
     // Test the connection
     await client.db('admin').command({ ping: 1 })

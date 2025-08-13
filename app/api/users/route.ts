@@ -7,11 +7,13 @@ import {
   CreateUserResponse,
 } from '@/types/user'
 
+const dbName = process.env.DATABASE_NAME || 'dbName'
+
 // GET /api/users - Get all users
 export async function GET(): Promise<NextResponse<UsersResponse>> {
   try {
     const client = await clientPromise
-    const db = client.db('poolCal')
+    const db = client.db(dbName)
     const users = await db.collection<User>('users').find({}).toArray()
 
     return NextResponse.json({
@@ -64,7 +66,7 @@ export async function POST(
     }
 
     const client = await clientPromise
-    const db = client.db('myapp')
+    const db = client.db(dbName)
 
     // Check if user already exists
     const existingUser = await db.collection<User>('users').findOne({ email })
