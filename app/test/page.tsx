@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Metadata } from 'next'
 
 interface TestResult {
@@ -13,6 +13,12 @@ interface TestResult {
 export default function TestPage(): React.ReactElement {
   const [result, setResult] = useState<TestResult | null>(null)
   const [loading, setLoading] = useState<boolean>(false)
+  const [mounted, setMounted] = useState<boolean>(false)
+
+  // Handle hydration
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   async function testConnection(): Promise<void> {
     setLoading(true)

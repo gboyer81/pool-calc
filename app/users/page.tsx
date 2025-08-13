@@ -11,10 +11,16 @@ interface FormData {
 export default function UserManagement(): React.ReactElement {
   const [users, setUsers] = useState<ClientUser[]>([])
   const [loading, setLoading] = useState<boolean>(true)
+  const [mounted, setMounted] = useState<boolean>(false)
   const [formData, setFormData] = useState<FormData>({ name: '', email: '' })
   const [editingUser, setEditingUser] = useState<ClientUser | null>(null)
   const [message, setMessage] = useState<string>('')
   const [formLoading, setFormLoading] = useState<boolean>(false)
+
+  // Handle hydration
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   // Fetch all users
   async function fetchUsers(): Promise<void> {
@@ -131,81 +137,66 @@ export default function UserManagement(): React.ReactElement {
     setFormData({ name: '', email: '' })
   }
 
-  // Format date for display
+  // Format date for display (hydration-safe)
   function formatDate(dateString: string): string {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    })
+    const date = new Date(dateString)
+
+    // Use a consistent format that won't vary between server/client
+    const year = date.getFullYear()
+    const month = date.getMonth() + 1
+    const day = date.getDate()
+    const hours = date.getHours().toString().padStart(2, '0')
+    const minutes = date.getMinutes().toString().padStart(2, '0')
+
+    const monthNames = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ]
+
+    return `${monthNames[month - 1]} ${day}, ${year} ${hours}:${minutes}`
   }
 
   if (loading) {
     return (
-      <div
-        style={{
-          padding: '20px',
-          textAlign: 'center',
-          fontSize: '18px',
-          fontFamily: 'Arial',
-        }}>
-        Loading users...
-      </div>
+      <div className='p-5 text-center text-lg font-sans'>Loading users...</div>
     )
   }
 
   return (
-    <div
-      style={{
-        padding: '20px',
-        maxWidth: '800px',
-        margin: '0 auto',
-        fontFamily: 'Arial',
-      }}>
-      <h1 style={{ color: '#333', marginBottom: '30px' }}>User Management</h1>
+    <div className='p-5 max-w-4xl mx-auto font-sans'>
+      <h1 className='text-gray-800 mb-8 text-3xl font-bold'>User Management</h1>
 
       {/* Message */}
       {message && (
         <div
-          style={{
-            padding: '12px 16px',
-            marginBottom: '20px',
-            backgroundColor: message.includes('Error') ? '#f8d7da' : '#d4edda',
-            border: `1px solid ${
-              message.includes('Error') ? '#f5c6cb' : '#c3e6cb'
-            }`,
-            borderRadius: '6px',
-            color: message.includes('Error') ? '#721c24' : '#155724',
-            fontWeight: 'bold',
-          }}>
+          className={`px-4 py-3 mb-5 border rounded-md font-bold ${
+            message.includes('Error')
+              ? 'bg-red-100 border-red-300 text-red-800'
+              : 'bg-green-100 border-green-300 text-green-800'
+          }`}>
           {message}
         </div>
       )}
 
       {/* Add/Edit User Form */}
-      <div
-        style={{
-          backgroundColor: '#f8f9fa',
-          padding: '25px',
-          borderRadius: '8px',
-          marginBottom: '30px',
-          border: '1px solid #e9ecef',
-        }}>
-        <h2 style={{ margin: '0 0 20px 0', color: '#495057' }}>
+      <div className='bg-gray-50 p-6 rounded-lg mb-8 border border-gray-200'>
+        <h2 className='m-0 mb-5 text-gray-700 text-xl font-semibold'>
           {editingUser ? 'Edit User' : 'Add New User'}
         </h2>
         <form onSubmit={handleSubmit}>
-          <div style={{ marginBottom: '20px' }}>
-            <label
-              style={{
-                display: 'block',
-                marginBottom: '8px',
-                fontWeight: 'bold',
-                color: '#495057',
-              }}>
-              Name: <span style={{ color: '#dc3545' }}>*</span>
+          <div className='mb-5'>
+            <label className='block mb-2 font-bold text-gray-700'>
+              Name: <span className='text-red-600'>*</span>
             </label>
             <input
               type='text'
@@ -214,25 +205,12 @@ export default function UserManagement(): React.ReactElement {
               onChange={handleInputChange}
               required
               placeholder='Enter full name'
-              style={{
-                width: '100%',
-                padding: '12px',
-                border: '1px solid #ced4da',
-                borderRadius: '6px',
-                fontSize: '16px',
-                boxSizing: 'border-box',
-              }}
+              className='w-full p-3 border border-gray-300 rounded-md text-base box-border focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent'
             />
           </div>
-          <div style={{ marginBottom: '25px' }}>
-            <label
-              style={{
-                display: 'block',
-                marginBottom: '8px',
-                fontWeight: 'bold',
-                color: '#495057',
-              }}>
-              Email: <span style={{ color: '#dc3545' }}>*</span>
+          <div className='mb-6'>
+            <label className='block mb-2 font-bold text-gray-700'>
+              Email: <span className='text-red-600'>*</span>
             </label>
             <input
               type='email'
@@ -241,31 +219,18 @@ export default function UserManagement(): React.ReactElement {
               onChange={handleInputChange}
               required
               placeholder='Enter email address'
-              style={{
-                width: '100%',
-                padding: '12px',
-                border: '1px solid #ced4da',
-                borderRadius: '6px',
-                fontSize: '16px',
-                boxSizing: 'border-box',
-              }}
+              className='w-full p-3 border border-gray-300 rounded-md text-base box-border focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent'
             />
           </div>
           <div>
             <button
               type='submit'
               disabled={formLoading}
-              style={{
-                backgroundColor: formLoading ? '#6c757d' : '#007bff',
-                color: 'white',
-                padding: '12px 24px',
-                border: 'none',
-                borderRadius: '6px',
-                cursor: formLoading ? 'not-allowed' : 'pointer',
-                marginRight: '12px',
-                fontSize: '16px',
-                fontWeight: 'bold',
-              }}>
+              className={`px-6 py-3 border-none rounded-md mr-3 text-base font-bold transition-colors ${
+                formLoading
+                  ? 'bg-gray-500 text-white cursor-not-allowed'
+                  : 'bg-blue-600 text-white cursor-pointer hover:bg-blue-700'
+              }`}>
               {formLoading
                 ? editingUser
                   ? 'Updating...'
@@ -278,16 +243,7 @@ export default function UserManagement(): React.ReactElement {
               <button
                 type='button'
                 onClick={cancelEdit}
-                style={{
-                  backgroundColor: '#6c757d',
-                  color: 'white',
-                  padding: '12px 24px',
-                  border: 'none',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  fontSize: '16px',
-                  fontWeight: 'bold',
-                }}>
+                className='bg-gray-500 text-white px-6 py-3 border-none rounded-md cursor-pointer text-base font-bold hover:bg-gray-600 transition-colors'>
                 Cancel
               </button>
             )}
@@ -295,74 +251,42 @@ export default function UserManagement(): React.ReactElement {
         </form>
       </div>
 
-      {/* Users List */}
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '20px',
-        }}>
-        <h2 style={{ margin: 0, color: '#333' }}>Users ({users.length})</h2>
-        {users.length > 0 && (
-          <button
-            onClick={fetchUsers}
-            style={{
-              padding: '8px 16px',
-              backgroundColor: '#17a2b8',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontSize: '14px',
-            }}>
-            Refresh
-          </button>
-        )}
+      {/* Users List Header */}
+      <div className='flex justify-between items-center mb-5 gap-8'>
+        <div className='flex-1'>
+          <h2 className='m-0 text-gray-800 text-xl font-semibold'>
+            Registered Users: ({users.length})
+          </h2>
+        </div>
+        <div className='flex-1 flex justify-end'>
+          {users.length > 0 && (
+            <button
+              onClick={fetchUsers}
+              className='px-4 py-2 bg-cyan-600 text-white border-none rounded cursor-pointer text-sm hover:bg-cyan-700 transition-colors'>
+              Refresh
+            </button>
+          )}
+        </div>
       </div>
 
       {users.length === 0 ? (
-        <div
-          style={{
-            textAlign: 'center',
-            padding: '40px',
-            backgroundColor: '#f8f9fa',
-            borderRadius: '8px',
-            border: '1px solid #e9ecef',
-            color: '#6c757d',
-          }}>
-          <h3 style={{ margin: '0 0 10px 0' }}>No users found</h3>
-          <p style={{ margin: 0 }}>Add your first user using the form above!</p>
+        <div className='text-center p-10 bg-gray-50 rounded-lg border border-gray-200 text-gray-500'>
+          <h3 className='m-0 mb-3 text-lg font-semibold'>No users found</h3>
+          <p className='m-0'>Add your first user using the form above!</p>
         </div>
       ) : (
-        <div style={{ display: 'grid', gap: '16px' }}>
+        <div className='grid gap-4'>
           {users.map((user: ClientUser) => (
             <div
               key={user._id}
-              style={{
-                border: '1px solid #dee2e6',
-                borderRadius: '8px',
-                padding: '20px',
-                backgroundColor: 'white',
-                boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-              }}>
-              <h3 style={{ margin: '0 0 8px 0', color: '#333' }}>
+              className='border border-gray-300 rounded-lg p-5 bg-white shadow-sm hover:shadow-md transition-shadow'>
+              <h3 className='m-0 mb-2 text-gray-800 text-lg font-semibold'>
                 {user.name}
               </h3>
-              <p
-                style={{
-                  margin: '0 0 8px 0',
-                  color: '#666',
-                  fontSize: '16px',
-                }}>
+              <p className='m-0 mb-2 text-gray-600 text-base'>
                 📧 {user.email}
               </p>
-              <p
-                style={{
-                  margin: '0 0 16px 0',
-                  fontSize: '13px',
-                  color: '#999',
-                }}>
+              <p className='m-0 mb-4 text-xs text-gray-500'>
                 Created: {formatDate(user.createdAt)}
                 {user.updatedAt !== user.createdAt && (
                   <span> • Updated: {formatDate(user.updatedAt)}</span>
@@ -371,31 +295,12 @@ export default function UserManagement(): React.ReactElement {
               <div>
                 <button
                   onClick={() => handleEdit(user)}
-                  style={{
-                    backgroundColor: '#28a745',
-                    color: 'white',
-                    padding: '8px 16px',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    marginRight: '10px',
-                    fontSize: '14px',
-                    fontWeight: 'bold',
-                  }}>
+                  className='bg-green-600 text-white px-4 py-2 border-none rounded cursor-pointer mr-3 text-sm font-bold hover:bg-green-700 transition-colors'>
                   ✏️ Edit
                 </button>
                 <button
                   onClick={() => handleDelete(user._id)}
-                  style={{
-                    backgroundColor: '#dc3545',
-                    color: 'white',
-                    padding: '8px 16px',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    fontSize: '14px',
-                    fontWeight: 'bold',
-                  }}>
+                  className='bg-red-600 text-white px-4 py-2 border-none rounded cursor-pointer text-sm font-bold hover:bg-red-700 transition-colors'>
                   🗑️ Delete
                 </button>
               </div>

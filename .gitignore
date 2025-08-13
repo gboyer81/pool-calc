@@ -48,3 +48,6 @@ next-env.d.ts
 
 # Mongodb
 Cluster0-*.json
+
+# Unused
+pooolCalc.tsx

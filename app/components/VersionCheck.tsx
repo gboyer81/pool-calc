@@ -1,8 +1,14 @@
 'use client'
 
+import { useEffect, useState } from 'react'
+
 export default function VersionCheck() {
-  const now = new Date()
-  const timestamp = now.toLocaleString()
+  const [timestamp, setTimestamp] = useState<string>('')
+
+  useEffect(() => {
+    // Only set timestamp after component mounts (client-side only)
+    setTimestamp(new Date().toLocaleString())
+  }, [])
 
   const forceRefresh = () => {
     const randomParam = 'v=' + Date.now()
@@ -22,7 +28,9 @@ export default function VersionCheck() {
         color: '#666',
       }}>
       <strong>Version 2.1</strong> | Updated: August 8th, 2025 |
-      <span id='cacheTimestamp'> Loaded: {timestamp}</span>
+      <span id='cacheTimestamp'>
+        {timestamp ? ` Loaded: ${timestamp}` : ''}
+      </span>
       <button
         onClick={forceRefresh}
         style={{

@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import clientPromise from '../../../lib/mongodb'
+import clientPromise from '@/lib/mongodb'
 import {
   User,
   UserInput,
   UsersResponse,
   CreateUserResponse,
-} from '../../../types/user'
+} from '@/types/user'
 
 // GET /api/users - Get all users
 export async function GET(): Promise<NextResponse<UsersResponse>> {

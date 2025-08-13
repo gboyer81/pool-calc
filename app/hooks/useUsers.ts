@@ -1,12 +1,18 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { ClientUser, UserInput, UseUsersReturn } from '../../types/user'
+import { ClientUser, UserInput, UseUsersReturn } from '@/types/user'
 
 export function useUsers(): UseUsersReturn {
   const [users, setUsers] = useState<ClientUser[]>([])
   const [loading, setLoading] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
+  const [mounted, setMounted] = useState<boolean>(false)
+
+  // Handle hydration
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   // Fetch all users
   async function fetchUsers(): Promise<void> {

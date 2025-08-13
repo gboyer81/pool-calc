@@ -280,6 +280,178 @@ const PoolCalculator: React.FC = () => {
     }
   }
 
+  const calculateSaltEffect = (
+    gallons: number,
+    currentPpm: number,
+    saltAmount: number,
+    saltUnit: string
+  ): { newPpm: number } => {
+    if (gallons <= 0) throw new Error('Pool volume must be greater than 0')
+    if (currentPpm < 0) throw new Error('Current salt level cannot be negative')
+    if (saltAmount < 0) throw new Error('Salt amount cannot be negative')
+
+    // Convert salt amount to pounds
+    let saltPounds = saltAmount
+    if (saltUnit === 'bags') {
+      saltPounds = saltAmount * 40 // 40lb bags
+    }
+
+    // Calculate ppm increase
+    const waterLiters = gallons * 3.78541
+    const waterGrams = waterLiters * 1000
+    const saltGrams = saltPounds * 453.592
+    const ppmIncrease = (saltGrams / waterGrams) * 1000000
+
+    const newPpm = currentPpm + ppmIncrease
+
+    return {
+      newPpm: Math.round(newPpm),
+    }
+  }
+
+  const calculateChlorineEffect = (
+    gallons: number,
+    currentFc: number,
+    chlorineAmount: number,
+    chlorineAmountUnit: string,
+    chlorineType: string
+  ): { newFc: number } => {
+    if (gallons <= 0) throw new Error('Pool volume must be greater than 0')
+    if (currentFc < 0)
+      throw new Error('Current free chlorine cannot be negative')
+    if (chlorineAmount < 0)
+      throw new Error('Chlorine amount cannot be negative')
+
+    let fcIncrease = 0
+
+    if (chlorineType === 'liquid') {
+      let liquidOunces = chlorineAmount
+      if (chlorineAmountUnit === 'gallons') {
+        liquidOunces = chlorineAmount * 128
+      }
+      fcIncrease = liquidOunces / (gallons / 1000)
+    } else {
+      const ppmPerPoundPer10k: { [key: string]: number } = {
+        powder: 10,
+        granular: 8,
+      }
+      const ppmRate = ppmPerPoundPer10k[chlorineType]
+      let pounds = chlorineAmount
+      if (chlorineAmountUnit === 'fluid_ounces') {
+        pounds = chlorineAmount / 16
+      }
+      fcIncrease = (pounds / (gallons / 10000)) * ppmRate
+    }
+
+    const newFc = currentFc + fcIncrease
+
+    return {
+      newFc: Math.round(newFc * 100) / 100,
+    }
+  }
+
+  const calculatePhEffect = (
+    gallons: number,
+    currentPh: number,
+    amount: number,
+    amountUnit: string,
+    chemicalType: string
+  ): { newPh: number } => {
+    if (gallons <= 0) throw new Error('Pool volume must be greater than 0')
+    if (currentPh < 6.0 || currentPh > 9.0)
+      throw new Error('Current pH must be between 6.0 and 9.0')
+    if (amount < 0) throw new Error('Chemical amount cannot be negative')
+
+    let phChange = 0
+
+    if (chemicalType === 'soda_ash') {
+      // Soda ash raises pH - more realistic calculation
+      let pounds = amount
+      if (amountUnit === 'gallons') {
+        pounds = amount * 8.34 // Approximate weight of gallon of soda ash solution
+      } else if (amountUnit === 'fluid_ounces') {
+        pounds = amount / 16 // Convert ounces to pounds
+      }
+      // Approximate: 1 lb soda ash per 10,000 gallons raises pH by ~0.2
+      phChange = (pounds / gallons) * 10000 * 0.2
+    } else if (chemicalType === 'muriatic_acid') {
+      // Muriatic acid lowers pH - more realistic calculation
+      let gallonsAcid = amount
+      if (amountUnit === 'pounds') {
+        gallonsAcid = amount / 9.8 // Approximate weight of gallon of muriatic acid
+      } else if (amountUnit === 'fluid_ounces') {
+        gallonsAcid = amount / 128 // Convert fluid ounces to gallons
+      }
+      // Approximate: 1 gallon muriatic acid per 10,000 gallons lowers pH by ~0.2
+      phChange = -(gallonsAcid / gallons) * 10000 * 0.2
+    }
+
+    const newPh = Math.max(6.0, Math.min(9.0, currentPh + phChange))
+
+    return {
+      newPh: Math.round(newPh * 100) / 100,
+    }
+  }
+
+  const calculateAlkalinityEffect = (
+    gallons: number,
+    currentAlk: number,
+    sodiumBicarbAmount: number
+  ): { newAlk: number } => {
+    if (gallons <= 0) throw new Error('Pool volume must be greater than 0')
+    if (currentAlk < 0) throw new Error('Current alkalinity cannot be negative')
+    if (sodiumBicarbAmount < 0)
+      throw new Error('Sodium bicarbonate amount cannot be negative')
+
+    // Approximate: 1 lb sodium bicarbonate per 10,000 gallons raises alkalinity by ~10 ppm
+    const alkIncrease = (sodiumBicarbAmount / gallons) * 10000 * 10
+    const newAlk = currentAlk + alkIncrease
+
+    return {
+      newAlk: Math.round(newAlk),
+    }
+  }
+
+  const calculateCalciumEffect = (
+    gallons: number,
+    currentCa: number,
+    calciumChlorideAmount: number
+  ): { newCa: number } => {
+    if (gallons <= 0) throw new Error('Pool volume must be greater than 0')
+    if (currentCa < 0)
+      throw new Error('Current calcium hardness cannot be negative')
+    if (calciumChlorideAmount < 0)
+      throw new Error('Calcium chloride amount cannot be negative')
+
+    // Approximate: 1 lb calcium chloride per 10,000 gallons raises calcium hardness by ~10 ppm
+    const caIncrease = (calciumChlorideAmount / gallons) * 10000 * 10
+    const newCa = currentCa + caIncrease
+
+    return {
+      newCa: Math.round(newCa),
+    }
+  }
+
+  const calculateCyaEffect = (
+    gallons: number,
+    currentCya: number,
+    cyanuricAcidAmount: number
+  ): { newCya: number } => {
+    if (gallons <= 0) throw new Error('Pool volume must be greater than 0')
+    if (currentCya < 0)
+      throw new Error('Current cyanuric acid cannot be negative')
+    if (cyanuricAcidAmount < 0)
+      throw new Error('Cyanuric acid amount cannot be negative')
+
+    // Approximate: 1 lb cyanuric acid per 10,000 gallons raises CYA by ~10 ppm
+    const cyaIncrease = (cyanuricAcidAmount / gallons) * 10000 * 10
+    const newCya = currentCya + cyaIncrease
+
+    return {
+      newCya: Math.round(newCya),
+    }
+  }
+
   const calculatePh = (
     gallons: number,
     currentPh: number,
@@ -460,11 +632,62 @@ const PoolCalculator: React.FC = () => {
   // Event handlers
   const handleInputChange = (name: string, value: string) => {
     setFormData((prev) => ({ ...prev, [name]: value }))
+
+    // Auto-adjust units when chlorine type changes
+    if (name === 'chlorineType') {
+      if (value === 'liquid') {
+        setFormData((prev) => ({
+          ...prev,
+          [name]: value,
+          chlorineAmountUnit: 'gallons',
+        }))
+      } else if (value === 'powder' || value === 'granular') {
+        setFormData((prev) => ({
+          ...prev,
+          [name]: value,
+          chlorineAmountUnit: 'pounds',
+        }))
+      }
+    }
+
+    // Auto-adjust units when pH chemical type changes
+    if (name === 'phChemicalType') {
+      if (value === 'soda_ash') {
+        setFormData((prev) => ({
+          ...prev,
+          [name]: value,
+          phAmountUnit: 'pounds',
+        }))
+      } else if (value === 'muriatic_acid') {
+        setFormData((prev) => ({
+          ...prev,
+          [name]: value,
+          phAmountUnit: 'fluid_ounces',
+        }))
+      }
+    }
   }
 
   const handleCalculatorSwitch = (type: CalculatorType) => {
     setCurrentCalculator(type)
     setShowResults(false)
+
+    // Auto-populate volume field if we have a saved volume and the field is empty
+    if (savedPoolVolume) {
+      const volumeFieldMap = {
+        salt: 'gallons',
+        chlorine: 'gallonsChlorine',
+        ph: 'gallonsPh',
+        alkalinity: 'gallonsAlk',
+        calcium: 'gallonsCa',
+        cya: 'gallonsCya',
+      }
+
+      const fieldName = volumeFieldMap[type as keyof typeof volumeFieldMap]
+      if (fieldName && !formData[fieldName as keyof typeof formData]) {
+        handleInputChange(fieldName, savedPoolVolume.toString())
+      }
+    }
   }
 
   const handleModeSwitch = (calculator: string, mode: CalculationMode) => {
@@ -515,24 +738,108 @@ const PoolCalculator: React.FC = () => {
         throw new Error('Pool volume is required')
       }
 
+      if (currentCalculator === 'salt' && calculationModes.salt === 'effect') {
+        if (
+          formData.currentPpmEffect === '' ||
+          formData.currentPpmEffect === null
+        ) {
+          throw new Error('Current salt level is required')
+        }
+        if (formData.saltAmount === '' || formData.saltAmount === null) {
+          throw new Error('Salt amount to add is required')
+        }
+      }
+
       if (currentCalculator === 'chlorine' && !formData.gallonsChlorine) {
         throw new Error('Pool volume is required')
+      }
+
+      if (
+        currentCalculator === 'chlorine' &&
+        calculationModes.chlorine === 'effect'
+      ) {
+        if (
+          formData.currentFcEffect === '' ||
+          formData.currentFcEffect === null
+        ) {
+          throw new Error('Current free chlorine level is required')
+        }
+        if (
+          formData.chlorineAmount === '' ||
+          formData.chlorineAmount === null
+        ) {
+          throw new Error('Chlorine amount to add is required')
+        }
       }
 
       if (currentCalculator === 'ph' && !formData.gallonsPh) {
         throw new Error('Pool volume is required')
       }
 
+      if (currentCalculator === 'ph' && calculationModes.ph === 'effect') {
+        if (
+          formData.currentPhEffect === '' ||
+          formData.currentPhEffect === null
+        ) {
+          throw new Error('Current pH level is required')
+        }
+        if (formData.phAmount === '' || formData.phAmount === null) {
+          throw new Error('Chemical amount to add is required')
+        }
+      }
+
       if (currentCalculator === 'alkalinity' && !formData.gallonsAlk) {
         throw new Error('Pool volume is required')
+      }
+
+      if (
+        currentCalculator === 'alkalinity' &&
+        calculationModes.alkalinity === 'effect'
+      ) {
+        if (
+          formData.currentAlkEffect === '' ||
+          formData.currentAlkEffect === null
+        ) {
+          throw new Error('Current alkalinity level is required')
+        }
+        if (formData.alkAmount === '' || formData.alkAmount === null) {
+          throw new Error('Sodium bicarbonate amount is required')
+        }
       }
 
       if (currentCalculator === 'calcium' && !formData.gallonsCa) {
         throw new Error('Pool volume is required')
       }
 
+      if (
+        currentCalculator === 'calcium' &&
+        calculationModes.calcium === 'effect'
+      ) {
+        if (
+          formData.currentCaEffect === '' ||
+          formData.currentCaEffect === null
+        ) {
+          throw new Error('Current calcium hardness level is required')
+        }
+        if (formData.calciumAmount === '' || formData.calciumAmount === null) {
+          throw new Error('Calcium chloride amount is required')
+        }
+      }
+
       if (currentCalculator === 'cya' && !formData.gallonsCya) {
         throw new Error('Pool volume is required')
+      }
+
+      if (currentCalculator === 'cya' && calculationModes.cya === 'effect') {
+        if (
+          formData.currentCyaEffect === '' ||
+          formData.currentCyaEffect === null
+        ) {
+          throw new Error('Current cyanuric acid level is required')
+        }
+        if (formData.cyaAmount === '' || formData.cyaAmount === null) {
+          throw new Error('Cyanuric acid amount is required')
+        }
       }
 
       if (currentCalculator === 'lsi' && calculationModes.lsi === 'calculate') {
@@ -617,6 +924,233 @@ const PoolCalculator: React.FC = () => {
             data: saltResult,
             params: { gallons, targetPpm, currentPpm },
             precise: usePreciseCalculation,
+          }
+        } else if (mode === 'effect') {
+          const currentPpm = parseFloat(formData.currentPpmEffect) || 0
+          const saltAmount = parseFloat(formData.saltAmount) || 0
+          const saltUnit = formData.saltUnit
+          const saltEffect = calculateSaltEffect(
+            gallons,
+            currentPpm,
+            saltAmount,
+            saltUnit
+          )
+
+          result = {
+            type: 'salt',
+            mode: 'effect',
+            data: saltEffect,
+            params: { gallons, currentPpm, saltAmount, saltUnit },
+          }
+        }
+      } else if (currentCalculator === 'chlorine') {
+        const mode = calculationModes.chlorine
+        const gallons = parseFloat(formData.gallonsChlorine)
+
+        if (mode === 'target') {
+          const targetFc = parseFloat(formData.targetFc)
+          const currentFc = parseFloat(formData.currentFc) || 0
+          const chlorineResult = calculateChlorine(
+            gallons,
+            targetFc,
+            currentFc,
+            formData.chlorineType
+          )
+
+          result = {
+            type: 'chlorine',
+            mode: 'target',
+            data: chlorineResult,
+            params: {
+              gallons,
+              targetFc,
+              currentFc,
+              chlorineType: formData.chlorineType,
+            },
+          }
+        } else if (mode === 'effect') {
+          const currentFc = parseFloat(formData.currentFcEffect) || 0
+          const chlorineAmount = parseFloat(formData.chlorineAmount) || 0
+          const chlorineAmountUnit = formData.chlorineAmountUnit
+          const chlorineEffect = calculateChlorineEffect(
+            gallons,
+            currentFc,
+            chlorineAmount,
+            chlorineAmountUnit,
+            formData.chlorineType
+          )
+
+          result = {
+            type: 'chlorine',
+            mode: 'effect',
+            data: chlorineEffect,
+            params: {
+              gallons,
+              currentFc,
+              chlorineAmount,
+              chlorineAmountUnit,
+              chlorineType: formData.chlorineType,
+            },
+          }
+        }
+      } else if (currentCalculator === 'ph') {
+        const mode = calculationModes.ph
+        const gallons = parseFloat(formData.gallonsPh)
+
+        if (mode === 'target') {
+          const currentPh = parseFloat(formData.currentPh)
+          const targetPh = parseFloat(formData.targetPh)
+          const phResult = calculatePh(gallons, currentPh, targetPh)
+
+          result = {
+            type: 'ph',
+            mode: 'target',
+            data: phResult,
+            params: { gallons, currentPh, targetPh },
+          }
+        } else if (mode === 'effect') {
+          const currentPh = parseFloat(formData.currentPhEffect) || 7.0
+          const amount = parseFloat(formData.phAmount) || 0
+          const amountUnit = formData.phAmountUnit
+          const chemicalType = formData.phChemicalType
+          const phEffect = calculatePhEffect(
+            gallons,
+            currentPh,
+            amount,
+            amountUnit,
+            chemicalType
+          )
+
+          result = {
+            type: 'ph',
+            mode: 'effect',
+            data: phEffect,
+            params: { gallons, currentPh, amount, amountUnit, chemicalType },
+          }
+        }
+      } else if (currentCalculator === 'alkalinity') {
+        const mode = calculationModes.alkalinity
+        const gallons = parseFloat(formData.gallonsAlk)
+
+        if (mode === 'target') {
+          const currentAlk = parseFloat(formData.currentAlk) || 0
+          const targetAlk = parseFloat(formData.targetAlk) || 100
+
+          if (currentAlk >= targetAlk) {
+            result = {
+              type: 'alkalinity',
+              mode: 'target',
+              data: { amount: 0 },
+              params: { gallons, currentAlk, targetAlk },
+            }
+          } else {
+            // Approximate: 1 lb sodium bicarbonate per 10,000 gallons raises alkalinity by ~10 ppm
+            const alkIncrease = targetAlk - currentAlk
+            const sodiumBicarbNeeded = (alkIncrease / 10) * (gallons / 10000)
+
+            result = {
+              type: 'alkalinity',
+              mode: 'target',
+              data: { amount: Math.round(sodiumBicarbNeeded * 100) / 100 },
+              params: { gallons, currentAlk, targetAlk },
+            }
+          }
+        } else if (mode === 'effect') {
+          const currentAlk = parseFloat(formData.currentAlkEffect) || 0
+          const alkAmount = parseFloat(formData.alkAmount) || 0
+          const alkEffect = calculateAlkalinityEffect(
+            gallons,
+            currentAlk,
+            alkAmount
+          )
+
+          result = {
+            type: 'alkalinity',
+            mode: 'effect',
+            data: alkEffect,
+            params: { gallons, currentAlk, alkAmount },
+          }
+        }
+      } else if (currentCalculator === 'calcium') {
+        const mode = calculationModes.calcium
+        const gallons = parseFloat(formData.gallonsCa)
+
+        if (mode === 'target') {
+          const currentCa = parseFloat(formData.currentCa) || 0
+          const targetCa = parseFloat(formData.targetCa) || 250
+
+          if (currentCa >= targetCa) {
+            result = {
+              type: 'calcium',
+              mode: 'target',
+              data: { amount: 0 },
+              params: { gallons, currentCa, targetCa },
+            }
+          } else {
+            // Approximate: 1 lb calcium chloride per 10,000 gallons raises calcium hardness by ~10 ppm
+            const caIncrease = targetCa - currentCa
+            const calciumChlorideNeeded = (caIncrease / 10) * (gallons / 10000)
+
+            result = {
+              type: 'calcium',
+              mode: 'target',
+              data: { amount: Math.round(calciumChlorideNeeded * 100) / 100 },
+              params: { gallons, currentCa, targetCa },
+            }
+          }
+        } else if (mode === 'effect') {
+          const currentCa = parseFloat(formData.currentCaEffect) || 0
+          const calciumAmount = parseFloat(formData.calciumAmount) || 0
+          const calciumEffect = calculateCalciumEffect(
+            gallons,
+            currentCa,
+            calciumAmount
+          )
+
+          result = {
+            type: 'calcium',
+            mode: 'effect',
+            data: calciumEffect,
+            params: { gallons, currentCa, calciumAmount },
+          }
+        }
+      } else if (currentCalculator === 'cya') {
+        const mode = calculationModes.cya
+        const gallons = parseFloat(formData.gallonsCya)
+
+        if (mode === 'target') {
+          const currentCya = parseFloat(formData.currentCya) || 0
+          const targetCya = parseFloat(formData.targetCya) || 50
+
+          if (currentCya >= targetCya) {
+            result = {
+              type: 'cya',
+              mode: 'target',
+              data: { amount: 0 },
+              params: { gallons, currentCya, targetCya },
+            }
+          } else {
+            // Approximate: 1 lb cyanuric acid per 10,000 gallons raises CYA by ~10 ppm
+            const cyaIncrease = targetCya - currentCya
+            const cyanuricAcidNeeded = (cyaIncrease / 10) * (gallons / 10000)
+
+            result = {
+              type: 'cya',
+              mode: 'target',
+              data: { amount: Math.round(cyanuricAcidNeeded * 100) / 100 },
+              params: { gallons, currentCya, targetCya },
+            }
+          }
+        } else if (mode === 'effect') {
+          const currentCya = parseFloat(formData.currentCyaEffect) || 0
+          const cyaAmount = parseFloat(formData.cyaAmount) || 0
+          const cyaEffect = calculateCyaEffect(gallons, currentCya, cyaAmount)
+
+          result = {
+            type: 'cya',
+            mode: 'effect',
+            data: cyaEffect,
+            params: { gallons, currentCya, cyaAmount },
           }
         }
       } else if (currentCalculator === 'lsi') {
@@ -1387,131 +1921,9 @@ const PoolCalculator: React.FC = () => {
                     }
                     className='w-full mt-2 px-3 py-3 border-2 border-gray-300 rounded-lg text-base transition-colors duration-300 focus:outline-none focus:border-blue-500'>
                     <option value='pounds'>Pounds</option>
+                    <option value='fluid_ounces'>Fluid Ounces</option>
                     <option value='gallons'>Gallons</option>
                   </select>
-                </div>
-              </>
-            )}
-
-            {calculationModes.lsi === 'target' && (
-              <>
-                <div className='mb-5'>
-                  <label className='block mb-2 font-semibold text-gray-800'>
-                    Water Temperature:
-                  </label>
-                  <input
-                    type='number'
-                    value={formData.lsiTargetTemp}
-                    onChange={(e) =>
-                      handleInputChange('lsiTargetTemp', e.target.value)
-                    }
-                    className='w-full px-3 py-3 border-2 border-gray-300 rounded-lg text-base transition-colors duration-300 focus:outline-none focus:border-blue-500'
-                    placeholder='e.g., 80'
-                  />
-                  <select
-                    value={formData.lsiTargetTempUnit}
-                    onChange={(e) =>
-                      handleInputChange('lsiTargetTempUnit', e.target.value)
-                    }
-                    className='w-full mt-2 px-3 py-3 border-2 border-gray-300 rounded-lg text-base transition-colors duration-300 focus:outline-none focus:border-blue-500'>
-                    <option value='fahrenheit'>Fahrenheit (°F)</option>
-                    <option value='celsius'>Celsius (°C)</option>
-                  </select>
-                </div>
-                <div className='mb-5'>
-                  <label className='block mb-2 font-semibold text-gray-800'>
-                    Calcium Hardness (ppm):
-                  </label>
-                  <input
-                    type='number'
-                    value={formData.lsiTargetCalcium}
-                    onChange={(e) =>
-                      handleInputChange('lsiTargetCalcium', e.target.value)
-                    }
-                    className='w-full px-3 py-3 border-2 border-gray-300 rounded-lg text-base transition-colors duration-300 focus:outline-none focus:border-blue-500'
-                    placeholder='e.g., 250'
-                  />
-                </div>
-                <div className='mb-5'>
-                  <label className='block mb-2 font-semibold text-gray-800'>
-                    Total Alkalinity (ppm):
-                  </label>
-                  <input
-                    type='number'
-                    value={formData.lsiTargetAlkalinity}
-                    onChange={(e) =>
-                      handleInputChange('lsiTargetAlkalinity', e.target.value)
-                    }
-                    className='w-full px-3 py-3 border-2 border-gray-300 rounded-lg text-base transition-colors duration-300 focus:outline-none focus:border-blue-500'
-                    placeholder='e.g., 100'
-                  />
-                </div>
-                <div className='mb-5'>
-                  <label className='block mb-2 font-semibold text-gray-800'>
-                    Total Dissolved Solids (ppm):
-                  </label>
-                  <input
-                    type='number'
-                    value={formData.lsiTargetTds}
-                    onChange={(e) =>
-                      handleInputChange('lsiTargetTds', e.target.value)
-                    }
-                    className='w-full px-3 py-3 border-2 border-gray-300 rounded-lg text-base transition-colors duration-300 focus:outline-none focus:border-blue-500'
-                    placeholder='e.g., 1500'
-                    disabled={formData.estimateTargetTds}
-                  />
-                  <div className='mt-2 p-2 bg-gray-50 rounded'>
-                    <label className='flex items-center text-sm'>
-                      <input
-                        type='checkbox'
-                        checked={formData.estimateTargetTds}
-                        onChange={(e) => {
-                          handleInputChange(
-                            'estimateTargetTds',
-                            e.target.checked.toString()
-                          )
-                          if (
-                            e.target.checked &&
-                            formData.lsiTargetCalcium &&
-                            formData.lsiTargetAlkalinity
-                          ) {
-                            const estimated = estimateTDS(
-                              parseFloat(formData.lsiTargetCalcium),
-                              parseFloat(formData.lsiTargetAlkalinity)
-                            )
-                            handleInputChange(
-                              'lsiTargetTds',
-                              estimated.toString()
-                            )
-                          }
-                        }}
-                        className='mr-2'
-                      />
-                      <span className='text-gray-600'>
-                        Estimate TDS if unknown
-                      </span>
-                    </label>
-                  </div>
-                </div>
-                <div className='mb-5'>
-                  <label className='block mb-2 font-semibold text-gray-800'>
-                    Target LSI:
-                  </label>
-                  <input
-                    type='number'
-                    value={formData.targetLsi}
-                    onChange={(e) =>
-                      handleInputChange('targetLsi', e.target.value)
-                    }
-                    className='w-full px-3 py-3 border-2 border-gray-300 rounded-lg text-base transition-colors duration-300 focus:outline-none focus:border-blue-500'
-                    placeholder='e.g., 0.0'
-                    step='0.1'
-                    min='-2.0'
-                    max='2.0'
-                  />
-                  <div className='mt-2 text-sm text-gray-600 bg-gray-50 p-2 rounded'>
-                    Ideal range: -0.3 to +0.3 (0.0 = perfectly balanced)
-                  </div>
                 </div>
               </>
             )}
@@ -2148,7 +2560,6 @@ const PoolCalculator: React.FC = () => {
             )}
           </div>
         )}
-        {/* Removed duplicate unintended LSI block that caused unmatched parenthesis */}
 
         {/* Action Buttons */}
         <div className='flex gap-4 my-8'>
@@ -2279,6 +2690,404 @@ const PoolCalculator: React.FC = () => {
                 </div>
               </div>
             )
+          ) : results.type === 'salt' && results.mode === 'effect' ? (
+            <div className='bg-gray-100 bg-opacity-80 p-6 rounded-lg mt-6 border-l-4 border-green-600'>
+              <h3 className='mt-0 text-gray-800 text-xl font-semibold mb-4'>
+                Salt Level After Addition
+              </h3>
+              <p className='text-gray-700 mb-4'>
+                Adding {results.params.saltAmount} {results.params.saltUnit} of
+                salt to your {results.params.gallons.toLocaleString()} gallon
+                pool:
+              </p>
+              <div className='grid grid-cols-2 gap-4 mt-4'>
+                <div className='bg-white p-4 rounded-lg text-center shadow-md'>
+                  <div className='text-2xl font-bold text-green-800'>
+                    {results.params.currentPpm} ppm
+                  </div>
+                  <div className='text-gray-600 text-sm mt-1'>
+                    Current Level
+                  </div>
+                </div>
+                <div className='bg-white p-4 rounded-lg text-center shadow-md'>
+                  <div className='text-2xl font-bold text-green-800'>
+                    {results.data.newPpm} ppm
+                  </div>
+                  <div className='text-gray-600 text-sm mt-1'>New Level</div>
+                </div>
+              </div>
+              <div className='bg-green-100 text-green-700 p-4 rounded-lg mt-5 border-l-4 border-green-500'>
+                <strong>Change:</strong> +
+                {results.data.newPpm - results.params.currentPpm} ppm
+              </div>
+            </div>
+          ) : results.type === 'chlorine' && results.mode === 'target' ? (
+            results.data.amount === 0 ? (
+              <div className='bg-blue-100 text-blue-700 p-4 rounded-lg mt-5 border-l-4 border-blue-500'>
+                <h3 className='mt-0 text-gray-800 text-xl font-semibold mb-2'>
+                  No Chlorine Needed
+                </h3>
+                <p>
+                  Your pool already has {results.params.currentFc} ppm, which
+                  meets or exceeds your target of {results.params.targetFc} ppm.
+                </p>
+              </div>
+            ) : (
+              <div className='bg-gray-100 bg-opacity-80 p-6 rounded-lg mt-6 border-l-4 border-blue-600'>
+                <h3 className='mt-0 text-gray-800 text-xl font-semibold mb-4'>
+                  Chlorine Required
+                </h3>
+                <p className='text-gray-700 mb-4'>
+                  To bring your {results.params.gallons.toLocaleString()} gallon
+                  pool from {results.params.currentFc} ppm to{' '}
+                  {results.params.targetFc} ppm free chlorine:
+                </p>
+                <div className='grid grid-cols-1 gap-4 mt-4'>
+                  <div className='bg-white p-4 rounded-lg text-center shadow-md'>
+                    <div className='text-2xl font-bold text-blue-800'>
+                      {results.data.amount} {results.data.unit}
+                    </div>
+                    <div className='text-gray-600 text-sm mt-1'>
+                      {results.params.chlorineType === 'liquid'
+                        ? 'Liquid Chlorine (12.5%)'
+                        : results.params.chlorineType === 'powder'
+                        ? 'Cal-Hypo Powder (65%)'
+                        : 'Dichlor Granular (56%)'}
+                    </div>
+                  </div>
+                </div>
+                <div className='bg-blue-100 text-blue-700 p-4 rounded-lg mt-5 border-l-4 border-blue-500'>
+                  <strong>Note:</strong> Add chemicals slowly and allow proper
+                  circulation. Test water after 4-6 hours and adjust as needed.
+                </div>
+              </div>
+            )
+          ) : results.type === 'chlorine' && results.mode === 'effect' ? (
+            <div className='bg-gray-100 bg-opacity-80 p-6 rounded-lg mt-6 border-l-4 border-green-600'>
+              <h3 className='mt-0 text-gray-800 text-xl font-semibold mb-4'>
+                Chlorine Level After Addition
+              </h3>
+              <p className='text-gray-700 mb-4'>
+                Adding {results.params.chlorineAmount}{' '}
+                {results.params.chlorineAmountUnit} of{' '}
+                {results.params.chlorineType} chlorine to your{' '}
+                {results.params.gallons.toLocaleString()} gallon pool:
+              </p>
+              <div className='grid grid-cols-2 gap-4 mt-4'>
+                <div className='bg-white p-4 rounded-lg text-center shadow-md'>
+                  <div className='text-2xl font-bold text-green-800'>
+                    {results.params.currentFc} ppm
+                  </div>
+                  <div className='text-gray-600 text-sm mt-1'>
+                    Current Free Chlorine
+                  </div>
+                </div>
+                <div className='bg-white p-4 rounded-lg text-center shadow-md'>
+                  <div className='text-2xl font-bold text-green-800'>
+                    {results.data.newFc} ppm
+                  </div>
+                  <div className='text-gray-600 text-sm mt-1'>
+                    New Free Chlorine
+                  </div>
+                </div>
+              </div>
+              <div className='bg-green-100 text-green-700 p-4 rounded-lg mt-5 border-l-4 border-green-500'>
+                <strong>Change:</strong> +
+                {(results.data.newFc - results.params.currentFc).toFixed(1)} ppm
+                <br />
+                <strong>Chlorine Type:</strong>{' '}
+                {results.params.chlorineType === 'liquid'
+                  ? 'Liquid Chlorine (12.5%)'
+                  : results.params.chlorineType === 'powder'
+                  ? 'Cal-Hypo Powder (65%)'
+                  : 'Dichlor Granular (56%)'}
+              </div>
+            </div>
+          ) : results.type === 'ph' && results.mode === 'target' ? (
+            results.data.amount === 0 ? (
+              <div className='bg-blue-100 text-blue-700 p-4 rounded-lg mt-5 border-l-4 border-blue-500'>
+                <h3 className='mt-0 text-gray-800 text-xl font-semibold mb-2'>
+                  No pH Adjustment Needed
+                </h3>
+                <p>Your pH is already close to the target level.</p>
+              </div>
+            ) : (
+              <div className='bg-gray-100 bg-opacity-80 p-6 rounded-lg mt-6 border-l-4 border-blue-600'>
+                <h3 className='mt-0 text-gray-800 text-xl font-semibold mb-4'>
+                  pH Adjustment Required
+                </h3>
+                <p className='text-gray-700 mb-4'>
+                  To bring your {results.params.gallons.toLocaleString()} gallon
+                  pool from pH {results.params.currentPh} to pH{' '}
+                  {results.params.targetPh}:
+                </p>
+                <div className='grid grid-cols-1 gap-4 mt-4'>
+                  <div className='bg-white p-4 rounded-lg text-center shadow-md'>
+                    <div className='text-2xl font-bold text-blue-800'>
+                      {results.data.amount} {results.data.unit}
+                    </div>
+                    <div className='text-gray-600 text-sm mt-1'>
+                      {results.data.chemical}
+                    </div>
+                  </div>
+                </div>
+                <div className='bg-blue-100 text-blue-700 p-4 rounded-lg mt-5 border-l-4 border-blue-500'>
+                  <strong>Note:</strong> Add chemicals slowly to deep end with
+                  pump running. Wait 4-6 hours before retesting pH.
+                </div>
+              </div>
+            )
+          ) : results.type === 'ph' && results.mode === 'effect' ? (
+            <div className='bg-gray-100 bg-opacity-80 p-6 rounded-lg mt-6 border-l-4 border-green-600'>
+              <h3 className='mt-0 text-gray-800 text-xl font-semibold mb-4'>
+                pH Level After Addition
+              </h3>
+              <p className='text-gray-700 mb-4'>
+                Adding {results.params.amount}{' '}
+                {results.params.amountUnit === 'fluid_ounces'
+                  ? 'fluid ounces'
+                  : results.params.amountUnit}{' '}
+                of{' '}
+                {results.params.chemicalType === 'soda_ash'
+                  ? 'Soda Ash'
+                  : 'Muriatic Acid'}{' '}
+                to your {results.params.gallons.toLocaleString()} gallon pool:
+              </p>
+              <div className='grid grid-cols-2 gap-4 mt-4'>
+                <div className='bg-white p-4 rounded-lg text-center shadow-md'>
+                  <div className='text-2xl font-bold text-green-800'>
+                    {results.params.currentPh}
+                  </div>
+                  <div className='text-gray-600 text-sm mt-1'>Current pH</div>
+                </div>
+                <div className='bg-white p-4 rounded-lg text-center shadow-md'>
+                  <div className='text-2xl font-bold text-green-800'>
+                    {results.data.newPh}
+                  </div>
+                  <div className='text-gray-600 text-sm mt-1'>New pH</div>
+                </div>
+              </div>
+              <div className='bg-green-100 text-green-700 p-4 rounded-lg mt-5 border-l-4 border-green-500'>
+                <strong>Change:</strong>{' '}
+                {results.data.newPh > results.params.currentPh ? '+' : ''}
+                {(results.data.newPh - results.params.currentPh).toFixed(2)} pH
+                units
+                <br />
+                <strong>Chemical:</strong>{' '}
+                {results.params.chemicalType === 'soda_ash'
+                  ? 'Soda Ash (raises pH)'
+                  : 'Muriatic Acid (lowers pH)'}
+                <br />
+                <strong>Note:</strong> This is an estimate. Actual pH changes
+                can vary based on water chemistry.
+              </div>
+            </div>
+          ) : results.type === 'alkalinity' && results.mode === 'target' ? (
+            results.data.amount === 0 ? (
+              <div className='bg-blue-100 text-blue-700 p-4 rounded-lg mt-5 border-l-4 border-blue-500'>
+                <h3 className='mt-0 text-gray-800 text-xl font-semibold mb-2'>
+                  No Alkalinity Adjustment Needed
+                </h3>
+                <p>Your alkalinity is already at or above the target level.</p>
+              </div>
+            ) : (
+              <div className='bg-gray-100 bg-opacity-80 p-6 rounded-lg mt-6 border-l-4 border-blue-600'>
+                <h3 className='mt-0 text-gray-800 text-xl font-semibold mb-4'>
+                  Sodium Bicarbonate Required
+                </h3>
+                <p className='text-gray-700 mb-4'>
+                  To bring your {results.params.gallons.toLocaleString()} gallon
+                  pool from {results.params.currentAlk} ppm to{' '}
+                  {results.params.targetAlk} ppm total alkalinity:
+                </p>
+                <div className='grid grid-cols-1 gap-4 mt-4'>
+                  <div className='bg-white p-4 rounded-lg text-center shadow-md'>
+                    <div className='text-2xl font-bold text-blue-800'>
+                      {results.data.amount} pounds
+                    </div>
+                    <div className='text-gray-600 text-sm mt-1'>
+                      Sodium Bicarbonate (Baking Soda)
+                    </div>
+                  </div>
+                </div>
+                <div className='bg-blue-100 text-blue-700 p-4 rounded-lg mt-5 border-l-4 border-blue-500'>
+                  <strong>Note:</strong> Add slowly to deep end with pump
+                  running. Wait 6-8 hours before retesting alkalinity.
+                </div>
+              </div>
+            )
+          ) : results.type === 'alkalinity' && results.mode === 'effect' ? (
+            <div className='bg-gray-100 bg-opacity-80 p-6 rounded-lg mt-6 border-l-4 border-green-600'>
+              <h3 className='mt-0 text-gray-800 text-xl font-semibold mb-4'>
+                Alkalinity Level After Addition
+              </h3>
+              <p className='text-gray-700 mb-4'>
+                Adding {results.params.alkAmount} pounds of sodium bicarbonate
+                to your {results.params.gallons.toLocaleString()} gallon pool:
+              </p>
+              <div className='grid grid-cols-2 gap-4 mt-4'>
+                <div className='bg-white p-4 rounded-lg text-center shadow-md'>
+                  <div className='text-2xl font-bold text-green-800'>
+                    {results.params.currentAlk} ppm
+                  </div>
+                  <div className='text-gray-600 text-sm mt-1'>
+                    Current Alkalinity
+                  </div>
+                </div>
+                <div className='bg-white p-4 rounded-lg text-center shadow-md'>
+                  <div className='text-2xl font-bold text-green-800'>
+                    {results.data.newAlk} ppm
+                  </div>
+                  <div className='text-gray-600 text-sm mt-1'>
+                    New Alkalinity
+                  </div>
+                </div>
+              </div>
+              <div className='bg-green-100 text-green-700 p-4 rounded-lg mt-5 border-l-4 border-green-500'>
+                <strong>Change:</strong> +
+                {results.data.newAlk - results.params.currentAlk} ppm
+                <br />
+                <strong>Chemical:</strong> Sodium Bicarbonate (Baking Soda)
+              </div>
+            </div>
+          ) : results.type === 'calcium' && results.mode === 'target' ? (
+            results.data.amount === 0 ? (
+              <div className='bg-blue-100 text-blue-700 p-4 rounded-lg mt-5 border-l-4 border-blue-500'>
+                <h3 className='mt-0 text-gray-800 text-xl font-semibold mb-2'>
+                  No Calcium Adjustment Needed
+                </h3>
+                <p>
+                  Your calcium hardness is already at or above the target level.
+                </p>
+              </div>
+            ) : (
+              <div className='bg-gray-100 bg-opacity-80 p-6 rounded-lg mt-6 border-l-4 border-blue-600'>
+                <h3 className='mt-0 text-gray-800 text-xl font-semibold mb-4'>
+                  Calcium Chloride Required
+                </h3>
+                <p className='text-gray-700 mb-4'>
+                  To bring your {results.params.gallons.toLocaleString()} gallon
+                  pool from {results.params.currentCa} ppm to{' '}
+                  {results.params.targetCa} ppm calcium hardness:
+                </p>
+                <div className='grid grid-cols-1 gap-4 mt-4'>
+                  <div className='bg-white p-4 rounded-lg text-center shadow-md'>
+                    <div className='text-2xl font-bold text-blue-800'>
+                      {results.data.amount} pounds
+                    </div>
+                    <div className='text-gray-600 text-sm mt-1'>
+                      Calcium Chloride
+                    </div>
+                  </div>
+                </div>
+                <div className='bg-blue-100 text-blue-700 p-4 rounded-lg mt-5 border-l-4 border-blue-500'>
+                  <strong>Note:</strong> Dissolve in bucket of water before
+                  adding. Add slowly to deep end with pump running.
+                </div>
+              </div>
+            )
+          ) : results.type === 'calcium' && results.mode === 'effect' ? (
+            <div className='bg-gray-100 bg-opacity-80 p-6 rounded-lg mt-6 border-l-4 border-green-600'>
+              <h3 className='mt-0 text-gray-800 text-xl font-semibold mb-4'>
+                Calcium Hardness After Addition
+              </h3>
+              <p className='text-gray-700 mb-4'>
+                Adding {results.params.calciumAmount} pounds of calcium chloride
+                to your {results.params.gallons.toLocaleString()} gallon pool:
+              </p>
+              <div className='grid grid-cols-2 gap-4 mt-4'>
+                <div className='bg-white p-4 rounded-lg text-center shadow-md'>
+                  <div className='text-2xl font-bold text-green-800'>
+                    {results.params.currentCa} ppm
+                  </div>
+                  <div className='text-gray-600 text-sm mt-1'>
+                    Current Calcium
+                  </div>
+                </div>
+                <div className='bg-white p-4 rounded-lg text-center shadow-md'>
+                  <div className='text-2xl font-bold text-green-800'>
+                    {results.data.newCa} ppm
+                  </div>
+                  <div className='text-gray-600 text-sm mt-1'>New Calcium</div>
+                </div>
+              </div>
+              <div className='bg-green-100 text-green-700 p-4 rounded-lg mt-5 border-l-4 border-green-500'>
+                <strong>Change:</strong> +
+                {results.data.newCa - results.params.currentCa} ppm
+                <br />
+                <strong>Chemical:</strong> Calcium Chloride
+              </div>
+            </div>
+          ) : results.type === 'cya' && results.mode === 'target' ? (
+            results.data.amount === 0 ? (
+              <div className='bg-blue-100 text-blue-700 p-4 rounded-lg mt-5 border-l-4 border-blue-500'>
+                <h3 className='mt-0 text-gray-800 text-xl font-semibold mb-2'>
+                  No Stabilizer Adjustment Needed
+                </h3>
+                <p>
+                  Your cyanuric acid level is already at or above the target
+                  level.
+                </p>
+              </div>
+            ) : (
+              <div className='bg-gray-100 bg-opacity-80 p-6 rounded-lg mt-6 border-l-4 border-blue-600'>
+                <h3 className='mt-0 text-gray-800 text-xl font-semibold mb-4'>
+                  Cyanuric Acid Required
+                </h3>
+                <p className='text-gray-700 mb-4'>
+                  To bring your {results.params.gallons.toLocaleString()} gallon
+                  pool from {results.params.currentCya} ppm to{' '}
+                  {results.params.targetCya} ppm cyanuric acid:
+                </p>
+                <div className='grid grid-cols-1 gap-4 mt-4'>
+                  <div className='bg-white p-4 rounded-lg text-center shadow-md'>
+                    <div className='text-2xl font-bold text-blue-800'>
+                      {results.data.amount} pounds
+                    </div>
+                    <div className='text-gray-600 text-sm mt-1'>
+                      Cyanuric Acid (Stabilizer)
+                    </div>
+                  </div>
+                </div>
+                <div className='bg-blue-100 text-blue-700 p-4 rounded-lg mt-5 border-l-4 border-blue-500'>
+                  <strong>Note:</strong> Dissolve in sock or skimmer basket. CYA
+                  dissolves very slowly - may take 2-3 days.
+                </div>
+              </div>
+            )
+          ) : results.type === 'cya' && results.mode === 'effect' ? (
+            <div className='bg-gray-100 bg-opacity-80 p-6 rounded-lg mt-6 border-l-4 border-green-600'>
+              <h3 className='mt-0 text-gray-800 text-xl font-semibold mb-4'>
+                Cyanuric Acid Level After Addition
+              </h3>
+              <p className='text-gray-700 mb-4'>
+                Adding {results.params.cyaAmount} pounds of cyanuric acid to
+                your {results.params.gallons.toLocaleString()} gallon pool:
+              </p>
+              <div className='grid grid-cols-2 gap-4 mt-4'>
+                <div className='bg-white p-4 rounded-lg text-center shadow-md'>
+                  <div className='text-2xl font-bold text-green-800'>
+                    {results.params.currentCya} ppm
+                  </div>
+                  <div className='text-gray-600 text-sm mt-1'>Current CYA</div>
+                </div>
+                <div className='bg-white p-4 rounded-lg text-center shadow-md'>
+                  <div className='text-2xl font-bold text-green-800'>
+                    {results.data.newCya} ppm
+                  </div>
+                  <div className='text-gray-600 text-sm mt-1'>New CYA</div>
+                </div>
+              </div>
+              <div className='bg-green-100 text-green-700 p-4 rounded-lg mt-5 border-l-4 border-green-500'>
+                <strong>Change:</strong> +
+                {results.data.newCya - results.params.currentCya} ppm
+                <br />
+                <strong>Chemical:</strong> Cyanuric Acid (Stabilizer)
+                <br />
+                <strong>Note:</strong> CYA dissolves slowly and may take 2-3
+                days to fully register.
+              </div>
+            </div>
           ) : results.type === 'lsi' && results.mode === 'calculate' ? (
             <div className='bg-gray-100 bg-opacity-80 p-6 rounded-lg mt-6 border-l-4 border-blue-600'>
               <h3 className='mt-0 text-gray-800 text-xl font-semibold mb-4'>

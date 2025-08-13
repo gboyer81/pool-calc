@@ -1,10 +1,14 @@
 import type { Metadata } from 'next'
-import Head from 'next/head'
 import './globals.css'
 
 export const metadata: Metadata = {
   title: 'Pacer Pool Calculator',
   description: 'A simple calculator for pool chemicals.',
+  metadataBase: new URL('http://localhost:3000'), // Replace with your domain
+  robots: {
+    index: true,
+    follow: true,
+  },
 }
 
 export default function RootLayout({
@@ -13,8 +17,9 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang='en' suppressHydrationWarning>
-      <Head>
+    <html lang='en'>
+      <head>
+        {/* Cache control meta tags - these need to be in head, not metadata export */}
         <meta
           httpEquiv='Cache-Control'
           content='no-cache, no-store, must-revalidate'
@@ -24,8 +29,10 @@ export default function RootLayout({
         <meta name='cache-control' content='max-age=0' />
         <meta name='version' content='2.1.20241207' />
         <meta name='last-modified' content='2025-08-07' />
-      </Head>
-      <body className='max-w-4xl mx-auto p-5 bg-gradient-to-r from-[var(--primarybg)] to-[var(--secondarybg)] min-h-screen'>
+      </head>
+      <body
+        className='max-w-4xl mx-auto p-5 bg-gradient-to-r from-[var(--primarybg)] to-[var(--secondarybg)] min-h-screen'
+        suppressHydrationWarning>
         <div className='container mx-auto'>
           <main>{children}</main>
         </div>
