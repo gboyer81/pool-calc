@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, FormEvent, ChangeEvent } from 'react'
-import { ClientUser, UserInput } from '../../types/user'
+import { ClientUser, UserInput } from '@/types/user'
 
 interface FormData {
   name: string

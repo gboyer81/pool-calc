@@ -11,7 +11,7 @@ import {
 export async function GET(): Promise<NextResponse<UsersResponse>> {
   try {
     const client = await clientPromise
-    const db = client.db('poolCalc')
+    const db = client.db('poolCal')
     const users = await db.collection<User>('users').find({}).toArray()
 
     return NextResponse.json({
@@ -64,7 +64,7 @@ export async function POST(
     }
 
     const client = await clientPromise
-    const db = client.db('poolCalc')
+    const db = client.db('myapp')
 
     // Check if user already exists
     const existingUser = await db.collection<User>('users').findOne({ email })

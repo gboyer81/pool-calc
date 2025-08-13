@@ -22,7 +22,7 @@ export async function GET(
     }
 
     const client = await clientPromise
-    const db = client.db('poolCalc')
+    const db = client.db('myapp')
     const user = await db
       .collection<User>('users')
       .findOne({ _id: new ObjectId(id) })
@@ -98,7 +98,7 @@ export async function PUT(
     }
 
     const client = await clientPromise
-    const db = client.db('poolCalc')
+    const db = client.db('myapp')
 
     // Check if email is already taken by another user
     const existingUser = await db.collection<User>('users').findOne({
@@ -174,7 +174,7 @@ export async function DELETE(
     }
 
     const client = await clientPromise
-    const db = client.db('poolCalc')
+    const db = client.db('myapp')
 
     const result = await db
       .collection<User>('users')
