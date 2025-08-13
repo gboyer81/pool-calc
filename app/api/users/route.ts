@@ -13,7 +13,7 @@ const dbName = process.env.DATABASE_NAME || 'dbName'
 export async function GET(): Promise<NextResponse<UsersResponse>> {
   try {
     const client = await clientPromise
-    const db = client.db(dbName)
+    const db = client.db('dbName')
     const users = await db.collection<User>('users').find({}).toArray()
 
     return NextResponse.json({
