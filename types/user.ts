@@ -5,8 +5,8 @@ export interface User {
   _id: ObjectId
   name: string
   email: string
-  createdAt: Date
-  updatedAt: Date
+  createdAt?: Date
+  updatedAt?: Date
 }
 
 // User input interface (for creating/updating users)

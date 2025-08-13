@@ -1,23 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
-import clientPromise from '../../../../lib/mongodb'
+import clientPromise from '@/lib/mongodb'
 import { ObjectId } from 'mongodb'
-import {
-  User,
-  UserInput,
-  UserResponse,
-  ApiResponse,
-} from '../../../../types/user'
-
-interface RouteParams {
-  params: {
-    id: string
-  }
-}
+import { User, UserInput, UserResponse, ApiResponse } from '@/types/user'
 
 // GET /api/users/[id] - Get a specific user
 export async function GET(
   request: NextRequest,
-  { params }: RouteParams
+  { params }: { params: { id: string } }
 ): Promise<NextResponse<UserResponse>> {
   try {
     const { id } = params
@@ -69,7 +58,7 @@ export async function GET(
 // PUT /api/users/[id] - Update a specific user
 export async function PUT(
   request: NextRequest,
-  { params }: RouteParams
+  { params }: { params: { id: string } }
 ): Promise<NextResponse<ApiResponse>> {
   try {
     const { id } = params
@@ -169,7 +158,7 @@ export async function PUT(
 // DELETE /api/users/[id] - Delete a specific user
 export async function DELETE(
   request: NextRequest,
-  { params }: RouteParams
+  { params }: { params: { id: string } }
 ): Promise<NextResponse<ApiResponse>> {
   try {
     const { id } = params
