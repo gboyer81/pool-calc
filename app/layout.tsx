@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Navigation from './components/Navigation'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -27,13 +28,14 @@ export default function RootLayout({
         <meta httpEquiv='Pragma' content='no-cache' />
         <meta httpEquiv='Expires' content='0' />
         <meta name='cache-control' content='max-age=0' />
-        <meta name='version' content='2.1.20241207' />
-        <meta name='last-modified' content='2025-08-07' />
+        <meta name='version' content='3.2.227' />
+        <meta name='last-modified' content='2025-08-13' />
       </head>
       <body
-        className='max-w-4xl mx-auto p-5 bg-gradient-to-r from-[var(--primarybg)] to-[var(--secondarybg)] min-h-screen'
+        className='min-w-screen bg-gradient-to-r from-[var(--primarybg)] to-[var(--secondarybg)] min-h-screen'
         suppressHydrationWarning>
-        <div className='container mx-auto'>
+        <Navigation />
+        <div className='max-w-3xl mx-auto'>
           <main>{children}</main>
         </div>
       </body>

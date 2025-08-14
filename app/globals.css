@@ -27,6 +27,7 @@
     var(--primarybg) 100%
   );
   --breakpoint-lg: 800px;
+  --box-shadow-7xl: 0 25px 100px rgba(0, 0, 0, 0.2);
 }
 
 @media (prefers-color-scheme: dark) {

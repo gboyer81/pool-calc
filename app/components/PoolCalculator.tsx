@@ -1299,7 +1299,7 @@ const PoolCalculator: React.FC = () => {
   }
 
   return (
-    <div className='max-w-4xl mx-auto bg-white p-8'>
+    <div className='max-w-2xl mx-auto p-5'>
       <div className='space-y-5'>
         {/* Calculator Type Selector */}
         <div className='mb-5'>
@@ -2637,7 +2637,7 @@ const PoolCalculator: React.FC = () => {
                   </div>
                   <div className='text-gray-600 text-sm mt-1'>Gallons</div>
                 </div>
-                <div className='bg-white p-4 rounded-lg text-center shadow-md'>
+                <div className='bg-white/75 p-4 rounded-lg text-center shadow-md'>
                   <div className='text-2xl font-bold text-blue-800'>
                     {results.data.cubicFeet}
                   </div>
@@ -2675,13 +2675,13 @@ const PoolCalculator: React.FC = () => {
                   {results.params.targetPpm} ppm:
                 </p>
                 <div className='grid grid-cols-2 gap-4 mt-4'>
-                  <div className='bg-white p-4 rounded-lg text-center shadow-md'>
+                  <div className='bg-white/75 p-4 rounded-lg text-center shadow-md'>
                     <div className='text-2xl font-bold text-blue-800'>
                       {results.data.pounds}
                     </div>
                     <div className='text-gray-600 text-sm mt-1'>Pounds</div>
                   </div>
-                  <div className='bg-white p-4 rounded-lg text-center shadow-md'>
+                  <div className='bg-white/75 p-4 rounded-lg text-center shadow-md'>
                     <div className='text-2xl font-bold text-blue-800'>
                       {results.data.bags}
                     </div>
@@ -2701,7 +2701,7 @@ const PoolCalculator: React.FC = () => {
                 pool:
               </p>
               <div className='grid grid-cols-2 gap-4 mt-4'>
-                <div className='bg-white p-4 rounded-lg text-center shadow-md'>
+                <div className='bg-white/75 p-4 rounded-lg text-center shadow-md'>
                   <div className='text-2xl font-bold text-green-800'>
                     {results.params.currentPpm} ppm
                   </div>
@@ -2709,7 +2709,7 @@ const PoolCalculator: React.FC = () => {
                     Current Level
                   </div>
                 </div>
-                <div className='bg-white p-4 rounded-lg text-center shadow-md'>
+                <div className='bg-white/75 p-4 rounded-lg text-center shadow-md'>
                   <div className='text-2xl font-bold text-green-800'>
                     {results.data.newPpm} ppm
                   </div>
@@ -2743,7 +2743,7 @@ const PoolCalculator: React.FC = () => {
                   {results.params.targetFc} ppm free chlorine:
                 </p>
                 <div className='grid grid-cols-1 gap-4 mt-4'>
-                  <div className='bg-white p-4 rounded-lg text-center shadow-md'>
+                  <div className='bg-white/75 p-4 rounded-lg text-center shadow-md'>
                     <div className='text-2xl font-bold text-blue-800'>
                       {results.data.amount} {results.data.unit}
                     </div>
@@ -2774,7 +2774,7 @@ const PoolCalculator: React.FC = () => {
                 {results.params.gallons.toLocaleString()} gallon pool:
               </p>
               <div className='grid grid-cols-2 gap-4 mt-4'>
-                <div className='bg-white p-4 rounded-lg text-center shadow-md'>
+                <div className='bg-white/75 p-4 rounded-lg text-center shadow-md'>
                   <div className='text-2xl font-bold text-green-800'>
                     {results.params.currentFc} ppm
                   </div>
@@ -2782,7 +2782,7 @@ const PoolCalculator: React.FC = () => {
                     Current Free Chlorine
                   </div>
                 </div>
-                <div className='bg-white p-4 rounded-lg text-center shadow-md'>
+                <div className='bg-white/75 p-4 rounded-lg text-center shadow-md'>
                   <div className='text-2xl font-bold text-green-800'>
                     {results.data.newFc} ppm
                   </div>
@@ -2822,7 +2822,7 @@ const PoolCalculator: React.FC = () => {
                   {results.params.targetPh}:
                 </p>
                 <div className='grid grid-cols-1 gap-4 mt-4'>
-                  <div className='bg-white p-4 rounded-lg text-center shadow-md'>
+                  <div className='bg-white/75 p-4 rounded-lg text-center shadow-md'>
                     <div className='text-2xl font-bold text-blue-800'>
                       {results.data.amount} {results.data.unit}
                     </div>
@@ -2854,13 +2854,13 @@ const PoolCalculator: React.FC = () => {
                 to your {results.params.gallons.toLocaleString()} gallon pool:
               </p>
               <div className='grid grid-cols-2 gap-4 mt-4'>
-                <div className='bg-white p-4 rounded-lg text-center shadow-md'>
+                <div className='bg-white/75 p-4 rounded-lg text-center shadow-md'>
                   <div className='text-2xl font-bold text-green-800'>
                     {results.params.currentPh}
                   </div>
                   <div className='text-gray-600 text-sm mt-1'>Current pH</div>
                 </div>
-                <div className='bg-white p-4 rounded-lg text-center shadow-md'>
+                <div className='bg-white/75 p-4 rounded-lg text-center shadow-md'>
                   <div className='text-2xl font-bold text-green-800'>
                     {results.data.newPh}
                   </div>
@@ -2901,7 +2901,7 @@ const PoolCalculator: React.FC = () => {
                   {results.params.targetAlk} ppm total alkalinity:
                 </p>
                 <div className='grid grid-cols-1 gap-4 mt-4'>
-                  <div className='bg-white p-4 rounded-lg text-center shadow-md'>
+                  <div className='bg-white/75 p-4 rounded-lg text-center shadow-md'>
                     <div className='text-2xl font-bold text-blue-800'>
                       {results.data.amount} pounds
                     </div>
@@ -2926,7 +2926,7 @@ const PoolCalculator: React.FC = () => {
                 to your {results.params.gallons.toLocaleString()} gallon pool:
               </p>
               <div className='grid grid-cols-2 gap-4 mt-4'>
-                <div className='bg-white p-4 rounded-lg text-center shadow-md'>
+                <div className='bg-white/75 p-4 rounded-lg text-center shadow-md'>
                   <div className='text-2xl font-bold text-green-800'>
                     {results.params.currentAlk} ppm
                   </div>
@@ -2934,7 +2934,7 @@ const PoolCalculator: React.FC = () => {
                     Current Alkalinity
                   </div>
                 </div>
-                <div className='bg-white p-4 rounded-lg text-center shadow-md'>
+                <div className='bg-white/75 p-4 rounded-lg text-center shadow-md'>
                   <div className='text-2xl font-bold text-green-800'>
                     {results.data.newAlk} ppm
                   </div>
@@ -2971,7 +2971,7 @@ const PoolCalculator: React.FC = () => {
                   {results.params.targetCa} ppm calcium hardness:
                 </p>
                 <div className='grid grid-cols-1 gap-4 mt-4'>
-                  <div className='bg-white p-4 rounded-lg text-center shadow-md'>
+                  <div className='bg-white/75 p-4 rounded-lg text-center shadow-md'>
                     <div className='text-2xl font-bold text-blue-800'>
                       {results.data.amount} pounds
                     </div>
@@ -2996,7 +2996,7 @@ const PoolCalculator: React.FC = () => {
                 to your {results.params.gallons.toLocaleString()} gallon pool:
               </p>
               <div className='grid grid-cols-2 gap-4 mt-4'>
-                <div className='bg-white p-4 rounded-lg text-center shadow-md'>
+                <div className='bg-white/75 p-4 rounded-lg text-center shadow-md'>
                   <div className='text-2xl font-bold text-green-800'>
                     {results.params.currentCa} ppm
                   </div>
@@ -3004,7 +3004,7 @@ const PoolCalculator: React.FC = () => {
                     Current Calcium
                   </div>
                 </div>
-                <div className='bg-white p-4 rounded-lg text-center shadow-md'>
+                <div className='bg-white/75 p-4 rounded-lg text-center shadow-md'>
                   <div className='text-2xl font-bold text-green-800'>
                     {results.data.newCa} ppm
                   </div>
@@ -3040,7 +3040,7 @@ const PoolCalculator: React.FC = () => {
                   {results.params.targetCya} ppm cyanuric acid:
                 </p>
                 <div className='grid grid-cols-1 gap-4 mt-4'>
-                  <div className='bg-white p-4 rounded-lg text-center shadow-md'>
+                  <div className='bg-white/75 p-4 rounded-lg text-center shadow-md'>
                     <div className='text-2xl font-bold text-blue-800'>
                       {results.data.amount} pounds
                     </div>
@@ -3065,13 +3065,13 @@ const PoolCalculator: React.FC = () => {
                 your {results.params.gallons.toLocaleString()} gallon pool:
               </p>
               <div className='grid grid-cols-2 gap-4 mt-4'>
-                <div className='bg-white p-4 rounded-lg text-center shadow-md'>
+                <div className='bg-white/75 p-4 rounded-lg text-center shadow-md'>
                   <div className='text-2xl font-bold text-green-800'>
                     {results.params.currentCya} ppm
                   </div>
                   <div className='text-gray-600 text-sm mt-1'>Current CYA</div>
                 </div>
-                <div className='bg-white p-4 rounded-lg text-center shadow-md'>
+                <div className='bg-white/75 p-4 rounded-lg text-center shadow-md'>
                   <div className='text-2xl font-bold text-green-800'>
                     {results.data.newCya} ppm
                   </div>
@@ -3115,37 +3115,37 @@ const PoolCalculator: React.FC = () => {
                 </div>
               </div>
               <div className='grid grid-cols-3 gap-4 text-center text-sm mb-4'>
-                <div className='bg-white p-3 rounded-lg shadow-sm'>
+                <div className='bg-white/75 p-3 rounded-lg shadow-sm'>
                   <div className='text-lg font-bold text-blue-800'>
                     pH: {results.params.ph}
                   </div>
                   <div className='text-gray-600 text-xs'>Current Level</div>
                 </div>
-                <div className='bg-white p-3 rounded-lg shadow-sm'>
+                <div className='bg-white/75 p-3 rounded-lg shadow-sm'>
                   <div className='text-lg font-bold text-blue-800'>
                     {results.params.tempF}°F
                   </div>
                   <div className='text-gray-600 text-xs'>Temperature</div>
                 </div>
-                <div className='bg-white p-3 rounded-lg shadow-sm'>
+                <div className='bg-white/75 p-3 rounded-lg shadow-sm'>
                   <div className='text-lg font-bold text-blue-800'>
                     {results.params.calcium} ppm
                   </div>
                   <div className='text-gray-600 text-xs'>Calcium</div>
                 </div>
-                <div className='bg-white p-3 rounded-lg shadow-sm'>
+                <div className='bg-white/75 p-3 rounded-lg shadow-sm'>
                   <div className='text-lg font-bold text-blue-800'>
                     {results.params.alkalinity} ppm
                   </div>
                   <div className='text-gray-600 text-xs'>Alkalinity</div>
                 </div>
-                <div className='bg-white p-3 rounded-lg shadow-sm'>
+                <div className='bg-white/75 p-3 rounded-lg shadow-sm'>
                   <div className='text-lg font-bold text-blue-800'>
                     {results.params.tds} ppm
                   </div>
                   <div className='text-gray-600 text-xs'>TDS</div>
                 </div>
-                <div className='bg-white p-3 rounded-lg shadow-sm'>
+                <div className='bg-white/75 p-3 rounded-lg shadow-sm'>
                   <div className='text-lg font-bold text-blue-800'>
                     LSI: {results.data.lsi}
                   </div>
@@ -3183,13 +3183,13 @@ const PoolCalculator: React.FC = () => {
                 current water conditions:
               </p>
               <div className='grid grid-cols-2 gap-4 mt-4'>
-                <div className='bg-white p-4 rounded-lg text-center shadow-md'>
+                <div className='bg-white/75 p-4 rounded-lg text-center shadow-md'>
                   <div className='text-2xl font-bold text-blue-800'>
                     {results.data.targetPh}
                   </div>
                   <div className='text-gray-600 text-sm mt-1'>Target pH</div>
                 </div>
-                <div className='bg-white p-4 rounded-lg text-center shadow-md'>
+                <div className='bg-white/75 p-4 rounded-lg text-center shadow-md'>
                   <div className='text-2xl font-bold text-blue-800'>
                     {results.params.targetLsi}
                   </div>

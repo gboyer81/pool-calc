@@ -17,34 +17,26 @@ export default function VersionCheck() {
   }
 
   return (
-    <div
-      style={{
-        textAlign: 'center',
-        marginBottom: '0',
-        padding: '4px',
-        background: '#f8f9fa',
-        borderRadius: '6px',
-        fontSize: '0.8em',
-        color: '#666',
-      }}>
-      <strong>Version 2.1</strong> | Updated: August 8th, 2025 |
-      <span id='cacheTimestamp'>
-        {timestamp ? ` Loaded: ${timestamp}` : ''}
-      </span>
-      <button
-        onClick={forceRefresh}
-        style={{
-          marginLeft: '10px',
-          padding: '2px 8px',
-          fontSize: '10px',
-          background: '#e9ecef',
-          border: '1px solid #ced4da',
-          borderRadius: '4px',
-          cursor: 'pointer',
-        }}
-        title="Force refresh if you don't see the latest features">
-        🔄
-      </button>
+    <div className='flex flex-row flex-nowrap items-center justify-center gap-1.5 mb-0 px-2 py-0.5 max-w-2xl mx-auto bg-gray-50 rounded-md text-[12.5px] text-gray-500'>
+      <div>
+        <strong>Version 3.2</strong>
+      </div>
+      <div>|</div>
+      <div>Updated: August 13th, 2025</div>
+      <div>|</div>
+      <div>
+        <span id='cacheTimestamp'>
+          {timestamp ? ` Loaded: ${timestamp}` : ''}
+        </span>
+      </div>
+      <div>
+        <button
+          onClick={forceRefresh}
+          className='ml-2.5 px-0.5 py-0.5 text-xs bg-gray-200 border border-gray-300 rounded cursor-pointer hover:bg-gray-300 hover:border-gray-400 transition-colors'
+          title="Force refresh if you don't see the latest features">
+          🔄
+        </button>
+      </div>
     </div>
   )
 }
