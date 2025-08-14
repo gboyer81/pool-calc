@@ -51,3 +51,12 @@ Cluster0-*.json
 
 # Unused
 pooolCalc.tsx
+
+playground-*.mongodb.js
+
+*implementation*.md
+implementation_*.md
+*_integration_guide.md
+implementation_plan.md
+
+demoData.js

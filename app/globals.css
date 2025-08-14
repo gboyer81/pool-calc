@@ -40,14 +40,14 @@
 /* OG global */
 body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  max-width: 800px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
-  background: linear-gradient(
+  /* background: linear-gradient(
     135deg,
     var(--secondarybg) 0%,
     var(--primarybg) 100%
-  );
+  ); */
   min-height: 100vh;
   color: #333;
 }
@@ -56,7 +56,7 @@ body {
   background: white;
   padding: 30px;
   border-radius: 15px;
-  box-shadow: 0 25px 100px rgba(0, 0, 0, 0.2);
+  /* box-shadow: 0 25px 100px rgba(0, 0, 0, 0.2); */
 }
 
 h1 {
