@@ -87,7 +87,8 @@ export async function POST(
     }
 
     const client = await clientPromise
-    const db = client.db('poolCalc')
+    // FIX: Use consistent database name 'PoolCalc' (capital P)
+    const db = client.db('PoolCalc')
 
     // Find technician by email
     const technician = await db
@@ -100,7 +101,6 @@ export async function POST(
         email: technician.email,
         isActive: technician.isActive,
         hasPassword: !!technician.password,
-        passwordPrefix: technician.password?.substring(0, 10),
       })
     }
 
@@ -118,32 +118,16 @@ export async function POST(
       return NextResponse.json(
         {
           success: false,
-          error: 'Account is deactivated. Please contact your supervisor.',
+          error: 'Account is deactivated',
         },
         { status: 401 }
       )
     }
 
-    // Verify password using bcrypt (since the hash shows it's bcrypt)
-    console.log('Comparing passwords...')
-    let isValidPassword = await bcrypt.compare(password, technician.password)
-    console.log('Password valid:', isValidPassword)
+    // Verify password
+    const isPasswordValid = await verifyPassword(password, technician.password)
 
-    // Demo override - if bcrypt fails, check for demo credentials
-    if (
-      !isValidPassword &&
-      password === 'password123' &&
-      [
-        'tech@poolservice.com',
-        'supervisor@poolservice.com',
-        'admin@poolservice.com',
-      ].includes(technician.email)
-    ) {
-      console.log('Demo credential override applied')
-      isValidPassword = true
-    }
-
-    if (!isValidPassword) {
+    if (!isPasswordValid) {
       return NextResponse.json(
         {
           success: false,
@@ -153,12 +137,7 @@ export async function POST(
       )
     }
 
-    // Update last login
-    await db
-      .collection('technicians')
-      .updateOne({ _id: technician._id }, { $set: { lastLogin: new Date() } })
-
-    // Generate JWT token
+    // Create JWT token
     const token = jwt.sign(
       {
         technicianId: technician._id.toString(),
@@ -166,13 +145,25 @@ export async function POST(
         role: technician.role,
       },
       JWT_SECRET,
-      { expiresIn: '24h' }
+      { expiresIn: '7d' }
     )
 
-    // Return technician data (without password) and token
+    // Update last login
+    await db.collection('technicians').updateOne(
+      { _id: technician._id },
+      {
+        $set: {
+          lastLogin: new Date(),
+          updatedAt: new Date(),
+        },
+      }
+    )
+
+    // Return success response
     return NextResponse.json({
       success: true,
       message: 'Login successful',
+      token: token,
       technician: {
         _id: technician._id.toString(),
         name: technician.name,
@@ -181,16 +172,16 @@ export async function POST(
         role: technician.role,
         assignedClients: technician.assignedClients.map((id) => id.toString()),
       },
-      token,
     })
   } catch (error) {
+    console.error('Login error:', error)
     const errorMessage =
       error instanceof Error ? error.message : 'Unknown error occurred'
 
     return NextResponse.json(
       {
         success: false,
-        error: errorMessage,
+        error: 'Login failed: ' + errorMessage,
       },
       { status: 500 }
     )

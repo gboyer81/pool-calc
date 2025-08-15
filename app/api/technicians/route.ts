@@ -53,7 +53,8 @@ export async function GET(
     // TODO: Add JWT verification middleware for admin access
 
     const client = await clientPromise
-    const db = client.db('poolCalc')
+    // FIX: Use consistent database name 'PoolCalc' (capital P)
+    const db = client.db('PoolCalc')
 
     const technicians = await db
       .collection<Technician>('technicians')
@@ -122,19 +123,22 @@ export async function POST(
       )
     }
 
-    // Password validation
-    if (password.length < 8) {
+    // Phone validation (basic)
+    const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/
+    const cleanPhone = phone.replace(/\D/g, '')
+    if (cleanPhone.length < 10) {
       return NextResponse.json(
         {
           success: false,
-          error: 'Password must be at least 8 characters long',
+          error: 'Please provide a valid phone number',
         },
         { status: 400 }
       )
     }
 
     const client = await clientPromise
-    const db = client.db('poolCalc')
+    // FIX: Use consistent database name 'PoolCalc' (capital P)
+    const db = client.db('PoolCalc')
 
     // Check if technician already exists
     const existingTechnician = await db
@@ -157,23 +161,15 @@ export async function POST(
     }
 
     // Hash password
-    const hashedPassword = await bcrypt.hash(password, 12)
+    const saltRounds = 10
+    const hashedPassword = await bcrypt.hash(password, saltRounds)
 
-    // Convert assigned client IDs to ObjectIds
-    let assignedClientObjects: ObjectId[] = []
-    if (assignedClients && assignedClients.length > 0) {
-      try {
-        assignedClientObjects = assignedClients.map((id) => new ObjectId(id))
-      } catch (err) {
-        return NextResponse.json(
-          {
-            success: false,
-            error: 'Invalid client ID format in assigned clients',
-          },
-          { status: 400 }
-        )
-      }
-    }
+    // Convert assignedClients to ObjectIds if provided
+    const clientObjectIds = assignedClients
+      ? assignedClients
+          .filter((id) => ObjectId.isValid(id))
+          .map((id) => new ObjectId(id))
+      : []
 
     // Insert new technician
     const now = new Date()
@@ -186,7 +182,7 @@ export async function POST(
       role,
       certifications: [],
       serviceAreas: serviceAreas || [],
-      assignedClients: assignedClientObjects,
+      assignedClients: clientObjectIds,
       isActive: true,
       createdAt: now,
       updatedAt: now,
