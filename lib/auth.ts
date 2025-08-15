@@ -29,7 +29,7 @@ export async function authenticateRequest(
 
     // Get full technician data from database
     const client = await clientPromise
-    const db = client.db('PoolCalc')
+    const db = client.db('poolCalc')
 
     const technician = await db
       .collection('technicians')

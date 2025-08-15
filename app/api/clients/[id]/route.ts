@@ -64,7 +64,7 @@ export async function GET(
     }
 
     const client = await clientPromise
-    const db = client.db('PoolCalc')
+    const db = client.db('poolCalc')
     const clientData = await db
       .collection<Client>('clients')
       .findOne({ _id: new ObjectId(id) })
@@ -177,7 +177,7 @@ export async function PUT(
     }
 
     const client = await clientPromise
-    const db = client.db('PoolCalc')
+    const db = client.db('poolCalc')
 
     // Check if email or phone is already taken by another client
     const existingClient = await db.collection<Client>('clients').findOne({
@@ -264,7 +264,7 @@ export async function DELETE(
     }
 
     const client = await clientPromise
-    const db = client.db('PoolCalc')
+    const db = client.db('poolCalc')
 
     // Check if client has any pools first
     const pools = await db
@@ -350,7 +350,7 @@ export async function PATCH(
     }
 
     const client = await clientPromise
-    const db = client.db('PoolCalc')
+    const db = client.db('poolCalc')
 
     const result = await db.collection<Client>('clients').updateOne(
       { _id: new ObjectId(id) },

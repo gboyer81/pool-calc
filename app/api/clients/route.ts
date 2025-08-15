@@ -83,7 +83,7 @@ export async function GET(
     const isActive = searchParams.get('isActive')
 
     const client = await clientPromise
-    const db = client.db('PoolCalc')
+    const db = client.db('poolCalc')
 
     // Build query filters
     let query: any = {}
@@ -206,7 +206,7 @@ export async function POST(
     }
 
     const client = await clientPromise
-    const db = client.db('PoolCalc')
+    const db = client.db('poolCalc')
 
     // Check if client already exists
     const existingClient = await db.collection<Client>('clients').findOne({

@@ -63,7 +63,7 @@ export async function POST(
     }
 
     const client = await clientPromise
-    const db = client.db('PoolCalc')
+    const db = client.db('poolCalc')
 
     // Verify technician exists
     const technician = await db.collection('technicians').findOne({

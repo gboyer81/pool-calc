@@ -60,3 +60,8 @@ implementation_*.md
 implementation_plan.md
 
 demoData.js
+app/api/fix/
+app/api/seed/
+app/api/debug/
+hash_gen.js
+fix-db.sh

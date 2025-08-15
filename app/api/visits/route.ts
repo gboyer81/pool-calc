@@ -124,7 +124,7 @@ export async function GET(
     const limit = parseInt(searchParams.get('limit') || '50')
 
     const client = await clientPromise
-    const db = client.db('PoolCalc')
+    const db = client.db('poolCalc')
 
     // Build query filters
     let query: any = {}
@@ -247,7 +247,7 @@ export async function POST(
     }
 
     const client = await clientPromise
-    const db = client.db('PoolCalc')
+    const db = client.db('poolCalc')
 
     // Verify client and pool exist
     const clientExists = await db

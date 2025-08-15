@@ -54,7 +54,7 @@ export async function GET(
 
     const client = await clientPromise
     // FIX: Use consistent database name 'PoolCalc' (capital P)
-    const db = client.db('PoolCalc')
+    const db = client.db('poolCalc')
 
     const technicians = await db
       .collection<Technician>('technicians')
@@ -138,7 +138,7 @@ export async function POST(
 
     const client = await clientPromise
     // FIX: Use consistent database name 'PoolCalc' (capital P)
-    const db = client.db('PoolCalc')
+    const db = client.db('poolCalc')
 
     // Check if technician already exists
     const existingTechnician = await db
