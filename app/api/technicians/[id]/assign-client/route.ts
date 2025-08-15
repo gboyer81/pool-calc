@@ -117,7 +117,7 @@ export async function POST(
         assignedClients: new ObjectId(clientId),
       },
       {
-        $pull: { assignedClients: new ObjectId(clientId) },
+        $pull: { assignedClients: new ObjectId(clientId) } as any,
         $set: { updatedAt: new Date() },
       }
     )

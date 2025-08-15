@@ -53,7 +53,7 @@ export async function GET(
     // TODO: Add JWT verification middleware for admin access
 
     const client = await clientPromise
-    const db = client.db('poolCal')
+    const db = client.db('poolCalc')
 
     const technicians = await db
       .collection<Technician>('technicians')
@@ -134,7 +134,7 @@ export async function POST(
     }
 
     const client = await clientPromise
-    const db = client.db('poolCal')
+    const db = client.db('poolCalc')
 
     // Check if technician already exists
     const existingTechnician = await db

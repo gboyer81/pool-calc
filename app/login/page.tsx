@@ -82,8 +82,8 @@ export default function TechnicianLogin() {
   }
 
   return (
-    <div className='min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100'>
-      <div className='max-w-md w-full mx-4'>
+    <div className='min-h-screen flex justify-center bg-gradient-to-br from-blue-50 to-blue-200'>
+      <div className='max-w-3xl w-full mx-4'>
         {/* Header */}
         <div className='text-center mb-8'>
           <div className='text-6xl mb-4'>🏊‍♀️</div>

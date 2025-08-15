@@ -41,7 +41,7 @@ export default function RootLayout({
 
         {/* Main Content */}
         <div className='min-h-screen p-5'>
-          <div className='container mx-auto bg-white rounded-lg shadow-xl min-h-[calc(100vh-2.5rem)]'>
+          <div className='container mx-auto bg-white rounded-4xl min-h-[calc(100vh-2.5rem)]'>
             <main className='p-6'>{children}</main>
           </div>
         </div>

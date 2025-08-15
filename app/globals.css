@@ -48,18 +48,18 @@ body {
     var(--secondarybg) 0%,
     var(--primarybg) 100%
   ); */
-  min-height: 100vh;
+  /*min-height: 100vh;*/
   color: #333;
 }
 
-.container {
+/* .container {
   background: white;
   padding: 30px;
-  border-radius: 15px;
-  /* box-shadow: 0 25px 100px rgba(0, 0, 0, 0.2); */
-}
+  border-radius: 16px; */
+/* box-shadow: 0 25px 100px rgba(0, 0, 0, 0.2); */
+/* } */
 
-h1 {
+/* h1 {
   color: #4a5568;
   text-align: center;
   margin-bottom: 30px;
@@ -279,4 +279,4 @@ button {
   .mode-buttons {
     flex-direction: column;
   }
-}
+} */

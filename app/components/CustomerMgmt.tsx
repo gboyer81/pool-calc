@@ -1,3 +1,5 @@
+'use client'
+
 import React, { useState, useEffect } from 'react'
 //import { Client } from '../../types/pool-service'
 
