@@ -3,12 +3,13 @@ import VersionCheck from './components/VersionCheck'
 
 export default function Home() {
   return (
-    <div className='bg-white rounded-4xl pt-4'>
-      <h1 className='text-[#4a5568] mb-0 text-2xl font-semibold text-center mt-2'>
-        🏊‍♀️ Pool Calculator
+    <div className='bg-white rounded-4xl pt-4 text-center'>
+      <div className='text-6xl mt-8'>🏊‍♀️</div>
+      <h1 className='text-3xl font-bold text-gray-900 mb-6'>
+        Pool Service Pro
       </h1>
       <VersionCheck />
-      <div className='space-y-6 '>
+      <div>
         <PoolCalculator />
       </div>
     </div>

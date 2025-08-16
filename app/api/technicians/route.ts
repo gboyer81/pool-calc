@@ -53,7 +53,7 @@ export async function GET(
     // TODO: Add JWT verification middleware for admin access
 
     const client = await clientPromise
-    // FIX: Use consistent database name 'PoolCalc' (capital P)
+    // FIX: Use lowercase database name 'poolCalc'
     const db = client.db('poolCalc')
 
     const technicians = await db
@@ -85,7 +85,29 @@ export async function POST(
   request: NextRequest
 ): Promise<NextResponse<CreateTechnicianResponse>> {
   try {
-    // TODO: Add JWT verification middleware for admin access
+    // Add authentication check
+    const { authenticateRequest } = await import('@/lib/auth')
+    const user = await authenticateRequest(request)
+    if (!user) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Authentication required',
+        },
+        { status: 401 }
+      )
+    }
+
+    // Only supervisors and admins can create technicians
+    if (!['supervisor', 'admin'].includes(user.role)) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Insufficient permissions',
+        },
+        { status: 403 }
+      )
+    }
 
     const body: TechnicianInput = await request.json()
     const {
@@ -137,7 +159,7 @@ export async function POST(
     }
 
     const client = await clientPromise
-    // FIX: Use consistent database name 'PoolCalc' (capital P)
+    // FIX: Use lowercase database name 'poolCalc'
     const db = client.db('poolCalc')
 
     // Check if technician already exists

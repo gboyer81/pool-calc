@@ -87,7 +87,6 @@ export async function POST(
     }
 
     const client = await clientPromise
-    // FIX: Use consistent database name 'PoolCalc' (capital P)
     const db = client.db('poolCalc')
 
     // Find technician by email

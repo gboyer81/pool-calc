@@ -74,19 +74,15 @@ export default function TechnicianLogin() {
   }
 
   if (!mounted) {
-    return (
-      <div className='flex justify-center items-center h-screen'>
-        Loading...
-      </div>
-    )
+    return <div className='flex justify-center mt-14 h-screen'>Loading...</div>
   }
 
   return (
-    <div className='min-h-screen flex justify-center bg-gradient-to-br from-blue-50 to-blue-200'>
-      <div className='max-w-3xl w-full mx-4'>
+    <div className='flex justify-center bg-gradient-to-br from-blue-50 to-blue-200 rounded-2xl p-8'>
+      <div className='max-w-4xl w-full mx-4'>
         {/* Header */}
         <div className='text-center mb-8'>
-          <div className='text-6xl mb-4'>🏊‍♀️</div>
+          <div className='text-6xl my-4'>🏊‍♀️</div>
           <h1 className='text-3xl font-bold text-gray-900 mb-2'>
             Pool Service Pro
           </h1>
@@ -94,7 +90,7 @@ export default function TechnicianLogin() {
         </div>
 
         {/* Login Form */}
-        <div className='bg-white rounded-lg shadow-xl p-8'>
+        <div className='bg-white rounded-lg shadow-2xl p-8'>
           <div className='space-y-6'>
             {/* Error Message */}
             {error && (

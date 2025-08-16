@@ -38,19 +38,19 @@
 }
 
 /* OG global */
-body {
+/* body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  max-width: 1200px;
+  max-width: 1536px;
   margin: 0 auto;
-  padding: 20px;
-  /* background: linear-gradient(
+  /*padding: 20px;
+    background: linear-gradient(
     135deg,
     var(--secondarybg) 0%,
     var(--primarybg) 100%
   ); */
-  /*min-height: 100vh;*/
+/*min-height: 100vh;
   color: #333;
-}
+} */
 
 /* .container {
   background: white;

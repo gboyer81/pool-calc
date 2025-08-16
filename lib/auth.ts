@@ -34,7 +34,7 @@ export async function authenticateRequest(
     const technician = await db
       .collection('technicians')
       .findOne(
-        { _id: new ObjectId(decoded.technicianId) },
+        { _id: new ObjectId(String(decoded.technicianId)) },
         { projection: { password: 0 } }
       )
 

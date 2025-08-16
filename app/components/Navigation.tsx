@@ -75,20 +75,6 @@ const navigationItems: NavigationItem[] = [
     requiresAuth: true,
     roles: ['admin', 'supervisor'],
   },
-  {
-    name: 'Users',
-    href: '/users',
-    icon: '👤',
-    description: 'User management (legacy)',
-    requiresAuth: false,
-  },
-  {
-    name: 'Test DB',
-    href: '/test',
-    icon: '💾',
-    description: 'Database connection test',
-    requiresAuth: false,
-  },
 ]
 
 export default function Navigation() {
@@ -177,7 +163,7 @@ export default function Navigation() {
     <>
       {/* Navigation Header */}
       <nav className='bg-white sticky top-0 z-50'>
-        <div className='max-w-7xl mx-auto px-4'>
+        <div className='max-w-screen-2xl mx-auto px-4'>
           <div className='flex justify-between h-16'>
             {/* Logo */}
             <div className='flex items-center'>

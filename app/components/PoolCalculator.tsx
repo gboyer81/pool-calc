@@ -1325,7 +1325,7 @@ const PoolCalculator: React.FC = () => {
 
         {/* Volume Indicator */}
         {savedPoolVolume && currentCalculator !== 'volume' && (
-          <div className='bg-teal-50 border border-teal-200 flex justify-around items-center rounded-lg p-0.5 mb-5 gap-5'>
+          <div className='bg-teal-50 border border-teal-200 flex justify-around items-center rounded-lg p-1 mb-5 gap-5 text-sm'>
             <div>
               <strong>💾 Using saved pool volume:</strong>{' '}
               {savedPoolVolume.toLocaleString()} gallons
@@ -1333,7 +1333,7 @@ const PoolCalculator: React.FC = () => {
             <div>
               <button
                 onClick={() => setSavedPoolVolume(null)}
-                className='flex text-center ml-3 px-3 py-1 text-xs bg-linear-to-tl from-gray-200 to-gray-50 transform hover:-translate-y-0.5 hover:shadow-lg text-gray-900 border-gray-300 hover:bg-gray-100 hover:border-blue-400 rounded transition-colors duration-200'>
+                className='flex-1 px-8 py-1.5 border-none rounded-lg text-xs font-semibold cursor-pointer transition-all duration-300 bg-gray-200 transform hover:-translate-y-0.5 hover:shadow-lg text-gray-900'>
                 Clear
               </button>
             </div>

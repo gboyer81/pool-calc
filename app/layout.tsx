@@ -34,16 +34,14 @@ export default function RootLayout({
         <meta name='last-modified' content='2025-08-14' />
       </head>
       <body
-        className='min-h-screen bg-white antialiased'
+        className='bg-white antialiased max-w-screen-2xl mx-auto'
         suppressHydrationWarning>
         {/* Navigation Component */}
         <Navigation />
 
         {/* Main Content */}
-        <div className='min-h-screen p-5'>
-          <div className='container mx-auto bg-white rounded-4xl min-h-[calc(100vh-2.5rem)]'>
-            <main className='p-6'>{children}</main>
-          </div>
+        <div className='container mx-auto bg-white rounded-4xl min-h-[calc(100vh-2rem)]'>
+          <main className='p-6'>{children}</main>
         </div>
 
         {/* Footer Component */}

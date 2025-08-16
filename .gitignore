@@ -65,3 +65,4 @@ app/api/seed/
 app/api/debug/
 hash_gen.js
 fix-db.sh
+widen-app-containers.sh
