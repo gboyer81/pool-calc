@@ -1,8 +1,9 @@
 // app/layout.tsx
 import type { Metadata } from 'next'
+import { ThemeProvider } from './components/ThemeProvider'
 import './globals.css'
-import Navigation from './components/Navigation'
-import Footer from './components/Footer'
+import Navigation from '@/components/Navigation'
+import Footer from '@/components/Footer'
 
 export const metadata: Metadata = {
   title: 'Pool Service Pro',
@@ -34,18 +35,21 @@ export default function RootLayout({
         <meta name='last-modified' content='2025-08-14' />
       </head>
       <body
-        className='bg-white antialiased max-w-screen-2xl mx-auto'
+        className='antialiased max-w-screen-2xl mx-auto'
         suppressHydrationWarning>
-        {/* Navigation Component */}
-        <Navigation />
+        <ThemeProvider attribute='class' defaultTheme='system' enableSystem>
+          {/* Global styles */}
+          {/* Navigation Component */}
+          <Navigation />
 
-        {/* Main Content */}
-        <div className='container mx-auto bg-white rounded-4xl min-h-[calc(100vh-2rem)]'>
-          <main className='p-6'>{children}</main>
-        </div>
+          {/* Main Content */}
+          <div className='container mx-auto bg-white rounded-4xl min-h-[calc(100vh-2rem)]'>
+            <main className='p-6'>{children}</main>
+          </div>
 
-        {/* Footer Component */}
-        <Footer />
+          {/* Footer Component */}
+          <Footer />
+        </ThemeProvider>
       </body>
     </html>
   )

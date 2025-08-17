@@ -54,15 +54,8 @@ pooolCalc.tsx
 
 playground-*.mongodb.js
 
-*implementation*.md
-implementation_*.md
-*_integration_guide.md
-implementation_plan.md
-
-demoData.js
-app/api/fix/
-app/api/seed/
-app/api/debug/
-hash_gen.js
-fix-db.sh
-widen-app-containers.sh
+# dev scripts
+/dev-scripts
+app/api/debug
+app/api/fix
+app/api/seed
