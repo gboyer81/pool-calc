@@ -1,7 +1,6 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-//import { Client } from '../../types/pool-service'
 
 interface Client {
   _id: string
@@ -35,6 +34,25 @@ interface Pool {
     freeChlorine: { target: number }
     totalAlkalinity: { target: number }
   }
+  dimensions?: {
+    length?: number
+    width?: number
+    diameter?: number
+    avgDepth: number
+  }
+  notes?: string
+}
+
+interface PoolFormData {
+  name: string
+  type: 'residential' | 'commercial'
+  shape: string
+  gallons: string
+  avgDepth: string
+  phTarget: string
+  freeChlorineTarget: string
+  totalAlkalinityTarget: string
+  notes: string
 }
 
 export default function ClientManagement() {
@@ -44,51 +62,207 @@ export default function ClientManagement() {
   const [showClientPools, setShowClientPools] = useState(false)
   const [clientPools, setClientPools] = useState<Pool[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  // Sample data - replace with actual API calls
+  // Pool editing state
+  const [showEditPool, setShowEditPool] = useState(false)
+  const [editingPool, setEditingPool] = useState<Pool | null>(null)
+  const [poolFormData, setPoolFormData] = useState<PoolFormData>({
+    name: '',
+    type: 'residential',
+    shape: 'rectangular',
+    gallons: '',
+    avgDepth: '',
+    phTarget: '7.4',
+    freeChlorineTarget: '2.0',
+    totalAlkalinityTarget: '100',
+    notes: '',
+  })
+  const [poolSaving, setPoolSaving] = useState(false)
+
+  // Fetch clients
   useEffect(() => {
-    const sampleClients: Client[] = [
-      {
-        _id: '1',
-        name: 'Johnson Family',
-        email: 'johnson@email.com',
-        phone: '(555) 123-4567',
-        address: {
-          street: '123 Oak Street',
-          city: 'Springfield',
-          state: 'CA',
-          zipCode: '90210',
-        },
-        serviceFrequency: 'weekly',
-        serviceDay: 'tuesday',
-        preferredTimeSlot: 'morning',
-        specialInstructions: 'Gate code: 1234. Dog in backyard.',
-        isActive: true,
-        createdAt: '2024-01-15',
-        nextServiceDate: '2024-08-20',
-      },
-      {
-        _id: '2',
-        name: 'Smith Residence',
-        email: 'smith@email.com',
-        phone: '(555) 987-6543',
-        address: {
-          street: '456 Pine Avenue',
-          city: 'Beverly Hills',
-          state: 'CA',
-          zipCode: '90212',
-        },
-        serviceFrequency: 'twice-weekly',
-        serviceDay: 'monday',
-        preferredTimeSlot: 'afternoon',
-        isActive: true,
-        createdAt: '2024-02-01',
-        nextServiceDate: '2024-08-19',
-      },
-    ]
-    setClients(sampleClients)
-    setLoading(false)
+    fetchClients()
   }, [])
+
+  const fetchClients = async () => {
+    try {
+      setLoading(true)
+      const token = localStorage.getItem('technicianToken')
+      if (!token) {
+        window.location.href = '/login'
+        return
+      }
+
+      const response = await fetch('/api/clients', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      })
+
+      if (response.status === 401) {
+        localStorage.removeItem('technicianToken')
+        localStorage.removeItem('technicianData')
+        window.location.href = '/login'
+        return
+      }
+
+      const data = await response.json()
+      if (data.success) {
+        setClients(data.clients || [])
+        setError(null)
+      } else {
+        setError(data.error || 'Failed to fetch clients')
+      }
+    } catch (err) {
+      setError('Network error - unable to fetch clients')
+      console.error('Error fetching clients:', err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const fetchClientPools = async (client: Client) => {
+    try {
+      setSelectedClient(client)
+      const token = localStorage.getItem('technicianToken')
+      if (!token) {
+        window.location.href = '/login'
+        return
+      }
+
+      const response = await fetch(`/api/pools?clientId=${client._id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      })
+
+      if (response.status === 401) {
+        localStorage.removeItem('technicianToken')
+        localStorage.removeItem('technicianData')
+        window.location.href = '/login'
+        return
+      }
+
+      const data = await response.json()
+      if (data.success) {
+        setClientPools(data.pools || [])
+      } else {
+        setClientPools([])
+        setError(data.error || 'Failed to fetch pools')
+      }
+      setShowClientPools(true)
+    } catch (err) {
+      setError('Failed to fetch pools')
+      console.error('Error fetching pools:', err)
+    }
+  }
+
+  const handleEditPool = (pool: Pool) => {
+    setEditingPool(pool)
+    setPoolFormData({
+      name: pool.name,
+      type: pool.type,
+      shape: pool.shape,
+      gallons: pool.volume.gallons.toString(),
+      avgDepth: pool.dimensions?.avgDepth?.toString() || '',
+      phTarget: pool.targetLevels.ph.target.toString(),
+      freeChlorineTarget: pool.targetLevels.freeChlorine.target.toString(),
+      totalAlkalinityTarget:
+        pool.targetLevels.totalAlkalinity.target.toString(),
+      notes: pool.notes || '',
+    })
+    setShowEditPool(true)
+  }
+
+  const handleSavePool = async () => {
+    if (!editingPool) return
+
+    try {
+      setPoolSaving(true)
+      const token = localStorage.getItem('technicianToken')
+      if (!token) {
+        window.location.href = '/login'
+        return
+      }
+
+      // Validate required fields
+      if (!poolFormData.name.trim()) {
+        alert('Pool name is required')
+        return
+      }
+
+      if (!poolFormData.gallons || isNaN(Number(poolFormData.gallons))) {
+        alert('Valid pool volume is required')
+        return
+      }
+
+      if (!poolFormData.avgDepth || isNaN(Number(poolFormData.avgDepth))) {
+        alert('Valid average depth is required')
+        return
+      }
+
+      const updateData = {
+        name: poolFormData.name.trim(),
+        type: poolFormData.type,
+        shape: poolFormData.shape,
+        volume: {
+          gallons: Number(poolFormData.gallons),
+        },
+        dimensions: {
+          avgDepth: Number(poolFormData.avgDepth),
+        },
+        targetLevels: {
+          ph: {
+            min: 7.2,
+            max: 7.6,
+            target: Number(poolFormData.phTarget),
+          },
+          freeChlorine: {
+            min: 1.0,
+            max: 3.0,
+            target: Number(poolFormData.freeChlorineTarget),
+          },
+          totalAlkalinity: {
+            min: 80,
+            max: 120,
+            target: Number(poolFormData.totalAlkalinityTarget),
+          },
+        },
+        notes: poolFormData.notes.trim(),
+      }
+
+      const response = await fetch(`/api/pools/${editingPool._id}`, {
+        method: 'PUT',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updateData),
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        // Refresh the pools list
+        if (selectedClient) {
+          await fetchClientPools(selectedClient)
+        }
+        setShowEditPool(false)
+        setEditingPool(null)
+        alert('Pool updated successfully!')
+      } else {
+        throw new Error(data.error || 'Failed to update pool')
+      }
+    } catch (error: any) {
+      console.error('Error saving pool:', error)
+      alert('Error saving pool: ' + error.message)
+    } finally {
+      setPoolSaving(false)
+    }
+  }
 
   const getFrequencyBadgeColor = (frequency: string) => {
     switch (frequency) {
@@ -103,28 +277,6 @@ export default function ClientManagement() {
       default:
         return 'bg-gray-100 text-gray-800'
     }
-  }
-
-  const handleViewPools = async (client: Client) => {
-    setSelectedClient(client)
-    // Sample pool data - replace with API call
-    const pools: Pool[] = [
-      {
-        _id: '1',
-        clientId: client._id,
-        name: 'Main Pool',
-        type: 'residential',
-        shape: 'rectangular',
-        volume: { gallons: 20000 },
-        targetLevels: {
-          ph: { target: 7.4 },
-          freeChlorine: { target: 3.0 },
-          totalAlkalinity: { target: 100 },
-        },
-      },
-    ]
-    setClientPools(pools)
-    setShowClientPools(true)
   }
 
   if (loading) {
@@ -148,122 +300,74 @@ export default function ClientManagement() {
         <div className='flex gap-3'>
           <button
             onClick={() => setShowAddClient(true)}
-            className='bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors'>
-            + Add New Client
-          </button>
-          <button className='bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors'>
-            📅 Schedule View
+            className='bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700'>
+            + Add Client
           </button>
         </div>
       </div>
 
-      {/* Filter Bar */}
-      <div className='bg-white rounded-lg shadow p-4 mb-6'>
-        <div className='flex flex-wrap gap-4 items-center'>
-          <select className='border border-gray-300 rounded px-3 py-2'>
-            <option>All Service Frequencies</option>
-            <option>Twice Weekly</option>
-            <option>Weekly</option>
-            <option>Bi-Weekly</option>
-            <option>Monthly</option>
-          </select>
-          <select className='border border-gray-300 rounded px-3 py-2'>
-            <option>All Service Days</option>
-            <option>Monday</option>
-            <option>Tuesday</option>
-            <option>Wednesday</option>
-            <option>Thursday</option>
-            <option>Friday</option>
-          </select>
-          <input
-            type='text'
-            placeholder='Search clients...'
-            className='border border-gray-300 rounded px-3 py-2 flex-1 min-w-64'
-          />
+      {/* Error Display */}
+      {error && (
+        <div className='bg-red-100 text-red-800 p-4 rounded-lg mb-6'>
+          <strong>Error:</strong> {error}
+          <button
+            onClick={() => {
+              setError(null)
+              fetchClients()
+            }}
+            className='ml-4 bg-red-600 text-white px-3 py-1 rounded'>
+            Retry
+          </button>
         </div>
-      </div>
+      )}
 
-      {/* Client Cards Grid */}
+      {/* Client Grid */}
       <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
         {clients.map((client) => (
           <div
             key={client._id}
-            className='bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow'>
-            <div className='p-6'>
-              {/* Client Header */}
-              <div className='flex justify-between items-start mb-4'>
-                <div>
-                  <h3 className='text-xl font-semibold text-gray-900'>
-                    {client.name}
-                  </h3>
-                  <p className='text-gray-600 text-sm'>{client.email}</p>
-                  <p className='text-gray-600 text-sm'>{client.phone}</p>
-                </div>
+            className='bg-white rounded-lg shadow p-6 border border-gray-200'>
+            <div className='flex justify-between items-start mb-3'>
+              <h3 className='text-lg font-semibold text-gray-900'>
+                {client.name}
+              </h3>
+              <span
+                className={`px-2 py-1 rounded-full text-xs font-medium ${
+                  client.isActive
+                    ? 'bg-green-100 text-green-800'
+                    : 'bg-red-100 text-red-800'
+                }`}>
+                {client.isActive ? 'Active' : 'Inactive'}
+              </span>
+            </div>
+            <div className='space-y-2 text-sm text-gray-600'>
+              <p>📧 {client.email}</p>
+              <p>📞 {client.phone}</p>
+              <p>
+                📍 {client.address.street}, {client.address.city}
+              </p>
+              <div className='flex items-center gap-2'>
+                <span>🗓️</span>
                 <span
-                  className={`px-2 py-1 rounded-full text-xs font-medium ${getFrequencyBadgeColor(
+                  className={`px-2 py-1 rounded text-xs font-medium ${getFrequencyBadgeColor(
                     client.serviceFrequency
                   )}`}>
-                  {client.serviceFrequency.replace('-', ' ').toUpperCase()}
+                  {client.serviceFrequency}
                 </span>
               </div>
-
-              {/* Address */}
-              <div className='mb-4'>
-                <p className='text-sm text-gray-700'>
-                  📍 {client.address.street}
-                  <br />
-                  {client.address.city}, {client.address.state}{' '}
-                  {client.address.zipCode}
-                </p>
-              </div>
-
-              {/* Service Info */}
-              <div className='mb-4 space-y-2'>
-                {client.serviceDay && (
-                  <p className='text-sm'>
-                    <span className='font-medium'>Service Day:</span>{' '}
-                    {client.serviceDay}
-                  </p>
-                )}
-                {client.preferredTimeSlot && (
-                  <p className='text-sm'>
-                    <span className='font-medium'>Preferred Time:</span>{' '}
-                    {client.preferredTimeSlot}
-                  </p>
-                )}
-                {client.nextServiceDate && (
-                  <p className='text-sm'>
-                    <span className='font-medium'>Next Service:</span>{' '}
-                    {new Date(client.nextServiceDate).toLocaleDateString()}
-                  </p>
-                )}
-              </div>
-
-              {/* Special Instructions */}
-              {client.specialInstructions && (
-                <div className='mb-4 p-3 bg-yellow-50 rounded border-l-4 border-yellow-400'>
-                  <p className='text-sm text-yellow-800'>
-                    <span className='font-medium'>Special Instructions:</span>
-                    <br />
-                    {client.specialInstructions}
-                  </p>
-                </div>
-              )}
-
-              {/* Action Buttons */}
-              <div className='flex gap-2 pt-4 border-t border-gray-200'>
-                <button
-                  onClick={() => handleViewPools(client)}
-                  className='flex-1 bg-blue-600 text-white py-2 px-3 rounded text-sm hover:bg-blue-700 transition-colors'>
-                  View Pools
-                </button>
-                <button className='flex-1 bg-green-600 text-white py-2 px-3 rounded text-sm hover:bg-green-700 transition-colors'>
-                  Log Visit
-                </button>
-                <button className='bg-gray-200 text-gray-700 py-2 px-3 rounded text-sm hover:bg-gray-300 transition-colors'>
-                  ⚙️
-                </button>
-              </div>
+            </div>
+            <div className='mt-4 flex gap-2'>
+              <button
+                onClick={() => fetchClientPools(client)}
+                className='flex-1 bg-blue-600 text-white py-2 px-3 rounded text-sm hover:bg-blue-700 transition-colors'>
+                View Pools
+              </button>
+              <button className='flex-1 bg-green-600 text-white py-2 px-3 rounded text-sm hover:bg-green-700 transition-colors'>
+                Log Visit
+              </button>
+              <button className='bg-gray-200 text-gray-700 py-2 px-3 rounded text-sm hover:bg-gray-300 transition-colors'>
+                ⚙️
+              </button>
             </div>
           </div>
         ))}
@@ -271,7 +375,7 @@ export default function ClientManagement() {
 
       {/* Client Pools Modal */}
       {showClientPools && selectedClient && (
-        <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50'>
+        <div className='fixed inset-0 bg-black/50 backdrop-blur-xl flex items-center justify-center z-50'>
           <div className='bg-white rounded-lg max-w-4xl w-full mx-4 max-h-96 overflow-y-auto'>
             <div className='p-6'>
               <div className='flex justify-between items-center mb-4'>
@@ -310,6 +414,11 @@ export default function ClientManagement() {
                         </div>
                       </div>
                       <div className='flex gap-2'>
+                        <button
+                          onClick={() => handleEditPool(pool)}
+                          className='bg-gray-600 text-white px-3 py-1 rounded text-sm hover:bg-gray-700'>
+                          ⚙️ Edit
+                        </button>
                         <button className='bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700'>
                           View History
                         </button>
@@ -332,9 +441,226 @@ export default function ClientManagement() {
         </div>
       )}
 
+      {/* Edit Pool Modal */}
+      {showEditPool && editingPool && (
+        <div className='fixed inset-0 bg-black/50 backdrop-blur-xl flex items-center justify-center z-50'>
+          <div className='bg-white rounded-lg max-w-2xl w-full mx-4 max-h-screen overflow-y-auto'>
+            <div className='p-6'>
+              <div className='flex justify-between items-center mb-4'>
+                <h2 className='text-2xl font-bold'>
+                  Edit Pool: {editingPool.name}
+                </h2>
+                <button
+                  onClick={() => setShowEditPool(false)}
+                  className='text-gray-500 hover:text-gray-700 text-2xl'>
+                  ✕
+                </button>
+              </div>
+
+              <div className='space-y-4'>
+                {/* Pool Name */}
+                <div>
+                  <label className='block text-sm font-medium text-gray-700 mb-1'>
+                    Pool Name *
+                  </label>
+                  <input
+                    type='text'
+                    value={poolFormData.name}
+                    onChange={(e) =>
+                      setPoolFormData({ ...poolFormData, name: e.target.value })
+                    }
+                    className='w-full px-3 py-2 border border-gray-300 rounded-md'
+                    placeholder='Main Pool'
+                  />
+                </div>
+
+                {/* Pool Type and Shape */}
+                <div className='grid grid-cols-2 gap-4'>
+                  <div>
+                    <label className='block text-sm font-medium text-gray-700 mb-1'>
+                      Type *
+                    </label>
+                    <select
+                      value={poolFormData.type}
+                      onChange={(e) =>
+                        setPoolFormData({
+                          ...poolFormData,
+                          type: e.target.value as 'residential' | 'commercial',
+                        })
+                      }
+                      className='w-full px-3 py-2 border border-gray-300 rounded-md'>
+                      <option value='residential'>Residential</option>
+                      <option value='commercial'>Commercial</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className='block text-sm font-medium text-gray-700 mb-1'>
+                      Shape *
+                    </label>
+                    <select
+                      value={poolFormData.shape}
+                      onChange={(e) =>
+                        setPoolFormData({
+                          ...poolFormData,
+                          shape: e.target.value,
+                        })
+                      }
+                      className='w-full px-3 py-2 border border-gray-300 rounded-md'>
+                      <option value='rectangular'>Rectangular</option>
+                      <option value='circular'>Circular</option>
+                      <option value='oval'>Oval</option>
+                      <option value='kidney'>Kidney</option>
+                      <option value='freeform'>Freeform</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Volume and Depth */}
+                <div className='grid grid-cols-2 gap-4'>
+                  <div>
+                    <label className='block text-sm font-medium text-gray-700 mb-1'>
+                      Volume (gallons) *
+                    </label>
+                    <input
+                      type='number'
+                      value={poolFormData.gallons}
+                      onChange={(e) =>
+                        setPoolFormData({
+                          ...poolFormData,
+                          gallons: e.target.value,
+                        })
+                      }
+                      className='w-full px-3 py-2 border border-gray-300 rounded-md'
+                      placeholder='20000'
+                    />
+                  </div>
+                  <div>
+                    <label className='block text-sm font-medium text-gray-700 mb-1'>
+                      Average Depth (ft) *
+                    </label>
+                    <input
+                      type='number'
+                      step='0.1'
+                      value={poolFormData.avgDepth}
+                      onChange={(e) =>
+                        setPoolFormData({
+                          ...poolFormData,
+                          avgDepth: e.target.value,
+                        })
+                      }
+                      className='w-full px-3 py-2 border border-gray-300 rounded-md'
+                      placeholder='5.5'
+                    />
+                  </div>
+                </div>
+
+                {/* Target Levels */}
+                <div>
+                  <h3 className='text-lg font-medium text-gray-900 mb-3'>
+                    Target Chemical Levels
+                  </h3>
+                  <div className='grid grid-cols-3 gap-4'>
+                    <div>
+                      <label className='block text-sm font-medium text-gray-700 mb-1'>
+                        pH Target
+                      </label>
+                      <input
+                        type='number'
+                        step='0.1'
+                        value={poolFormData.phTarget}
+                        onChange={(e) =>
+                          setPoolFormData({
+                            ...poolFormData,
+                            phTarget: e.target.value,
+                          })
+                        }
+                        className='w-full px-3 py-2 border border-gray-300 rounded-md'
+                        placeholder='7.4'
+                      />
+                    </div>
+                    <div>
+                      <label className='block text-sm font-medium text-gray-700 mb-1'>
+                        Free Chlorine (ppm)
+                      </label>
+                      <input
+                        type='number'
+                        step='0.1'
+                        value={poolFormData.freeChlorineTarget}
+                        onChange={(e) =>
+                          setPoolFormData({
+                            ...poolFormData,
+                            freeChlorineTarget: e.target.value,
+                          })
+                        }
+                        className='w-full px-3 py-2 border border-gray-300 rounded-md'
+                        placeholder='2.0'
+                      />
+                    </div>
+                    <div>
+                      <label className='block text-sm font-medium text-gray-700 mb-1'>
+                        Total Alkalinity (ppm)
+                      </label>
+                      <input
+                        type='number'
+                        value={poolFormData.totalAlkalinityTarget}
+                        onChange={(e) =>
+                          setPoolFormData({
+                            ...poolFormData,
+                            totalAlkalinityTarget: e.target.value,
+                          })
+                        }
+                        className='w-full px-3 py-2 border border-gray-300 rounded-md'
+                        placeholder='100'
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Notes */}
+                <div>
+                  <label className='block text-sm font-medium text-gray-700 mb-1'>
+                    Notes
+                  </label>
+                  <textarea
+                    value={poolFormData.notes}
+                    onChange={(e) =>
+                      setPoolFormData({
+                        ...poolFormData,
+                        notes: e.target.value,
+                      })
+                    }
+                    className='w-full px-3 py-2 border border-gray-300 rounded-md'
+                    rows={3}
+                    placeholder='Special instructions or notes about this pool...'
+                  />
+                </div>
+              </div>
+
+              <div className='mt-6 flex justify-end gap-3'>
+                <button
+                  onClick={() => setShowEditPool(false)}
+                  className='bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400'>
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSavePool}
+                  disabled={poolSaving}
+                  className={`px-4 py-2 rounded text-white ${
+                    poolSaving
+                      ? 'bg-gray-400 cursor-not-allowed'
+                      : 'bg-blue-600 hover:bg-blue-700'
+                  }`}>
+                  {poolSaving ? 'Saving...' : 'Save Pool'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Add Client Modal (placeholder) */}
       {showAddClient && (
-        <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50'>
+        <div className='fixed inset-0 bg-black/50 backdrop-blur-xl flex items-center justify-center z-50'>
           <div className='bg-white rounded-lg max-w-2xl w-full mx-4'>
             <div className='p-6'>
               <div className='flex justify-between items-center mb-4'>

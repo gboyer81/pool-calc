@@ -20,8 +20,9 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  console.log(`NODE_ENV: ${process.env.NODE_ENV}`)
   return (
-    <html lang='en'>
+    <html lang='en' suppressHydrationWarning>
       <head>
         {/* Cache control meta tags */}
         <meta
@@ -34,11 +35,8 @@ export default function RootLayout({
         <meta name='version' content='3.0.20241208' />
         <meta name='last-modified' content='2025-08-14' />
       </head>
-      <body
-        className='antialiased max-w-screen-2xl mx-auto'
-        suppressHydrationWarning>
+      <body className='antialiased max-w-screen-2xl mx-auto'>
         <ThemeProvider attribute='class' defaultTheme='system' enableSystem>
-          {/* Global styles */}
           {/* Navigation Component */}
           <Navigation />
 

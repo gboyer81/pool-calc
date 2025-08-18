@@ -59,3 +59,4 @@ playground-*.mongodb.js
 app/api/debug
 app/api/fix
 app/api/seed
+app/api/test

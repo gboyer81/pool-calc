@@ -4,7 +4,7 @@ import clientPromise from '@/lib/mongodb'
 import { ObjectId } from 'mongodb'
 import { ApiResponse } from '@/types/user'
 
-// Pool interface
+// Pool interface matching your types
 interface Pool {
   _id?: any
   clientId: any
@@ -39,6 +39,10 @@ interface Pool {
       model?: string
       targetSalt: number
     }
+    automation?: {
+      system?: string
+      model?: string
+    }
   }
   targetLevels: {
     ph: { min: number; max: number; target: number }
@@ -66,12 +70,9 @@ interface PoolInput {
     diameter?: number
     avgDepth: number
   }
-  volume: {
-    gallons: number
-  }
   equipment?: {
     filter?: {
-      type: 'sand' | 'cartridge' | 'de'
+      type?: 'sand' | 'cartridge' | 'de'
       model?: string
     }
     pump?: {
@@ -79,19 +80,26 @@ interface PoolInput {
       horsepower?: number
     }
     heater?: {
-      type: 'gas' | 'electric' | 'heat-pump'
+      type?: 'gas' | 'electric' | 'heat-pump'
       model?: string
     }
     saltSystem?: {
       model?: string
-      targetSalt: number
+      targetSalt?: number
+    }
+    automation?: {
+      system?: string
+      model?: string
     }
   }
   targetLevels?: {
     ph?: { min: number; max: number; target: number }
+    totalChlorine?: { min: number; max: number; target: number }
     freeChlorine?: { min: number; max: number; target: number }
     totalAlkalinity?: { min: number; max: number; target: number }
     calciumHardness?: { min: number; max: number; target: number }
+    cyanuricAcid?: { min: number; max: number; target: number }
+    salt?: { min: number; max: number; target: number }
   }
   notes?: string
 }
@@ -101,241 +109,165 @@ interface PoolsResponse extends ApiResponse {
 }
 
 interface CreatePoolResponse extends ApiResponse {
-  poolId?: any
+  poolId?: string
+  pool?: Pool
 }
 
 // GET /api/pools - Get all pools or pools for a specific client
-export async function GET(
-  request: NextRequest
-): Promise<NextResponse<PoolsResponse>> {
+export async function GET(request: NextRequest) {
   try {
+    const client = await clientPromise
+    const db = client.db('pool-service')
     const { searchParams } = new URL(request.url)
     const clientId = searchParams.get('clientId')
-    const isActive = searchParams.get('isActive')
 
-    const client = await clientPromise
-    const db = client.db('poolCalc')
-
-    // Build query filters
-    let query: any = {}
+    let query: any = { isActive: true }
     if (clientId) {
-      if (!ObjectId.isValid(clientId)) {
-        return NextResponse.json(
-          {
-            success: false,
-            error: 'Invalid client ID format',
-          },
-          { status: 400 }
-        )
-      }
-      query.clientId = new ObjectId(clientId)
-    }
-    if (isActive !== null) {
-      query.isActive = isActive !== 'false'
+      query = { ...query, clientId: new ObjectId(clientId) }
     }
 
-    const pools = await db
-      .collection<Pool>('pools')
-      .find(query)
-      .sort({ name: 1 })
-      .toArray()
+    const pools = await db.collection('pools').find(query).toArray()
 
-    return NextResponse.json({
+    const response: PoolsResponse = {
       success: true,
-      pools: pools,
-    })
-  } catch (error) {
-    const errorMessage =
-      error instanceof Error ? error.message : 'Unknown error occurred'
+      pools: pools as Pool[],
+    }
 
+    return NextResponse.json(response)
+  } catch (error) {
+    console.error('Error fetching pools:', error)
     return NextResponse.json(
-      {
-        success: false,
-        error: errorMessage,
-      },
+      { success: false, error: 'Failed to fetch pools' },
       { status: 500 }
     )
   }
 }
 
-// POST /api/pools - Create a new pool
-export async function POST(
-  request: NextRequest
-): Promise<NextResponse<CreatePoolResponse>> {
+// POST /api/pools - Create new pool
+export async function POST(request: NextRequest) {
   try {
     const body: PoolInput = await request.json()
-    const {
-      clientId,
-      name,
-      type,
-      shape,
-      dimensions,
-      volume,
-      equipment,
-      targetLevels,
-      notes,
-    } = body
-
-    // Basic validation
-    if (!clientId || !name || !type || !shape || !dimensions || !volume) {
-      return NextResponse.json(
-        {
-          success: false,
-          error:
-            'Client ID, name, type, shape, dimensions, and volume are required',
-        },
-        { status: 400 }
-      )
-    }
-
-    if (!ObjectId.isValid(clientId)) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Invalid client ID format',
-        },
-        { status: 400 }
-      )
-    }
-
-    if (!dimensions.avgDepth || dimensions.avgDepth <= 0) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Average depth must be greater than 0',
-        },
-        { status: 400 }
-      )
-    }
-
-    if (!volume.gallons || volume.gallons <= 0) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Pool volume must be greater than 0',
-        },
-        { status: 400 }
-      )
-    }
-
     const client = await clientPromise
-    const db = client.db('poolCalc')
+    const db = client.db('pool-service')
 
-    // Verify client exists
-    const clientExists = await db
-      .collection('clients')
-      .findOne({ _id: new ObjectId(clientId) })
-    if (!clientExists) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Client not found',
-        },
-        { status: 404 }
-      )
-    }
+    // Calculate volume
+    let volume = 0
+    const { shape, dimensions } = body
+    const avgDepth = dimensions.avgDepth
 
-    // Check if pool name already exists for this client
-    const existingPool = await db.collection<Pool>('pools').findOne({
-      clientId: new ObjectId(clientId),
-      name: name.trim(),
-    })
-
-    if (existingPool) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Pool with this name already exists for this client',
-        },
-        { status: 400 }
-      )
+    switch (shape) {
+      case 'rectangular':
+        if (dimensions.length && dimensions.width) {
+          volume = dimensions.length * dimensions.width * avgDepth * 7.48
+        }
+        break
+      case 'circular':
+        if (dimensions.diameter) {
+          const radius = dimensions.diameter / 2
+          volume = Math.PI * radius * radius * avgDepth * 7.48
+        }
+        break
+      case 'oval':
+        if (dimensions.length && dimensions.width) {
+          volume =
+            Math.PI *
+            (dimensions.length / 2) *
+            (dimensions.width / 2) *
+            avgDepth *
+            7.48
+        }
+        break
+      case 'kidney':
+        if (dimensions.length && dimensions.width) {
+          // Approximate kidney shape as 0.8 of oval
+          volume =
+            0.8 *
+            Math.PI *
+            (dimensions.length / 2) *
+            (dimensions.width / 2) *
+            avgDepth *
+            7.48
+        }
+        break
+      case 'freeform':
+        // Require manual volume input for freeform pools
+        volume = 0
+        break
     }
 
     // Set default target levels if not provided
-    const defaultTargetLevels: {
-      ph: { min: number; max: number; target: number }
-      totalChlorine: { min: number; max: number; target: number }
-      freeChlorine: { min: number; max: number; target: number }
-      totalAlkalinity: { min: number; max: number; target: number }
-      calciumHardness: { min: number; max: number; target: number }
-      cyanuricAcid: { min: number; max: number; target: number }
-      salt?: { min: number; max: number; target: number }
-    } = {
+    const defaultTargets: Pool['targetLevels'] = {
       ph: { min: 7.2, max: 7.6, target: 7.4 },
       totalChlorine: { min: 1.0, max: 3.0, target: 2.0 },
       freeChlorine: { min: 1.0, max: 3.0, target: 2.0 },
       totalAlkalinity: { min: 80, max: 120, target: 100 },
-      calciumHardness: { min: 200, max: 400, target: 250 },
-      cyanuricAcid: { min: 30, max: 80, target: 50 },
+      calciumHardness: { min: 200, max: 400, target: 300 },
+      cyanuricAcid: { min: 30, max: 50, target: 40 },
     }
 
     // Add salt targets if salt system is present
-    if (equipment?.saltSystem) {
-      defaultTargetLevels.salt = {
-        min: equipment.saltSystem.targetSalt - 400,
-        max: equipment.saltSystem.targetSalt + 400,
-        target: equipment.saltSystem.targetSalt,
+    if (body.equipment?.saltSystem?.model) {
+      defaultTargets.salt = {
+        min: 2700,
+        max: 3400,
+        target: body.equipment.saltSystem.targetSalt || 3200,
       }
     }
 
-    // Insert new pool
-    const now = new Date()
-    const result = await db.collection('pools').insertOne({
-      clientId: new ObjectId(clientId),
-      name: name.trim(),
-      type,
-      shape,
-      dimensions,
+    const poolData: Pool = {
+      clientId: new ObjectId(body.clientId),
+      name: body.name,
+      type: body.type,
+      shape: body.shape,
+      dimensions: body.dimensions,
       volume: {
-        gallons: volume.gallons,
-        calculatedAt: now,
+        gallons: Math.round(volume),
+        calculatedAt: new Date(),
       },
       equipment: {
-        filter: {
-          type: equipment?.filter?.type || 'sand',
-          model: equipment?.filter?.model || '',
-        },
-        pump: {
-          model: equipment?.pump?.model || '',
-          horsepower: equipment?.pump?.horsepower || 1,
-        },
-        heater: equipment?.heater
+        filter: body.equipment?.filter
           ? {
-              type: equipment.heater.type,
-              model: equipment.heater.model || '',
+              ...body.equipment.filter,
+              type: body.equipment.filter.type || 'sand',
+            }
+          : { type: 'sand' },
+        pump: body.equipment?.pump || {},
+        heater:
+          body.equipment?.heater && body.equipment.heater.type
+            ? {
+                ...body.equipment.heater,
+                type: body.equipment.heater.type,
+              }
+            : undefined,
+        saltSystem: body.equipment?.saltSystem
+          ? {
+              ...body.equipment.saltSystem,
+              targetSalt: body.equipment.saltSystem.targetSalt || 3200,
             }
           : undefined,
-        saltSystem: equipment?.saltSystem
-          ? {
-              model: equipment.saltSystem.model || '',
-              targetSalt: equipment.saltSystem.targetSalt || 3200,
-            }
-          : undefined,
+        automation: body.equipment?.automation,
       },
-      targetLevels: { ...defaultTargetLevels, ...targetLevels },
-      notes: notes?.trim() || '',
+      targetLevels: { ...defaultTargets, ...body.targetLevels },
+      notes: body.notes || '',
       isActive: true,
-      createdAt: now,
-      updatedAt: now,
-    })
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }
 
-    return NextResponse.json(
-      {
-        success: true,
-        message: 'Pool created successfully',
-        poolId: result.insertedId,
-      },
-      { status: 201 }
-    )
+    const result = await db.collection('pools').insertOne(poolData)
+
+    const response: CreatePoolResponse = {
+      success: true,
+      message: 'Pool created successfully',
+      poolId: result.insertedId.toString(),
+      pool: { ...poolData, _id: result.insertedId },
+    }
+
+    return NextResponse.json(response, { status: 201 })
   } catch (error) {
-    const errorMessage =
-      error instanceof Error ? error.message : 'Unknown error occurred'
-
+    console.error('Error creating pool:', error)
     return NextResponse.json(
-      {
-        success: false,
-        error: errorMessage,
-      },
+      { success: false, error: 'Failed to create pool' },
       { status: 500 }
     )
   }
