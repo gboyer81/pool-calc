@@ -1,6 +1,11 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+import {
+  PhCalculatorForm,
+  ChlorineCalculatorForm,
+  AlkalinityCalculatorForm,
+} from '../../components/VisitCalculators'
 import ProtectedRoute from '../../components/ProtectedRoute'
 
 interface Client {
@@ -280,7 +285,7 @@ export default function EnhancedVisitLogging() {
 
   return (
     <ProtectedRoute requiredRoles={['technician', 'supervisor', 'admin']}>
-      <div className='max-w-4xl mx-auto p-6 bg-white'>
+      <div className='p-6'>
         {/* Header */}
         <div className='flex justify-between items-center mb-6'>
           <div>
@@ -341,96 +346,136 @@ export default function EnhancedVisitLogging() {
         {selectedPool && (
           <>
             {/* Water Testing with Calculator Integration */}
-            <div className='bg-white border border-gray-200 rounded-lg p-6 mb-6'>
-              <div className='flex justify-between items-center mb-4'>
-                <h2 className='text-xl font-semibold'>
-                  🧪 Water Testing Results
-                </h2>
-                <div className='text-sm text-gray-600'>
-                  Pool: {selectedPool.volume.gallons.toLocaleString()} gallons
-                </div>
-              </div>
+            <div className='bg-white border border-gray-200 rounded-lg p-6 max-w-screen-2xl mx-auto'>
+              <h2 className='text-xl font-semibold mb-4 flex items-center'>
+                🧪 Water Testing Results
+                <button
+                  onClick={() => setShowCalculator(true)}
+                  className='ml-auto text-sm bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700'>
+                  Use Calculator
+                </button>
+              </h2>
 
-              <div className='grid grid-cols-2 md:grid-cols-4 gap-4 mb-4'>
-                <div>
-                  <label className='block text-sm font-medium text-gray-700 mb-1'>
-                    pH (Target: {selectedPool.targetLevels.ph.target})
+              {/* Updated grid with better responsive behavior and spacing, constrained to page width */}
+              <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6 w-full'>
+                <div className='space-y-2'>
+                  <label className='block text-sm font-medium text-gray-700'>
+                    pH
                   </label>
-                  <div className='flex gap-2'>
-                    <input
-                      type='number'
-                      step='0.1'
-                      value={visit.readings.ph || ''}
-                      onChange={(e) => updateReading('ph', e.target.value)}
-                      className={`flex-1 px-3 py-2 border rounded-md ${getReadingStatus(
-                        'ph',
-                        visit.readings.ph
-                      )}`}
-                      placeholder='7.4'
-                    />
-                    <button
-                      onClick={() => openCalculator('ph')}
-                      className='bg-blue-600 text-white px-2 py-1 rounded text-xs hover:bg-blue-700'>
-                      📊
-                    </button>
-                  </div>
+                  <input
+                    type='number'
+                    step='0.1'
+                    value={visit.readings.ph || ''}
+                    onChange={(e) => updateReading('ph', e.target.value)}
+                    className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${getReadingStatus(
+                      'ph',
+                      visit.readings.ph
+                    )}`}
+                    placeholder='7.4'
+                  />
                 </div>
 
-                <div>
-                  <label className='block text-sm font-medium text-gray-700 mb-1'>
-                    Free Chlorine (Target:{' '}
-                    {selectedPool.targetLevels.freeChlorine.target})
+                <div className='space-y-2'>
+                  <label className='block text-sm font-medium text-gray-700'>
+                    Free Chlorine (ppm)
                   </label>
-                  <div className='flex gap-2'>
-                    <input
-                      type='number'
-                      step='0.1'
-                      value={visit.readings.freeChlorine || ''}
-                      onChange={(e) =>
-                        updateReading('freeChlorine', e.target.value)
-                      }
-                      className={`flex-1 px-3 py-2 border rounded-md ${getReadingStatus(
-                        'freeChlorine',
-                        visit.readings.freeChlorine
-                      )}`}
-                      placeholder='2.0'
-                    />
-                    <button
-                      onClick={() => openCalculator('chlorine')}
-                      className='bg-blue-600 text-white px-2 py-1 rounded text-xs hover:bg-blue-700'>
-                      📊
-                    </button>
-                  </div>
+                  <input
+                    type='number'
+                    step='0.1'
+                    value={visit.readings.freeChlorine || ''}
+                    onChange={(e) =>
+                      updateReading('freeChlorine', e.target.value)
+                    }
+                    className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${getReadingStatus(
+                      'freeChlorine',
+                      visit.readings.freeChlorine
+                    )}`}
+                    placeholder='2.0'
+                  />
                 </div>
 
-                <div>
-                  <label className='block text-sm font-medium text-gray-700 mb-1'>
-                    Total Alkalinity (Target:{' '}
-                    {selectedPool.targetLevels.totalAlkalinity.target})
+                <div className='space-y-2'>
+                  <label className='block text-sm font-medium text-gray-700'>
+                    Total Chlorine (ppm)
                   </label>
-                  <div className='flex gap-2'>
-                    <input
-                      type='number'
-                      value={visit.readings.totalAlkalinity || ''}
-                      onChange={(e) =>
-                        updateReading('totalAlkalinity', e.target.value)
-                      }
-                      className={`flex-1 px-3 py-2 border rounded-md ${getReadingStatus(
-                        'totalAlkalinity',
-                        visit.readings.totalAlkalinity
-                      )}`}
-                      placeholder='100'
-                    />
-                    <button
-                      onClick={() => openCalculator('alkalinity')}
-                      className='bg-blue-600 text-white px-2 py-1 rounded text-xs hover:bg-blue-700'>
-                      📊
-                    </button>
-                  </div>
+                  <input
+                    type='number'
+                    step='0.1'
+                    value={visit.readings.totalChlorine || ''}
+                    onChange={(e) =>
+                      updateReading('totalChlorine', e.target.value)
+                    }
+                    className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+                    placeholder='2.2'
+                  />
                 </div>
 
-                <div>
-                  <label className='block text-sm font-medium text-gray-700 mb-1'>
+                <div className='space-y-2'>
+                  <label className='block text-sm font-medium text-gray-700'>
+                    Total Alkalinity (ppm)
+                  </label>
+                  <input
+                    type='number'
+                    value={visit.readings.totalAlkalinity || ''}
+                    onChange={(e) =>
+                      updateReading('totalAlkalinity', e.target.value)
+                    }
+                    className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${getReadingStatus(
+                      'totalAlkalinity',
+                      visit.readings.totalAlkalinity
+                    )}`}
+                    placeholder='100'
+                  />
+                </div>
+
+                <div className='space-y-2'>
+                  <label className='block text-sm font-medium text-gray-700'>
+                    Calcium Hardness (ppm)
+                  </label>
+                  <input
+                    type='number'
+                    value={visit.readings.calciumHardness || ''}
+                    onChange={(e) =>
+                      updateReading('calciumHardness', e.target.value)
+                    }
+                    className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${getReadingStatus(
+                      'calciumHardness',
+                      visit.readings.calciumHardness
+                    )}`}
+                    placeholder='250'
+                  />
+                </div>
+
+                <div className='space-y-2'>
+                  <label className='block text-sm font-medium text-gray-700'>
+                    Cyanuric Acid (ppm)
+                  </label>
+                  <input
+                    type='number'
+                    value={visit.readings.cyanuricAcid || ''}
+                    onChange={(e) =>
+                      updateReading('cyanuricAcid', e.target.value)
+                    }
+                    className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+                    placeholder='50'
+                  />
+                </div>
+
+                <div className='space-y-2'>
+                  <label className='block text-sm font-medium text-gray-700'>
+                    Salt (ppm)
+                  </label>
+                  <input
+                    type='number'
+                    value={visit.readings.salt || ''}
+                    onChange={(e) => updateReading('salt', e.target.value)}
+                    className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+                    placeholder='3200'
+                  />
+                </div>
+
+                <div className='space-y-2'>
+                  <label className='block text-sm font-medium text-gray-700'>
                     Temperature (°F)
                   </label>
                   <input
@@ -439,51 +484,8 @@ export default function EnhancedVisitLogging() {
                     onChange={(e) =>
                       updateReading('temperature', e.target.value)
                     }
-                    className='w-full px-3 py-2 border border-gray-300 rounded-md'
+                    className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
                     placeholder='82'
-                  />
-                </div>
-              </div>
-
-              <div className='grid grid-cols-3 gap-4'>
-                <div>
-                  <label className='block text-sm font-medium text-gray-700 mb-1'>
-                    Calcium Hardness
-                  </label>
-                  <input
-                    type='number'
-                    value={visit.readings.calciumHardness || ''}
-                    onChange={(e) =>
-                      updateReading('calciumHardness', e.target.value)
-                    }
-                    className='w-full px-3 py-2 border border-gray-300 rounded-md'
-                    placeholder='250'
-                  />
-                </div>
-                <div>
-                  <label className='block text-sm font-medium text-gray-700 mb-1'>
-                    Cyanuric Acid
-                  </label>
-                  <input
-                    type='number'
-                    value={visit.readings.cyanuricAcid || ''}
-                    onChange={(e) =>
-                      updateReading('cyanuricAcid', e.target.value)
-                    }
-                    className='w-full px-3 py-2 border border-gray-300 rounded-md'
-                    placeholder='50'
-                  />
-                </div>
-                <div>
-                  <label className='block text-sm font-medium text-gray-700 mb-1'>
-                    Salt (ppm)
-                  </label>
-                  <input
-                    type='number'
-                    value={visit.readings.salt || ''}
-                    onChange={(e) => updateReading('salt', e.target.value)}
-                    className='w-full px-3 py-2 border border-gray-300 rounded-md'
-                    placeholder='3200'
                   />
                 </div>
               </div>
@@ -617,26 +619,36 @@ export default function EnhancedVisitLogging() {
             </div>
 
             {/* Quick Actions */}
-            <div className='flex gap-4 mb-6'>
-              <button
-                onClick={submitVisit}
-                disabled={!visit.poolId}
-                className='flex-1 bg-green-600 text-white py-3 px-6 rounded-lg hover:bg-green-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed'>
-                💾 Complete Visit
-              </button>
-              <button
-                onClick={() => (window.location.href = '/dashboard')}
-                className='bg-gray-500 text-white py-3 px-6 rounded-lg hover:bg-gray-600 transition-colors'>
-                Cancel
-              </button>
+            <div className='flex justify-start gap-6 mb-6'>
+              <div className='basis-[40%]'>
+                <button
+                  onClick={submitVisit}
+                  disabled={!visit.poolId}
+                  className='flex-1 bg-green-600 text-white w-full py-3 px-2 rounded-lg hover:bg-green-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed'>
+                  💾 Complete Visit
+                </button>
+              </div>
+
+              <div className='basis-[35%] border border-gray-200 rounded-lg'>
+                <h2 className='text-2xl font-semibold font-stretch-semi-condensed leading-relaxed text-center align-middle'>
+                  TODO: Add Note button
+                </h2>
+              </div>
+              <div className='basis-1/4'>
+                <button
+                  onClick={() => (window.location.href = '/dashboard')}
+                  className='bg-gray-500 text-white py-3 mr-6 w-full rounded-lg hover:bg-gray-600 transition-colors'>
+                  Cancel
+                </button>
+              </div>
             </div>
           </>
         )}
 
         {/* Mini Calculator Modal */}
-        {showCalculator && (
+        {showCalculator && selectedPool && (
           <div className='fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50'>
-            <div className='bg-white rounded-lg max-w-md w-full mx-4 p-6'>
+            <div className='bg-white rounded-lg max-w-lg w-full mx-4 p-6 max-h-[90vh] overflow-y-auto'>
               <div className='flex justify-between items-center mb-4'>
                 <h3 className='text-lg font-semibold'>
                   {calculatorType.charAt(0).toUpperCase() +
@@ -650,27 +662,44 @@ export default function EnhancedVisitLogging() {
                 </button>
               </div>
 
-              <div className='text-center text-gray-600 mb-4'>
-                <p>
-                  Pool Volume: {selectedPool?.volume.gallons.toLocaleString()}{' '}
-                  gallons
-                </p>
-                <p>
-                  This would integrate with your existing calculator component
-                </p>
-              </div>
+              <div className='space-y-4'>
+                {/* Pool Info */}
+                <div className='bg-blue-50 p-3 rounded-lg text-sm'>
+                  <p>
+                    <strong>Pool:</strong> {selectedPool.name}
+                  </p>
+                  <p>
+                    <strong>Volume:</strong>{' '}
+                    {selectedPool.volume.gallons.toLocaleString()} gallons
+                  </p>
+                </div>
 
-              <div className='flex gap-3'>
-                <button
-                  onClick={() => setShowCalculator(false)}
-                  className='flex-1 bg-gray-300 text-gray-700 py-2 rounded hover:bg-gray-400'>
-                  Cancel
-                </button>
-                <button
-                  onClick={() => window.open('/', '_blank')}
-                  className='flex-1 bg-blue-600 text-white py-2 rounded hover:bg-blue-700'>
-                  Open Full Calculator
-                </button>
+                {/* Calculator Type Specific Forms */}
+                {calculatorType === 'ph' && (
+                  <PhCalculatorForm
+                    poolVolume={selectedPool.volume.gallons}
+                    currentPh={visit.readings.ph}
+                    onAddChemical={addChemicalFromCalculator}
+                  />
+                )}
+
+                {calculatorType === 'chlorine' && (
+                  <ChlorineCalculatorForm
+                    poolVolume={selectedPool.volume.gallons}
+                    currentCl={visit.readings.freeChlorine}
+                    targetCl={selectedPool.targetLevels.freeChlorine.target}
+                    onAddChemical={addChemicalFromCalculator}
+                  />
+                )}
+
+                {calculatorType === 'alkalinity' && (
+                  <AlkalinityCalculatorForm
+                    poolVolume={selectedPool.volume.gallons}
+                    currentAlk={visit.readings.totalAlkalinity}
+                    targetAlk={selectedPool.targetLevels.totalAlkalinity.target}
+                    onAddChemical={addChemicalFromCalculator}
+                  />
+                )}
               </div>
             </div>
           </div>

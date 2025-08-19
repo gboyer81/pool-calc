@@ -19,10 +19,10 @@ export default function VersionCheck() {
   return (
     <div className='flex flex-row flex-nowrap items-center justify-center gap-1.5 mb-0 px-2 py-0.5 max-w-2xl mx-auto bg-gray-50 rounded-md text-[12.5px] text-gray-500'>
       <div>
-        <strong>Version 3.2</strong>
+        <strong>Version 1.1</strong>
       </div>
       <div>|</div>
-      <div>Updated: August 13th, 2025</div>
+      <div>Updated: August 18th, 2025</div>
       <div>|</div>
       <div>
         <span id='cacheTimestamp'>

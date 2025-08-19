@@ -37,16 +37,19 @@ export default function RootLayout({
       </head>
       <body className='antialiased max-w-screen-2xl mx-auto'>
         <ThemeProvider attribute='class' defaultTheme='system' enableSystem>
-          {/* Navigation Component */}
-          <Navigation />
+          {/* Full height flex container */}
+          <div className='min-h-screen flex flex-col'>
+            {/* Navigation Component - Sticky at top */}
+            <Navigation />
 
-          {/* Main Content */}
-          <div className='container mx-auto bg-white rounded-4xl min-h-[calc(100vh-2rem)]'>
-            <main className='p-6'>{children}</main>
+            {/* Main Content - Grows to fill available space */}
+            <div className='flex-1 container mx-auto bg-white rounded-4xl'>
+              <main className='p-6'>{children}</main>
+            </div>
+
+            {/* Footer Component - Sticky at bottom */}
+            <Footer />
           </div>
-
-          {/* Footer Component */}
-          <Footer />
         </ThemeProvider>
       </body>
     </html>

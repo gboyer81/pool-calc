@@ -162,7 +162,7 @@ export default function Navigation() {
   return (
     <>
       {/* Navigation Header */}
-      <nav className='bg-white sticky top-0 z-50'>
+      <nav className='bg-white sticky top-0 z-50 border-b border-gray-200 mb-8'>
         <div className='max-w-screen-2xl mx-auto px-4'>
           <div className='flex justify-between h-16'>
             {/* Logo */}
