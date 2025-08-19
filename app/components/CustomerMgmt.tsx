@@ -108,6 +108,31 @@ export default function ClientManagement() {
   // View toggle state
   const [viewMode, setViewMode] = useState<'table' | 'grid'>('table')
 
+  // Add client form state
+  const [clientFormData, setClientFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    address: {
+      street: '',
+      city: '',
+      state: '',
+      zipCode: '',
+    },
+    serviceFrequency: 'weekly' as
+      | 'twice-weekly'
+      | 'weekly'
+      | 'bi-weekly'
+      | 'monthly',
+    serviceDay: '',
+    preferredTimeSlot: '',
+    specialInstructions: '',
+  })
+  const [clientFormErrors, setClientFormErrors] = useState<
+    Record<string, string>
+  >({})
+  const [clientSaving, setClientSaving] = useState(false)
+
   // Fetch clients
   useEffect(() => {
     fetchClients()
@@ -220,7 +245,7 @@ export default function ClientManagement() {
       setShowClientPools(true)
 
       const token = localStorage.getItem('technicianToken')
-      const response = await fetch(`/api/clients/${client._id}/pools`, {
+      const response = await fetch(`/api/pools?clientId=${client._id}`, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -236,7 +261,7 @@ export default function ClientManagement() {
           setClientPools([])
         }
       } else {
-        console.error('Failed to fetch pools')
+        console.error('Failed to fetch pools - HTTP status:', response.status)
         setClientPools([])
       }
     } catch (error) {
@@ -324,6 +349,156 @@ export default function ClientManagement() {
     setSortOrder('asc')
   }
 
+  const resetClientForm = () => {
+    setClientFormData({
+      name: '',
+      email: '',
+      phone: '',
+      address: {
+        street: '',
+        city: '',
+        state: '',
+        zipCode: '',
+      },
+      serviceFrequency: 'weekly',
+      serviceDay: '',
+      preferredTimeSlot: '',
+      specialInstructions: '',
+    })
+    setClientFormErrors({})
+  }
+
+  const validateClientForm = () => {
+    const errors: Record<string, string> = {}
+
+    // Required field validation
+    if (!clientFormData.name.trim()) {
+      errors.name = 'Client name is required'
+    }
+
+    if (!clientFormData.email.trim()) {
+      errors.email = 'Email is required'
+    } else {
+      // Email format validation
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      if (!emailRegex.test(clientFormData.email)) {
+        errors.email = 'Please enter a valid email address'
+      }
+    }
+
+    if (!clientFormData.phone.trim()) {
+      errors.phone = 'Phone number is required'
+    } else {
+      // Basic phone validation
+      const phoneRegex = /^[\+]?[(]?[\d\s\-\(\)]{10,}$/
+      if (!phoneRegex.test(clientFormData.phone)) {
+        errors.phone = 'Please enter a valid phone number'
+      }
+    }
+
+    // Address validation
+    if (!clientFormData.address.street.trim()) {
+      errors.street = 'Street address is required'
+    }
+    if (!clientFormData.address.city.trim()) {
+      errors.city = 'City is required'
+    }
+    if (!clientFormData.address.state.trim()) {
+      errors.state = 'State is required'
+    }
+    if (!clientFormData.address.zipCode.trim()) {
+      errors.zipCode = 'ZIP code is required'
+    } else {
+      // Basic ZIP code validation
+      const zipRegex = /^\d{5}(-\d{4})?$/
+      if (!zipRegex.test(clientFormData.address.zipCode)) {
+        errors.zipCode =
+          'Please enter a valid ZIP code (e.g., 12345 or 12345-6789)'
+      }
+    }
+
+    setClientFormErrors(errors)
+    return Object.keys(errors).length === 0
+  }
+
+  const handleSubmitClient = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    if (!validateClientForm()) {
+      return
+    }
+
+    setClientSaving(true)
+    try {
+      const token = localStorage.getItem('technicianToken')
+      const response = await fetch('/api/clients', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(clientFormData),
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        if (data.success) {
+          // Success - refresh client list and close modal
+          await fetchClients()
+          setShowAddClient(false)
+          resetClientForm()
+
+          // Show success message (you could also use a toast notification)
+          alert(`Client "${clientFormData.name}" added successfully!`)
+        } else {
+          // Handle API validation errors
+          if (data.error.includes('email already exists')) {
+            setClientFormErrors({
+              email: 'A client with this email already exists',
+            })
+          } else {
+            alert('Error creating client: ' + data.error)
+          }
+        }
+      } else {
+        alert('Failed to create client. Please try again.')
+      }
+    } catch (error) {
+      console.error('Error creating client:', error)
+      alert('Network error. Please check your connection and try again.')
+    } finally {
+      setClientSaving(false)
+    }
+  }
+
+  const handleClientFormChange = (field: string, value: string) => {
+    if (field.startsWith('address.')) {
+      const addressField = field.split('.')[1]
+      setClientFormData((prev) => ({
+        ...prev,
+        address: {
+          ...prev.address,
+          [addressField]: value,
+        },
+      }))
+    } else {
+      setClientFormData((prev) => ({
+        ...prev,
+        [field]: value,
+      }))
+    }
+
+    // Clear error for this field when user starts typing
+    if (clientFormErrors[field] || clientFormErrors[field.split('.')[1]]) {
+      setClientFormErrors((prev) => {
+        const newErrors = { ...prev }
+        delete newErrors[field]
+        delete newErrors[field.split('.')[1]]
+        return newErrors
+      })
+    }
+  }
+
   if (loading) {
     return (
       <div className='flex justify-center items-center h-64'>
@@ -367,7 +542,10 @@ export default function ClientManagement() {
             </button>
           </div>
           <button
-            onClick={() => setShowAddClient(true)}
+            onClick={() => {
+              resetClientForm()
+              setShowAddClient(true)
+            }}
             className='bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700'>
             + Add Client
           </button>
@@ -741,30 +919,327 @@ export default function ClientManagement() {
         />
       )}
 
-      {/* Add Client Modal (placeholder) */}
+      {/* Add Client Modal */}
       {showAddClient && (
         <div className='fixed inset-0 bg-black/50 backdrop-blur-xl flex items-center justify-center z-50'>
-          <div className='bg-white rounded-lg max-w-2xl w-full mx-4'>
+          <div className='bg-white rounded-lg max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto'>
             <div className='p-6'>
-              <div className='flex justify-between items-center mb-4'>
+              <div className='flex justify-between items-center mb-6'>
                 <h2 className='text-2xl font-bold'>Add New Client</h2>
                 <button
-                  onClick={() => setShowAddClient(false)}
+                  onClick={() => {
+                    setShowAddClient(false)
+                    resetClientForm()
+                  }}
                   className='text-gray-500 hover:text-gray-700 text-2xl'>
                   ✕
                 </button>
               </div>
-              <p className='text-gray-600'>Client form would go here...</p>
-              <div className='mt-6 flex justify-end gap-3'>
-                <button
-                  onClick={() => setShowAddClient(false)}
-                  className='bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400'>
-                  Cancel
-                </button>
-                <button className='bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700'>
-                  Save Client
-                </button>
-              </div>
+
+              <form onSubmit={handleSubmitClient} className='space-y-6'>
+                {/* Basic Information */}
+                <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                  <div>
+                    <label className='block text-sm font-medium text-gray-700 mb-1'>
+                      Client Name *
+                    </label>
+                    <input
+                      type='text'
+                      value={clientFormData.name}
+                      onChange={(e) =>
+                        handleClientFormChange('name', e.target.value)
+                      }
+                      className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                        clientFormErrors.name
+                          ? 'border-red-500'
+                          : 'border-gray-300'
+                      }`}
+                      placeholder='Enter client name'
+                    />
+                    {clientFormErrors.name && (
+                      <p className='text-red-500 text-xs mt-1'>
+                        {clientFormErrors.name}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className='block text-sm font-medium text-gray-700 mb-1'>
+                      Email Address *
+                    </label>
+                    <input
+                      type='email'
+                      value={clientFormData.email}
+                      onChange={(e) =>
+                        handleClientFormChange('email', e.target.value)
+                      }
+                      className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                        clientFormErrors.email
+                          ? 'border-red-500'
+                          : 'border-gray-300'
+                      }`}
+                      placeholder='client@example.com'
+                    />
+                    {clientFormErrors.email && (
+                      <p className='text-red-500 text-xs mt-1'>
+                        {clientFormErrors.email}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className='block text-sm font-medium text-gray-700 mb-1'>
+                      Phone Number *
+                    </label>
+                    <input
+                      type='tel'
+                      value={clientFormData.phone}
+                      onChange={(e) =>
+                        handleClientFormChange('phone', e.target.value)
+                      }
+                      className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                        clientFormErrors.phone
+                          ? 'border-red-500'
+                          : 'border-gray-300'
+                      }`}
+                      placeholder='(555) 123-4567'
+                    />
+                    {clientFormErrors.phone && (
+                      <p className='text-red-500 text-xs mt-1'>
+                        {clientFormErrors.phone}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className='block text-sm font-medium text-gray-700 mb-1'>
+                      Service Frequency *
+                    </label>
+                    <select
+                      value={clientFormData.serviceFrequency}
+                      onChange={(e) =>
+                        handleClientFormChange(
+                          'serviceFrequency',
+                          e.target.value
+                        )
+                      }
+                      className='w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500'>
+                      <option value='twice-weekly'>Twice Weekly</option>
+                      <option value='weekly'>Weekly</option>
+                      <option value='bi-weekly'>Bi-Weekly</option>
+                      <option value='monthly'>Monthly</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Address Information */}
+                <div className='border-t pt-6'>
+                  <h3 className='text-lg font-medium text-gray-900 mb-4'>
+                    Service Address
+                  </h3>
+                  <div className='grid grid-cols-1 gap-4'>
+                    <div>
+                      <label className='block text-sm font-medium text-gray-700 mb-1'>
+                        Street Address *
+                      </label>
+                      <input
+                        type='text'
+                        value={clientFormData.address.street}
+                        onChange={(e) =>
+                          handleClientFormChange(
+                            'address.street',
+                            e.target.value
+                          )
+                        }
+                        className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                          clientFormErrors.street
+                            ? 'border-red-500'
+                            : 'border-gray-300'
+                        }`}
+                        placeholder='123 Main Street'
+                      />
+                      {clientFormErrors.street && (
+                        <p className='text-red-500 text-xs mt-1'>
+                          {clientFormErrors.street}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
+                      <div>
+                        <label className='block text-sm font-medium text-gray-700 mb-1'>
+                          City *
+                        </label>
+                        <input
+                          type='text'
+                          value={clientFormData.address.city}
+                          onChange={(e) =>
+                            handleClientFormChange(
+                              'address.city',
+                              e.target.value
+                            )
+                          }
+                          className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                            clientFormErrors.city
+                              ? 'border-red-500'
+                              : 'border-gray-300'
+                          }`}
+                          placeholder='Springfield'
+                        />
+                        {clientFormErrors.city && (
+                          <p className='text-red-500 text-xs mt-1'>
+                            {clientFormErrors.city}
+                          </p>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className='block text-sm font-medium text-gray-700 mb-1'>
+                          State *
+                        </label>
+                        <input
+                          type='text'
+                          value={clientFormData.address.state}
+                          onChange={(e) =>
+                            handleClientFormChange(
+                              'address.state',
+                              e.target.value
+                            )
+                          }
+                          className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                            clientFormErrors.state
+                              ? 'border-red-500'
+                              : 'border-gray-300'
+                          }`}
+                          placeholder='CA'
+                          maxLength={2}
+                        />
+                        {clientFormErrors.state && (
+                          <p className='text-red-500 text-xs mt-1'>
+                            {clientFormErrors.state}
+                          </p>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className='block text-sm font-medium text-gray-700 mb-1'>
+                          ZIP Code *
+                        </label>
+                        <input
+                          type='text'
+                          value={clientFormData.address.zipCode}
+                          onChange={(e) =>
+                            handleClientFormChange(
+                              'address.zipCode',
+                              e.target.value
+                            )
+                          }
+                          className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                            clientFormErrors.zipCode
+                              ? 'border-red-500'
+                              : 'border-gray-300'
+                          }`}
+                          placeholder='12345'
+                        />
+                        {clientFormErrors.zipCode && (
+                          <p className='text-red-500 text-xs mt-1'>
+                            {clientFormErrors.zipCode}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Optional Service Details */}
+                <div className='border-t pt-6'>
+                  <h3 className='text-lg font-medium text-gray-900 mb-4'>
+                    Service Preferences (Optional)
+                  </h3>
+                  <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                    <div>
+                      <label className='block text-sm font-medium text-gray-700 mb-1'>
+                        Preferred Service Day
+                      </label>
+                      <select
+                        value={clientFormData.serviceDay}
+                        onChange={(e) =>
+                          handleClientFormChange('serviceDay', e.target.value)
+                        }
+                        className='w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500'>
+                        <option value=''>Any Day</option>
+                        <option value='monday'>Monday</option>
+                        <option value='tuesday'>Tuesday</option>
+                        <option value='wednesday'>Wednesday</option>
+                        <option value='thursday'>Thursday</option>
+                        <option value='friday'>Friday</option>
+                        <option value='saturday'>Saturday</option>
+                        <option value='sunday'>Sunday</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className='block text-sm font-medium text-gray-700 mb-1'>
+                        Preferred Time Slot
+                      </label>
+                      <select
+                        value={clientFormData.preferredTimeSlot}
+                        onChange={(e) =>
+                          handleClientFormChange(
+                            'preferredTimeSlot',
+                            e.target.value
+                          )
+                        }
+                        className='w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500'>
+                        <option value=''>Any Time</option>
+                        <option value='morning'>Morning (8 AM - 12 PM)</option>
+                        <option value='afternoon'>
+                          Afternoon (12 PM - 5 PM)
+                        </option>
+                        <option value='evening'>Evening (5 PM - 8 PM)</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className='mt-4'>
+                    <label className='block text-sm font-medium text-gray-700 mb-1'>
+                      Special Instructions
+                    </label>
+                    <textarea
+                      value={clientFormData.specialInstructions}
+                      onChange={(e) =>
+                        handleClientFormChange(
+                          'specialInstructions',
+                          e.target.value
+                        )
+                      }
+                      rows={3}
+                      className='w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500'
+                      placeholder='Gate codes, special access instructions, pool-specific notes, etc.'
+                    />
+                  </div>
+                </div>
+
+                {/* Form Actions */}
+                <div className='border-t pt-6 flex justify-end gap-3'>
+                  <button
+                    type='button'
+                    onClick={() => {
+                      setShowAddClient(false)
+                      resetClientForm()
+                    }}
+                    className='bg-gray-300 text-gray-700 px-6 py-2 rounded hover:bg-gray-400 transition-colors'
+                    disabled={clientSaving}>
+                    Cancel
+                  </button>
+                  <button
+                    type='submit'
+                    disabled={clientSaving}
+                    className='bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed'>
+                    {clientSaving ? 'Creating Client...' : 'Create Client'}
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         </div>
