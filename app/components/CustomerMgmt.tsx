@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import TabbedPoolEditor from '@/components/TabbedPoolEditor'
+import TabbedPoolEditor from './TabbedPoolEditor'
 
 interface Client {
   _id: string
@@ -16,11 +16,7 @@ interface Client {
   }
   serviceFrequency: 'twice-weekly' | 'weekly' | 'bi-weekly' | 'monthly'
   serviceDay?: string
-  preferredTimeSlot?: string
-  specialInstructions?: string
   isActive: boolean
-  createdAt: string
-  nextServiceDate?: string
 }
 
 interface Pool {
@@ -42,11 +38,11 @@ interface Pool {
     avgDepth: number
   }
   notes?: string
-  // Add these optional properties for the tabbed editor
   equipment?: {
     filter?: {
       type: 'sand' | 'cartridge' | 'de'
       model?: string
+      lastCleaned?: Date | string
     }
     pump?: {
       model?: string
@@ -85,6 +81,7 @@ interface PoolFormData {
 
 export default function ClientManagement() {
   const [clients, setClients] = useState<Client[]>([])
+  const [filteredClients, setFilteredClients] = useState<Client[]>([])
   const [selectedClient, setSelectedClient] = useState<Client | null>(null)
   const [showAddClient, setShowAddClient] = useState(false)
   const [showClientPools, setShowClientPools] = useState(false)
@@ -92,15 +89,95 @@ export default function ClientManagement() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  // Search and filter state
+  const [searchTerm, setSearchTerm] = useState('')
+  const [statusFilter, setStatusFilter] = useState<
+    'all' | 'active' | 'inactive'
+  >('all')
+  const [frequencyFilter, setFrequencyFilter] = useState<
+    'all' | 'twice-weekly' | 'weekly' | 'bi-weekly' | 'monthly'
+  >('all')
+  const [sortBy, setSortBy] = useState<'name' | 'city' | 'frequency'>('name')
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
+
   // Pool editing state
   const [showEditPool, setShowEditPool] = useState(false)
   const [editingPool, setEditingPool] = useState<Pool | null>(null)
   const [poolSaving, setPoolSaving] = useState(false)
 
+  // View toggle state
+  const [viewMode, setViewMode] = useState<'table' | 'grid'>('table')
+
   // Fetch clients
   useEffect(() => {
     fetchClients()
   }, [])
+
+  // Filter and search clients
+  useEffect(() => {
+    let filtered = [...clients]
+
+    // Apply search filter
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase()
+      filtered = filtered.filter(
+        (client) =>
+          client.name.toLowerCase().includes(term) ||
+          client.email.toLowerCase().includes(term) ||
+          client.phone.includes(term) ||
+          client.address.street.toLowerCase().includes(term) ||
+          client.address.city.toLowerCase().includes(term) ||
+          client.address.state.toLowerCase().includes(term) ||
+          client.address.zipCode.includes(term)
+      )
+    }
+
+    // Apply status filter
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter((client) =>
+        statusFilter === 'active' ? client.isActive : !client.isActive
+      )
+    }
+
+    // Apply frequency filter
+    if (frequencyFilter !== 'all') {
+      filtered = filtered.filter(
+        (client) => client.serviceFrequency === frequencyFilter
+      )
+    }
+
+    // Apply sorting
+    filtered.sort((a, b) => {
+      let aValue: string
+      let bValue: string
+
+      switch (sortBy) {
+        case 'name':
+          aValue = a.name.toLowerCase()
+          bValue = b.name.toLowerCase()
+          break
+        case 'city':
+          aValue = a.address.city.toLowerCase()
+          bValue = b.address.city.toLowerCase()
+          break
+        case 'frequency':
+          aValue = a.serviceFrequency
+          bValue = b.serviceFrequency
+          break
+        default:
+          aValue = a.name.toLowerCase()
+          bValue = b.name.toLowerCase()
+      }
+
+      if (sortOrder === 'asc') {
+        return aValue < bValue ? -1 : aValue > bValue ? 1 : 0
+      } else {
+        return aValue > bValue ? -1 : aValue < bValue ? 1 : 0
+      }
+    })
+
+    setFilteredClients(filtered)
+  }, [clients, searchTerm, statusFilter, frequencyFilter, sortBy, sortOrder])
 
   const fetchClients = async () => {
     try {
@@ -118,23 +195,20 @@ export default function ClientManagement() {
         },
       })
 
-      if (response.status === 401) {
-        localStorage.removeItem('technicianToken')
-        localStorage.removeItem('technicianData')
-        window.location.href = '/login'
-        return
-      }
-
-      const data = await response.json()
-      if (data.success) {
-        setClients(data.clients || [])
-        setError(null)
+      if (response.ok) {
+        const data = await response.json()
+        if (data.success) {
+          setClients(data.clients || [])
+          setError(null)
+        } else {
+          setError(data.error || 'Failed to fetch clients')
+        }
       } else {
-        setError(data.error || 'Failed to fetch clients')
+        setError('Failed to fetch clients')
       }
     } catch (err) {
-      setError('Network error - unable to fetch clients')
-      console.error('Error fetching clients:', err)
+      setError('Network error')
+      console.error('Fetch error:', err)
     } finally {
       setLoading(false)
     }
@@ -143,78 +217,67 @@ export default function ClientManagement() {
   const fetchClientPools = async (client: Client) => {
     try {
       setSelectedClient(client)
-      const token = localStorage.getItem('technicianToken')
-      if (!token) {
-        window.location.href = '/login'
-        return
-      }
+      setShowClientPools(true)
 
-      const response = await fetch(`/api/pools?clientId=${client._id}`, {
+      const token = localStorage.getItem('technicianToken')
+      const response = await fetch(`/api/clients/${client._id}/pools`, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       })
 
-      if (response.status === 401) {
-        localStorage.removeItem('technicianToken')
-        localStorage.removeItem('technicianData')
-        window.location.href = '/login'
-        return
-      }
-
-      const data = await response.json()
-      if (data.success) {
-        setClientPools(data.pools || [])
+      if (response.ok) {
+        const data = await response.json()
+        if (data.success) {
+          setClientPools(data.pools || [])
+        } else {
+          console.error('Failed to fetch pools:', data.error)
+          setClientPools([])
+        }
       } else {
+        console.error('Failed to fetch pools')
         setClientPools([])
-        setError(data.error || 'Failed to fetch pools')
       }
-      setShowClientPools(true)
-    } catch (err) {
-      setError('Failed to fetch pools')
-      console.error('Error fetching pools:', err)
+    } catch (error) {
+      console.error('Error fetching pools:', error)
+      setClientPools([])
     }
   }
 
   const handleEditPool = (pool: Pool) => {
-    console.log('🐛 handleEditPool triggered with pool:', pool)
     setEditingPool(pool)
     setShowEditPool(true)
   }
 
-  const handleSavePool = async (updatedPoolData: Partial<Pool>) => {
+  const handleSavePool = async (updatedPool: Partial<Pool>) => {
     if (!editingPool) return
 
+    setPoolSaving(true)
     try {
-      setPoolSaving(true)
       const token = localStorage.getItem('technicianToken')
-      if (!token) {
-        window.location.href = '/login'
-        return
-      }
-
       const response = await fetch(`/api/pools/${editingPool._id}`, {
         method: 'PUT',
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(updatedPoolData),
+        body: JSON.stringify(updatedPool),
       })
 
-      const data = await response.json()
-
-      if (data.success) {
-        // Refresh the pools list
-        if (selectedClient) {
-          await fetchClientPools(selectedClient)
+      if (response.ok) {
+        const data = await response.json()
+        if (data.success) {
+          setShowEditPool(false)
+          setEditingPool(null)
+          if (selectedClient) {
+            await fetchClientPools(selectedClient)
+          }
+        } else {
+          throw new Error(data.error || 'Failed to update pool')
         }
-        setShowEditPool(false)
-        setEditingPool(null)
-        alert('Pool updated successfully!')
       } else {
-        throw new Error(data.error || 'Failed to update pool')
+        throw new Error('Failed to update pool')
       }
     } catch (error: any) {
       console.error('Error saving pool:', error)
@@ -239,6 +302,28 @@ export default function ClientManagement() {
     }
   }
 
+  const handleSort = (field: 'name' | 'city' | 'frequency') => {
+    if (sortBy === field) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSortBy(field)
+      setSortOrder('asc')
+    }
+  }
+
+  const getSortIcon = (field: 'name' | 'city' | 'frequency') => {
+    if (sortBy !== field) return '↕️'
+    return sortOrder === 'asc' ? '↑' : '↓'
+  }
+
+  const clearFilters = () => {
+    setSearchTerm('')
+    setStatusFilter('all')
+    setFrequencyFilter('all')
+    setSortBy('name')
+    setSortOrder('asc')
+  }
+
   if (loading) {
     return (
       <div className='flex justify-center items-center h-64'>
@@ -255,15 +340,107 @@ export default function ClientManagement() {
           <h1 className='text-3xl font-bold text-gray-900'>
             Client Management
           </h1>
-          <p className='text-gray-600 mt-1'>{clients.length} active clients</p>
+          <p className='text-gray-600 mt-1'>
+            {filteredClients.length} of {clients.length} clients
+            {searchTerm && ` matching "${searchTerm}"`}
+          </p>
         </div>
         <div className='flex gap-3'>
+          <div className='flex border border-gray-300 rounded-lg overflow-hidden'>
+            <button
+              onClick={() => setViewMode('table')}
+              className={`px-3 py-2 text-sm ${
+                viewMode === 'table'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-white text-gray-700 hover:bg-gray-50'
+              }`}>
+              📋 Table
+            </button>
+            <button
+              onClick={() => setViewMode('grid')}
+              className={`px-3 py-2 text-sm ${
+                viewMode === 'grid'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-white text-gray-700 hover:bg-gray-50'
+              }`}>
+              ⊞ Grid
+            </button>
+          </div>
           <button
             onClick={() => setShowAddClient(true)}
             className='bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700'>
             + Add Client
           </button>
         </div>
+      </div>
+
+      {/* Search and Filter Controls */}
+      <div className='bg-white rounded-lg shadow-sm border p-4 mb-6'>
+        <div className='grid grid-cols-1 md:grid-cols-4 gap-4'>
+          {/* Search */}
+          <div className='md:col-span-2'>
+            <label className='block text-sm font-medium text-gray-700 mb-1'>
+              Search Clients
+            </label>
+            <input
+              type='text'
+              placeholder='Search by name, email, phone, or address...'
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className='w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500'
+            />
+          </div>
+
+          {/* Status Filter */}
+          <div>
+            <label className='block text-sm font-medium text-gray-700 mb-1'>
+              Status
+            </label>
+            <select
+              value={statusFilter}
+              onChange={(e) =>
+                setStatusFilter(e.target.value as 'all' | 'active' | 'inactive')
+              }
+              className='w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500'>
+              <option value='all'>All Clients</option>
+              <option value='active'>Active Only</option>
+              <option value='inactive'>Inactive Only</option>
+            </select>
+          </div>
+
+          {/* Frequency Filter */}
+          <div>
+            <label className='block text-sm font-medium text-gray-700 mb-1'>
+              Service Frequency
+            </label>
+            <select
+              value={frequencyFilter}
+              onChange={(e) => setFrequencyFilter(e.target.value as any)}
+              className='w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500'>
+              <option value='all'>All Frequencies</option>
+              <option value='twice-weekly'>Twice Weekly</option>
+              <option value='weekly'>Weekly</option>
+              <option value='bi-weekly'>Bi-Weekly</option>
+              <option value='monthly'>Monthly</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Clear Filters */}
+        {(searchTerm ||
+          statusFilter !== 'all' ||
+          frequencyFilter !== 'all') && (
+          <div className='mt-3 flex justify-between items-center'>
+            <span className='text-sm text-gray-600'>
+              Active filters applied
+            </span>
+            <button
+              onClick={clearFilters}
+              className='text-sm text-blue-600 hover:text-blue-800'>
+              Clear all filters
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Error Display */}
@@ -281,57 +458,214 @@ export default function ClientManagement() {
         </div>
       )}
 
-      {/* Client Grid */}
-      <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
-        {clients.map((client) => (
-          <div
-            key={client._id}
-            className='bg-white rounded-lg shadow p-6 border border-gray-200'>
-            <div className='flex justify-between items-start mb-3'>
-              <h3 className='text-lg font-semibold text-gray-900'>
-                {client.name}
-              </h3>
-              <span
-                className={`px-2 py-1 rounded-full text-xs font-medium ${
-                  client.isActive
-                    ? 'bg-green-100 text-green-800'
-                    : 'bg-red-100 text-red-800'
-                }`}>
-                {client.isActive ? 'Active' : 'Inactive'}
-              </span>
+      {/* Table View */}
+      {viewMode === 'table' && (
+        <div className='bg-white rounded-lg shadow-sm border overflow-hidden'>
+          <div className='overflow-x-auto'>
+            <table className='min-w-full divide-y divide-gray-200'>
+              <thead className='bg-gray-50'>
+                <tr>
+                  <th
+                    className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100'
+                    onClick={() => handleSort('name')}>
+                    <div className='flex items-center gap-1'>
+                      Client {getSortIcon('name')}
+                    </div>
+                  </th>
+                  <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                    Contact Info
+                  </th>
+                  <th
+                    className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100'
+                    onClick={() => handleSort('city')}>
+                    <div className='flex items-center gap-1'>
+                      Location {getSortIcon('city')}
+                    </div>
+                  </th>
+                  <th
+                    className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100'
+                    onClick={() => handleSort('frequency')}>
+                    <div className='flex items-center gap-1'>
+                      Service {getSortIcon('frequency')}
+                    </div>
+                  </th>
+                  <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                    Status
+                  </th>
+                  <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className='bg-white divide-y divide-gray-200'>
+                {filteredClients.map((client) => (
+                  <tr key={client._id} className='hover:bg-gray-50'>
+                    <td className='px-6 py-4 whitespace-nowrap'>
+                      <div>
+                        <div className='text-sm font-medium text-gray-900'>
+                          {client.name}
+                        </div>
+                        <div className='text-sm text-gray-500'>
+                          ID: {client._id.slice(-6)}
+                        </div>
+                      </div>
+                    </td>
+                    <td className='px-6 py-4 whitespace-nowrap'>
+                      <div className='text-sm text-gray-900'>
+                        📧 {client.email}
+                      </div>
+                      <div className='text-sm text-gray-500'>
+                        📞 {client.phone}
+                      </div>
+                    </td>
+                    <td className='px-6 py-4 whitespace-nowrap'>
+                      <div className='text-sm text-gray-900'>
+                        {client.address.street}
+                      </div>
+                      <div className='text-sm text-gray-500'>
+                        {client.address.city}, {client.address.state}{' '}
+                        {client.address.zipCode}
+                      </div>
+                    </td>
+                    <td className='px-6 py-4 whitespace-nowrap'>
+                      <span
+                        className={`px-2 py-1 rounded text-xs font-medium ${getFrequencyBadgeColor(
+                          client.serviceFrequency
+                        )}`}>
+                        {client.serviceFrequency.replace('-', ' ')}
+                      </span>
+                      {client.serviceDay && (
+                        <div className='text-xs text-gray-500 mt-1'>
+                          {client.serviceDay}s
+                        </div>
+                      )}
+                    </td>
+                    <td className='px-6 py-4 whitespace-nowrap'>
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          client.isActive
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-red-100 text-red-800'
+                        }`}>
+                        {client.isActive ? 'Active' : 'Inactive'}
+                      </span>
+                    </td>
+                    <td className='px-6 py-4 whitespace-nowrap text-sm space-x-2'>
+                      <button
+                        onClick={() => fetchClientPools(client)}
+                        className='bg-blue-600 text-white px-3 py-1 rounded text-xs hover:bg-blue-700 transition-colors'>
+                        View Pools
+                      </button>
+                      <button className='bg-green-600 text-white px-3 py-1 rounded text-xs hover:bg-green-700 transition-colors'>
+                        Log Visit
+                      </button>
+                      <button className='bg-gray-200 text-gray-700 px-3 py-1 rounded text-xs hover:bg-gray-300 transition-colors'>
+                        ⚙️
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {filteredClients.length === 0 && (
+            <div className='text-center py-12'>
+              <div className='text-gray-500 text-lg'>
+                {searchTerm ||
+                statusFilter !== 'all' ||
+                frequencyFilter !== 'all'
+                  ? 'No clients match your search criteria'
+                  : 'No clients found'}
+              </div>
+              {(searchTerm ||
+                statusFilter !== 'all' ||
+                frequencyFilter !== 'all') && (
+                <button
+                  onClick={clearFilters}
+                  className='mt-2 text-blue-600 hover:text-blue-800'>
+                  Clear filters to see all clients
+                </button>
+              )}
             </div>
-            <div className='space-y-2 text-sm text-gray-600'>
-              <p>📧 {client.email}</p>
-              <p>📞 {client.phone}</p>
-              <p>
-                📍 {client.address.street}, {client.address.city}
-              </p>
-              <div className='flex items-center gap-2'>
-                <span>🗓️</span>
+          )}
+        </div>
+      )}
+
+      {/* Grid View (Original Card Layout) */}
+      {viewMode === 'grid' && (
+        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
+          {filteredClients.map((client) => (
+            <div
+              key={client._id}
+              className='bg-white rounded-lg shadow p-6 border border-gray-200'>
+              <div className='flex justify-between items-start mb-3'>
+                <h3 className='text-lg font-semibold text-gray-900'>
+                  {client.name}
+                </h3>
                 <span
-                  className={`px-2 py-1 rounded text-xs font-medium ${getFrequencyBadgeColor(
-                    client.serviceFrequency
-                  )}`}>
-                  {client.serviceFrequency}
+                  className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    client.isActive
+                      ? 'bg-green-100 text-green-800'
+                      : 'bg-red-100 text-red-800'
+                  }`}>
+                  {client.isActive ? 'Active' : 'Inactive'}
                 </span>
               </div>
+              <div className='space-y-2 text-sm text-gray-600'>
+                <p>📧 {client.email}</p>
+                <p>📞 {client.phone}</p>
+                <p>
+                  📍 {client.address.street}, {client.address.city}
+                </p>
+                <div className='flex items-center gap-2'>
+                  <span>🗓️</span>
+                  <span
+                    className={`px-2 py-1 rounded text-xs font-medium ${getFrequencyBadgeColor(
+                      client.serviceFrequency
+                    )}`}>
+                    {client.serviceFrequency}
+                  </span>
+                </div>
+              </div>
+              <div className='mt-4 flex gap-2'>
+                <button
+                  onClick={() => fetchClientPools(client)}
+                  className='flex-1 bg-blue-600 text-white py-2 px-3 rounded text-sm hover:bg-blue-700 transition-colors'>
+                  View Pools
+                </button>
+                <button className='flex-1 bg-green-600 text-white py-2 px-3 rounded text-sm hover:bg-green-700 transition-colors'>
+                  Log Visit
+                </button>
+                <button className='bg-gray-200 text-gray-700 py-2 px-3 rounded text-sm hover:bg-gray-300 transition-colors'>
+                  ⚙️
+                </button>
+              </div>
             </div>
-            <div className='mt-4 flex gap-2'>
-              <button
-                onClick={() => fetchClientPools(client)}
-                className='flex-1 bg-blue-600 text-white py-2 px-3 rounded text-sm hover:bg-blue-700 transition-colors'>
-                View Pools
-              </button>
-              <button className='flex-1 bg-green-600 text-white py-2 px-3 rounded text-sm hover:bg-green-700 transition-colors'>
-                Log Visit
-              </button>
-              <button className='bg-gray-200 text-gray-700 py-2 px-3 rounded text-sm hover:bg-gray-300 transition-colors'>
-                ⚙️
-              </button>
+          ))}
+
+          {filteredClients.length === 0 && (
+            <div className='col-span-full text-center py-12'>
+              <div className='text-gray-500 text-lg'>
+                {searchTerm ||
+                statusFilter !== 'all' ||
+                frequencyFilter !== 'all'
+                  ? 'No clients match your search criteria'
+                  : 'No clients found'}
+              </div>
+              {(searchTerm ||
+                statusFilter !== 'all' ||
+                frequencyFilter !== 'all') && (
+                <button
+                  onClick={clearFilters}
+                  className='mt-2 text-blue-600 hover:text-blue-800'>
+                  Clear filters to see all clients
+                </button>
+              )}
             </div>
-          </div>
-        ))}
-      </div>
+          )}
+        </div>
+      )}
 
       {/* Client Pools Modal */}
       {showClientPools && selectedClient && (
@@ -365,44 +699,36 @@ export default function ClientManagement() {
                           <p>Target pH: {pool.targetLevels.ph.target}</p>
                           <p>
                             Target Free Chlorine:{' '}
-                            {pool.targetLevels.freeChlorine.target} ppm
+                            {pool.targetLevels.freeChlorine.target}
                           </p>
                           <p>
                             Target Alkalinity:{' '}
-                            {pool.targetLevels.totalAlkalinity.target} ppm
+                            {pool.targetLevels.totalAlkalinity.target}
                           </p>
                         </div>
                       </div>
-                      <div className='flex gap-2'>
-                        <button
-                          onClick={() => handleEditPool(pool)}
-                          className='bg-gray-600 text-white px-3 py-1 rounded text-sm hover:bg-gray-700'>
-                          ⚙️ Edit
-                        </button>
-                        <button className='bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700'>
-                          View History
-                        </button>
-                        <button className='bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700'>
-                          Log Visit
-                        </button>
-                      </div>
+                      <button
+                        onClick={() => handleEditPool(pool)}
+                        className='bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700'>
+                        Edit
+                      </button>
                     </div>
                   </div>
                 ))}
-              </div>
 
-              <div className='mt-6 flex justify-end'>
-                <button className='bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700'>
-                  + Add New Pool
-                </button>
+                {clientPools.length === 0 && (
+                  <div className='text-center text-gray-500 py-8'>
+                    No pools found for this client
+                  </div>
+                )}
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Edit Pool Modal */}
-      {showEditPool && editingPool && (
+      {/* Pool Editor Modal */}
+      {showEditPool && (
         <TabbedPoolEditor
           pool={editingPool}
           isOpen={showEditPool}
