@@ -60,6 +60,8 @@ app/api/debug
 app/api/fix
 app/api/seed
 app/api/test
+app/api/admin
+app/api/admin/*
 
 # shell scripts
 *.sh
