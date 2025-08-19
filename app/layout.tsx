@@ -34,22 +34,71 @@ export default function RootLayout({
         <meta name='cache-control' content='max-age=0' />
         <meta name='version' content='3.0.20241208' />
         <meta name='last-modified' content='2025-08-14' />
+
+        {/* Hydration Fix Script - Runs before React hydration */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                // Remove the attribute if it exists on page load
+                function removeColorZillaAttribute() {
+                  if (document.body && document.body.hasAttribute('cz-shortcut-listen')) {
+                    document.body.removeAttribute('cz-shortcut-listen');
+                  }
+                }
+                
+                // Run immediately
+                removeColorZillaAttribute();
+                
+                // Set up MutationObserver to catch future additions
+                if (typeof MutationObserver !== 'undefined') {
+                  const observer = new MutationObserver((mutations) => {
+                    mutations.forEach((mutation) => {
+                      if (
+                        mutation.type === 'attributes' &&
+                        mutation.attributeName === 'cz-shortcut-listen' &&
+                        mutation.target === document.body
+                      ) {
+                        document.body.removeAttribute('cz-shortcut-listen');
+                      }
+                    });
+                  });
+                  
+                  // Start observing once DOM is ready
+                  function startObserver() {
+                    if (document.body) {
+                      observer.observe(document.body, {
+                        attributes: true,
+                        attributeFilter: ['cz-shortcut-listen']
+                      });
+                    }
+                  }
+                  
+                  if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', startObserver);
+                  } else {
+                    startObserver();
+                  }
+                }
+              })();
+            `,
+          }}
+        />
       </head>
-      <body className='antialiased max-w-screen-2xl mx-auto'>
+      <body
+        className='antialiased max-w-screen-2xl mx-auto'
+        suppressHydrationWarning>
         <ThemeProvider attribute='class' defaultTheme='system' enableSystem>
-          {/* Full height flex container */}
-          <div className='min-h-screen flex flex-col'>
-            {/* Navigation Component - Sticky at top */}
-            <Navigation />
+          {/* Navigation Component */}
+          <Navigation />
 
-            {/* Main Content - Grows to fill available space */}
-            <div className='flex-1 container mx-auto bg-white rounded-4xl'>
-              <main className='p-6'>{children}</main>
-            </div>
-
-            {/* Footer Component - Sticky at bottom */}
-            <Footer />
+          {/* Main Content */}
+          <div className='container mx-auto bg-white rounded-4xl min-h-[calc(100vh-2rem)]'>
+            <main className='p-6'>{children}</main>
           </div>
+
+          {/* Footer Component */}
+          <Footer />
         </ThemeProvider>
       </body>
     </html>
