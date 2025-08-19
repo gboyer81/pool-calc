@@ -51,35 +51,35 @@ export default function AdminPanel() {
     fetchTechnicians()
   }, [])
 
-  const handleSeedPools = async () => {
-    if (!confirm('Create sample pools for all clients without pools?')) return
+  // const handleSeedPools = async () => {
+  //   if (!confirm('Create sample pools for all clients without pools?')) return
 
-    try {
-      setSeeding(true)
-      const token = localStorage.getItem('technicianToken')
+  //   try {
+  //     setSeeding(true)
+  //     const token = localStorage.getItem('technicianToken')
 
-      const response = await fetch('/api/admin/seed-pools', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      })
+  //     const response = await fetch('/api/admin/seed-pools', {
+  //       method: 'POST',
+  //       headers: {
+  //         Authorization: `Bearer ${token}`,
+  //         'Content-Type': 'application/json',
+  //       },
+  //     })
 
-      const data = await response.json()
+  //     const data = await response.json()
 
-      if (data.success) {
-        alert(`✅ ${data.message}`)
-      } else {
-        alert(`❌ Error: ${data.error}`)
-      }
-    } catch (error) {
-      console.error('Error seeding pools:', error)
-      alert('❌ Failed to create sample pools')
-    } finally {
-      setSeeding(false)
-    }
-  }
+  //     if (data.success) {
+  //       alert(`✅ ${data.message}`)
+  //     } else {
+  //       alert(`❌ Error: ${data.error}`)
+  //     }
+  //   } catch (error) {
+  //     console.error('Error seeding pools:', error)
+  //     alert('❌ Failed to create sample pools')
+  //   } finally {
+  //     setSeeding(false)
+  //   }
+  // }
 
   const fetchTechnicians = async () => {
     try {
@@ -285,7 +285,7 @@ export default function AdminPanel() {
         {/* <DatabaseDiagnostic /> */}
 
         {/* Quick Add Pools for clients with none */}
-        <div className='mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200'>
+        {/* <div className='mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200'>
           <h3 className='text-lg font-semibold text-blue-900 mb-2'>
             Quick Setup
           </h3>
@@ -302,7 +302,7 @@ export default function AdminPanel() {
             }`}>
             {seeding ? '🔄 Creating Pools...' : '🏊‍♂️ Create Sample Pools'}
           </button>
-        </div>
+        </div> */}
 
         {error && (
           <div className='bg-red-100 text-red-800 p-4 rounded-lg mb-6'>
