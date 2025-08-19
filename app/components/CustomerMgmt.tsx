@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+import TabbedPoolEditor from '@/components/TabbedPoolEditor'
 
 interface Client {
   _id: string
@@ -41,6 +42,33 @@ interface Pool {
     avgDepth: number
   }
   notes?: string
+  // Add these optional properties for the tabbed editor
+  equipment?: {
+    filter?: {
+      type: 'sand' | 'cartridge' | 'de'
+      model?: string
+    }
+    pump?: {
+      model?: string
+      horsepower?: number
+    }
+    heater?: {
+      type: 'gas' | 'electric' | 'heat-pump'
+      model?: string
+    }
+    saltSystem?: {
+      model?: string
+      targetSalt: number
+    }
+  }
+  extendedTargetLevels?: {
+    ph?: { min?: number; max?: number; target: number }
+    freeChlorine?: { min?: number; max?: number; target: number }
+    totalAlkalinity?: { min?: number; max?: number; target: number }
+    calciumHardness?: { min?: number; max?: number; target?: number }
+    cyanuricAcid?: { min?: number; max?: number; target?: number }
+    salt?: { min?: number; max?: number; target?: number }
+  }
 }
 
 interface PoolFormData {
@@ -67,17 +95,6 @@ export default function ClientManagement() {
   // Pool editing state
   const [showEditPool, setShowEditPool] = useState(false)
   const [editingPool, setEditingPool] = useState<Pool | null>(null)
-  const [poolFormData, setPoolFormData] = useState<PoolFormData>({
-    name: '',
-    type: 'residential',
-    shape: 'rectangular',
-    gallons: '',
-    avgDepth: '',
-    phTarget: '7.4',
-    freeChlorineTarget: '2.0',
-    totalAlkalinityTarget: '100',
-    notes: '',
-  })
   const [poolSaving, setPoolSaving] = useState(false)
 
   // Fetch clients
@@ -161,23 +178,12 @@ export default function ClientManagement() {
   }
 
   const handleEditPool = (pool: Pool) => {
+    console.log('🐛 handleEditPool triggered with pool:', pool)
     setEditingPool(pool)
-    setPoolFormData({
-      name: pool.name,
-      type: pool.type,
-      shape: pool.shape,
-      gallons: pool.volume.gallons.toString(),
-      avgDepth: pool.dimensions?.avgDepth?.toString() || '',
-      phTarget: pool.targetLevels.ph.target.toString(),
-      freeChlorineTarget: pool.targetLevels.freeChlorine.target.toString(),
-      totalAlkalinityTarget:
-        pool.targetLevels.totalAlkalinity.target.toString(),
-      notes: pool.notes || '',
-    })
     setShowEditPool(true)
   }
 
-  const handleSavePool = async () => {
+  const handleSavePool = async (updatedPoolData: Partial<Pool>) => {
     if (!editingPool) return
 
     try {
@@ -188,59 +194,13 @@ export default function ClientManagement() {
         return
       }
 
-      // Validate required fields
-      if (!poolFormData.name.trim()) {
-        alert('Pool name is required')
-        return
-      }
-
-      if (!poolFormData.gallons || isNaN(Number(poolFormData.gallons))) {
-        alert('Valid pool volume is required')
-        return
-      }
-
-      if (!poolFormData.avgDepth || isNaN(Number(poolFormData.avgDepth))) {
-        alert('Valid average depth is required')
-        return
-      }
-
-      const updateData = {
-        name: poolFormData.name.trim(),
-        type: poolFormData.type,
-        shape: poolFormData.shape,
-        volume: {
-          gallons: Number(poolFormData.gallons),
-        },
-        dimensions: {
-          avgDepth: Number(poolFormData.avgDepth),
-        },
-        targetLevels: {
-          ph: {
-            min: 7.2,
-            max: 7.6,
-            target: Number(poolFormData.phTarget),
-          },
-          freeChlorine: {
-            min: 1.0,
-            max: 3.0,
-            target: Number(poolFormData.freeChlorineTarget),
-          },
-          totalAlkalinity: {
-            min: 80,
-            max: 120,
-            target: Number(poolFormData.totalAlkalinityTarget),
-          },
-        },
-        notes: poolFormData.notes.trim(),
-      }
-
       const response = await fetch(`/api/pools/${editingPool._id}`, {
         method: 'PUT',
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(updateData),
+        body: JSON.stringify(updatedPoolData),
       })
 
       const data = await response.json()
@@ -375,7 +335,7 @@ export default function ClientManagement() {
 
       {/* Client Pools Modal */}
       {showClientPools && selectedClient && (
-        <div className='fixed inset-0 bg-black/50 backdrop-blur-xl flex items-center justify-center z-50'>
+        <div className='fixed inset-0 bg-black/70 backdrop-blur-xl flex items-center justify-center z-50'>
           <div className='bg-white rounded-lg max-w-4xl w-full mx-4 max-h-96 overflow-y-auto'>
             <div className='p-6'>
               <div className='flex justify-between items-center mb-4'>
@@ -443,219 +403,16 @@ export default function ClientManagement() {
 
       {/* Edit Pool Modal */}
       {showEditPool && editingPool && (
-        <div className='fixed inset-0 bg-black/50 backdrop-blur-xl flex items-center justify-center z-50'>
-          <div className='bg-white rounded-lg max-w-2xl w-full mx-4 max-h-screen overflow-y-auto'>
-            <div className='p-6'>
-              <div className='flex justify-between items-center mb-4'>
-                <h2 className='text-2xl font-bold'>
-                  Edit Pool: {editingPool.name}
-                </h2>
-                <button
-                  onClick={() => setShowEditPool(false)}
-                  className='text-gray-500 hover:text-gray-700 text-2xl'>
-                  ✕
-                </button>
-              </div>
-
-              <div className='space-y-4'>
-                {/* Pool Name */}
-                <div>
-                  <label className='block text-sm font-medium text-gray-700 mb-1'>
-                    Pool Name *
-                  </label>
-                  <input
-                    type='text'
-                    value={poolFormData.name}
-                    onChange={(e) =>
-                      setPoolFormData({ ...poolFormData, name: e.target.value })
-                    }
-                    className='w-full px-3 py-2 border border-gray-300 rounded-md'
-                    placeholder='Main Pool'
-                  />
-                </div>
-
-                {/* Pool Type and Shape */}
-                <div className='grid grid-cols-2 gap-4'>
-                  <div>
-                    <label className='block text-sm font-medium text-gray-700 mb-1'>
-                      Type *
-                    </label>
-                    <select
-                      value={poolFormData.type}
-                      onChange={(e) =>
-                        setPoolFormData({
-                          ...poolFormData,
-                          type: e.target.value as 'residential' | 'commercial',
-                        })
-                      }
-                      className='w-full px-3 py-2 border border-gray-300 rounded-md'>
-                      <option value='residential'>Residential</option>
-                      <option value='commercial'>Commercial</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className='block text-sm font-medium text-gray-700 mb-1'>
-                      Shape *
-                    </label>
-                    <select
-                      value={poolFormData.shape}
-                      onChange={(e) =>
-                        setPoolFormData({
-                          ...poolFormData,
-                          shape: e.target.value,
-                        })
-                      }
-                      className='w-full px-3 py-2 border border-gray-300 rounded-md'>
-                      <option value='rectangular'>Rectangular</option>
-                      <option value='circular'>Circular</option>
-                      <option value='oval'>Oval</option>
-                      <option value='kidney'>Kidney</option>
-                      <option value='freeform'>Freeform</option>
-                    </select>
-                  </div>
-                </div>
-
-                {/* Volume and Depth */}
-                <div className='grid grid-cols-2 gap-4'>
-                  <div>
-                    <label className='block text-sm font-medium text-gray-700 mb-1'>
-                      Volume (gallons) *
-                    </label>
-                    <input
-                      type='number'
-                      value={poolFormData.gallons}
-                      onChange={(e) =>
-                        setPoolFormData({
-                          ...poolFormData,
-                          gallons: e.target.value,
-                        })
-                      }
-                      className='w-full px-3 py-2 border border-gray-300 rounded-md'
-                      placeholder='20000'
-                    />
-                  </div>
-                  <div>
-                    <label className='block text-sm font-medium text-gray-700 mb-1'>
-                      Average Depth (ft) *
-                    </label>
-                    <input
-                      type='number'
-                      step='0.1'
-                      value={poolFormData.avgDepth}
-                      onChange={(e) =>
-                        setPoolFormData({
-                          ...poolFormData,
-                          avgDepth: e.target.value,
-                        })
-                      }
-                      className='w-full px-3 py-2 border border-gray-300 rounded-md'
-                      placeholder='5.5'
-                    />
-                  </div>
-                </div>
-
-                {/* Target Levels */}
-                <div>
-                  <h3 className='text-lg font-medium text-gray-900 mb-3'>
-                    Target Chemical Levels
-                  </h3>
-                  <div className='grid grid-cols-3 gap-4'>
-                    <div>
-                      <label className='block text-sm font-medium text-gray-700 mb-1'>
-                        pH Target
-                      </label>
-                      <input
-                        type='number'
-                        step='0.1'
-                        value={poolFormData.phTarget}
-                        onChange={(e) =>
-                          setPoolFormData({
-                            ...poolFormData,
-                            phTarget: e.target.value,
-                          })
-                        }
-                        className='w-full px-3 py-2 border border-gray-300 rounded-md'
-                        placeholder='7.4'
-                      />
-                    </div>
-                    <div>
-                      <label className='block text-sm font-medium text-gray-700 mb-1'>
-                        Free Chlorine (ppm)
-                      </label>
-                      <input
-                        type='number'
-                        step='0.1'
-                        value={poolFormData.freeChlorineTarget}
-                        onChange={(e) =>
-                          setPoolFormData({
-                            ...poolFormData,
-                            freeChlorineTarget: e.target.value,
-                          })
-                        }
-                        className='w-full px-3 py-2 border border-gray-300 rounded-md'
-                        placeholder='2.0'
-                      />
-                    </div>
-                    <div>
-                      <label className='block text-sm font-medium text-gray-700 mb-1'>
-                        Total Alkalinity (ppm)
-                      </label>
-                      <input
-                        type='number'
-                        value={poolFormData.totalAlkalinityTarget}
-                        onChange={(e) =>
-                          setPoolFormData({
-                            ...poolFormData,
-                            totalAlkalinityTarget: e.target.value,
-                          })
-                        }
-                        className='w-full px-3 py-2 border border-gray-300 rounded-md'
-                        placeholder='100'
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Notes */}
-                <div>
-                  <label className='block text-sm font-medium text-gray-700 mb-1'>
-                    Notes
-                  </label>
-                  <textarea
-                    value={poolFormData.notes}
-                    onChange={(e) =>
-                      setPoolFormData({
-                        ...poolFormData,
-                        notes: e.target.value,
-                      })
-                    }
-                    className='w-full px-3 py-2 border border-gray-300 rounded-md'
-                    rows={3}
-                    placeholder='Special instructions or notes about this pool...'
-                  />
-                </div>
-              </div>
-
-              <div className='mt-6 flex justify-end gap-3'>
-                <button
-                  onClick={() => setShowEditPool(false)}
-                  className='bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400'>
-                  Cancel
-                </button>
-                <button
-                  onClick={handleSavePool}
-                  disabled={poolSaving}
-                  className={`px-4 py-2 rounded text-white ${
-                    poolSaving
-                      ? 'bg-gray-400 cursor-not-allowed'
-                      : 'bg-blue-600 hover:bg-blue-700'
-                  }`}>
-                  {poolSaving ? 'Saving...' : 'Save Pool'}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+        <TabbedPoolEditor
+          pool={editingPool}
+          isOpen={showEditPool}
+          onClose={() => {
+            setShowEditPool(false)
+            setEditingPool(null)
+          }}
+          onSave={handleSavePool}
+          saving={poolSaving}
+        />
       )}
 
       {/* Add Client Modal (placeholder) */}

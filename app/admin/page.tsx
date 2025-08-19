@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import ProtectedRoute from '../components/ProtectedRoute'
+// import DatabaseDiagnostic from '@/components/DBDiagnostics'
 
 interface Technician {
   _id: string
@@ -44,10 +45,41 @@ export default function AdminPanel() {
     serviceAreas: [],
   })
   const [formLoading, setFormLoading] = useState(false)
+  const [seeding, setSeeding] = useState(false)
 
   useEffect(() => {
     fetchTechnicians()
   }, [])
+
+  const handleSeedPools = async () => {
+    if (!confirm('Create sample pools for all clients without pools?')) return
+
+    try {
+      setSeeding(true)
+      const token = localStorage.getItem('technicianToken')
+
+      const response = await fetch('/api/admin/seed-pools', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        alert(`✅ ${data.message}`)
+      } else {
+        alert(`❌ Error: ${data.error}`)
+      }
+    } catch (error) {
+      console.error('Error seeding pools:', error)
+      alert('❌ Failed to create sample pools')
+    } finally {
+      setSeeding(false)
+    }
+  }
 
   const fetchTechnicians = async () => {
     try {
@@ -248,6 +280,28 @@ export default function AdminPanel() {
               ← Dashboard
             </button>
           </div>
+        </div>
+
+        {/* <DatabaseDiagnostic /> */}
+
+        {/* Quick Add Pools for clients with none */}
+        <div className='mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200'>
+          <h3 className='text-lg font-semibold text-blue-900 mb-2'>
+            Quick Setup
+          </h3>
+          <p className='text-blue-700 mb-3'>
+            Create sample pools for clients that don't have any pools yet.
+          </p>
+          <button
+            onClick={handleSeedPools}
+            disabled={seeding}
+            className={`px-4 py-2 rounded text-white ${
+              seeding
+                ? 'bg-gray-400 cursor-not-allowed'
+                : 'bg-blue-600 hover:bg-blue-700'
+            }`}>
+            {seeding ? '🔄 Creating Pools...' : '🏊‍♂️ Create Sample Pools'}
+          </button>
         </div>
 
         {error && (

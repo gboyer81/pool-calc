@@ -60,3 +60,10 @@ app/api/debug
 app/api/fix
 app/api/seed
 app/api/test
+
+# shell scripts
+*.sh
+
+# debug components
+DBDiagnostics.tsx
+APIDebugTool.tsx

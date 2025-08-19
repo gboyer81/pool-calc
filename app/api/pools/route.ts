@@ -117,7 +117,7 @@ interface CreatePoolResponse extends ApiResponse {
 export async function GET(request: NextRequest) {
   try {
     const client = await clientPromise
-    const db = client.db('pool-service')
+    const db = client.db('poolCalc')
     const { searchParams } = new URL(request.url)
     const clientId = searchParams.get('clientId')
 
@@ -148,7 +148,7 @@ export async function POST(request: NextRequest) {
   try {
     const body: PoolInput = await request.json()
     const client = await clientPromise
-    const db = client.db('pool-service')
+    const db = client.db('poolCalc')
 
     // Calculate volume
     let volume = 0
