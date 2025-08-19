@@ -85,16 +85,14 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body
-        className='antialiased max-w-screen-2xl mx-auto'
-        suppressHydrationWarning>
+      <body className='antialiased w-full max-w-full overflow-x-hidden'>
         <ThemeProvider attribute='class' defaultTheme='system' enableSystem>
           {/* Navigation Component */}
           <Navigation />
 
           {/* Main Content */}
-          <div className='container mx-auto bg-white rounded-4xl min-h-[calc(100vh-2rem)]'>
-            <main className='p-6'>{children}</main>
+          <div className='w-full max-w-screen-2xl mx-auto bg-white min-h-[calc(100vh-2rem)] overflow-x-hidden'>
+            <main className='p-3 sm:p-6 w-full max-w-full'>{children}</main>
           </div>
 
           {/* Footer Component */}

@@ -272,12 +272,12 @@ export default function AssignmentsPage() {
     <ProtectedRoute requiredRoles={['admin', 'supervisor']}>
       <div className='max-w-screen-2xl mx-auto p-6'>
         {/* Header */}
-        <div className='flex justify-between items-center mb-6'>
+        <div className='flex flex-col items-center md:flex-row md:justify-between md:items-center mb-6'>
           <div>
-            <h1 className='text-3xl font-bold text-gray-900'>
+            <h1 className='md:mb-0 text-3xl font-bold text-gray-900'>
               Client Assignments
             </h1>
-            <p className='text-gray-600 mt-1'>
+            <p className='text-gray-600 mb-2 md:mb-0'>
               Manage technician-client assignments
             </p>
           </div>

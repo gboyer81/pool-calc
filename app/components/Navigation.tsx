@@ -119,6 +119,19 @@ export default function Navigation() {
     return () => window.removeEventListener('storage', handleStorageChange)
   }, [])
 
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = 'unset'
+    }
+
+    // Cleanup function
+    return () => {
+      document.body.style.overflow = 'unset'
+    }
+  }, [mobileMenuOpen])
+
   // Filter navigation items based on authentication and role
   const getVisibleNavItems = () => {
     return navigationItems.filter((item) => {
@@ -247,66 +260,70 @@ export default function Navigation() {
 
         {/* Mobile Navigation */}
         <div
-          className={`lg:hidden transition-all duration-300 ease-in-out ${
+          className={`lg:hidden fixed inset-x-0 top-16 z-50 transition-all duration-300 ease-in-out ${
             mobileMenuOpen
-              ? 'max-h-screen opacity-100'
-              : 'max-h-0 opacity-0 overflow-hidden'
+              ? 'translate-y-0 opacity-100 pointer-events-auto'
+              : '-translate-y-full opacity-0 pointer-events-none'
           }`}>
-          <div className='px-2 pt-2 pb-3 space-y-1 bg-white border-t border-gray-200 shadow-lg'>
-            {/* User Info (Mobile) */}
-            {isAuthenticated && technician && (
-              <div className='px-3 py-3 bg-blue-50 rounded-lg mb-3'>
-                <div className='text-sm font-medium text-gray-900'>
-                  👤 {technician.name}
-                </div>
-                <div className='text-xs text-gray-600'>
-                  {technician.role} • {technician.employeeId}
-                </div>
-              </div>
-            )}
-
-            {/* Navigation Items */}
-            {visibleNavItems.map((item) => (
-              <Link
-                key={item.name}
-                href={item.href}
-                onClick={() => setMobileMenuOpen(false)}
-                className={`flex items-center space-x-3 px-3 py-3 rounded-md text-base font-medium transition-colors duration-200 ${
-                  isActivePage(item.href)
-                    ? 'bg-blue-100 text-blue-700'
-                    : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
-                }`}>
-                <span className='text-xl'>{item.icon}</span>
-                <div>
-                  <div>{item.name}</div>
-                  <div className='text-xs text-gray-500'>
-                    {item.description}
+          <div className='bg-white border-t border-gray-200 shadow-lg max-h-[calc(100vh-4rem)] overflow-y-auto'>
+            <div className='px-3 pt-2 pb-3 space-y-1'>
+              {/* User Info (Mobile) - IMPROVED */}
+              {isAuthenticated && technician && (
+                <div className='px-3 py-3 bg-blue-50 rounded-lg mb-3'>
+                  <div className='text-sm font-medium text-gray-900 truncate'>
+                    👤 {technician.name}
+                  </div>
+                  <div className='text-xs text-gray-600 truncate'>
+                    {technician.role} • {technician.employeeId}
                   </div>
                 </div>
-              </Link>
-            ))}
+              )}
 
-            {/* Logout (Mobile) */}
-            {isAuthenticated && (
-              <button
-                onClick={handleLogout}
-                className='w-full flex items-center space-x-3 px-3 py-3 rounded-md text-base font-medium text-red-600 hover:bg-red-50 transition-colors duration-200'>
-                <span className='text-xl'>🚪</span>
-                <span>Logout</span>
-              </button>
-            )}
-
-            {/* Quick Stats (Mobile) */}
-            {isAuthenticated && technician && (
-              <div className='mt-4 pt-4 border-t border-gray-200'>
-                <div className='px-3 py-2 text-xs text-gray-600'>
-                  <div>
-                    Assigned Clients: {technician.assignedClients.length}
+              {/* Navigation Items - IMPROVED */}
+              {visibleNavItems.map((item) => (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`flex items-center space-x-3 px-3 py-3 rounded-md text-base font-medium transition-colors duration-200 ${
+                    isActivePage(item.href)
+                      ? 'bg-blue-100 text-blue-700'
+                      : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
+                  }`}>
+                  <span className='text-xl flex-shrink-0'>{item.icon}</span>
+                  <div className='min-w-0 flex-1'>
+                    <div className='truncate'>{item.name}</div>
+                    <div className='text-xs text-gray-500 truncate'>
+                      {item.description}
+                    </div>
                   </div>
-                  <div>Current Time: {new Date().toLocaleTimeString()}</div>
+                </Link>
+              ))}
+
+              {/* Logout (Mobile) - IMPROVED */}
+              {isAuthenticated && (
+                <button
+                  onClick={handleLogout}
+                  className='w-full flex items-center space-x-3 px-3 py-3 rounded-md text-base font-medium text-red-600 hover:bg-red-50 transition-colors duration-200'>
+                  <span className='text-xl flex-shrink-0'>🚪</span>
+                  <span className='truncate'>Logout</span>
+                </button>
+              )}
+
+              {/* Quick Stats (Mobile) - IMPROVED */}
+              {isAuthenticated && technician && (
+                <div className='mt-4 pt-4 border-t border-gray-200'>
+                  <div className='px-3 py-2 text-xs text-gray-600 space-y-1'>
+                    <div className='truncate'>
+                      Assigned Clients: {technician.assignedClients.length}
+                    </div>
+                    <div className='truncate'>
+                      Current Time: {new Date().toLocaleTimeString()}
+                    </div>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
       </nav>
