@@ -1299,8 +1299,8 @@ const PoolCalculator: React.FC = () => {
   }
 
   return (
-    <div className='max-w-2xl mx-auto p-5'>
-      <div className='space-y-5'>
+    <div className='grid grid-flow-col md:grid-flow-row-dense md:grid-cols-3 lg:grid-cols-4 grid-rows-1 w-full py-4 px-24'>
+      <div className='md:col-span-2 mr-6 p-6'>
         {/* Calculator Type Selector */}
         <div className='mb-5'>
           <label className='block mb-2 font-semibold text-gray-800'>
@@ -3215,6 +3215,11 @@ const PoolCalculator: React.FC = () => {
           ) : null}
         </div>
       )}
+      <div
+        id='tech-sidebar'
+        className='hidden md:grid md:place-items-center md:col-span-1 border-l border-gray-300'>
+        <span className='text-2xl font-semibold text-gray-600'>Test</span>
+      </div>
     </div>
   )
 }

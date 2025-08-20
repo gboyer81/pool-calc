@@ -21,7 +21,7 @@ export default function Footer() {
             </span>
           </div>
           <div className='hidden md:flex items-center space-x-2 text-xs text-gray-500'>
-            <div className='truncate'>
+            <div className='truncate' suppressHydrationWarning>
               Current Time: {currentTime.toLocaleTimeString()}
             </div>
           </div>

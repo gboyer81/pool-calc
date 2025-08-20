@@ -477,7 +477,7 @@ export default function AdminPanel() {
         {/* Add/Edit Technician Modal */}
         {showAddForm && (
           <div className='fixed inset-0 bg-black/70 backdrop-blur-lg flex items-center justify-center z-50'>
-            <div className='bg-white rounded-lg max-w-md w-full mx-4 max-h-96 overflow-y-auto'>
+            <div className='bg-white rounded-lg max-w-2xl w-full mx-4 max-h-fit overflow-y-auto'>
               <div className='p-6'>
                 <div className='flex justify-between items-center mb-4'>
                   <h2 className='text-xl font-bold'>
