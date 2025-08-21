@@ -4,6 +4,7 @@ import { ThemeProvider } from './components/ThemeProvider'
 import './globals.css'
 import Navigation from '@/components/Navigation'
 import Footer from '@/components/Footer'
+import { ScrollProgress } from 'components/magicui/scroll-progress'
 
 export const metadata: Metadata = {
   title: 'Pool Service Pro',
@@ -89,7 +90,8 @@ export default function RootLayout({
         <ThemeProvider attribute='class' defaultTheme='system' enableSystem>
           {/* Navigation Component */}
           <Navigation />
-
+          {/* Scroll Progress Bar */}
+          <ScrollProgress className='top-[64px]' />
           {/* Main Content */}
           <div className='w-full max-w-screen-2xl mx-auto bg-white min-h-[calc(100vh-2rem)] overflow-x-hidden'>
             <main className='p-3 sm:p-6 w-full max-w-full'>{children}</main>

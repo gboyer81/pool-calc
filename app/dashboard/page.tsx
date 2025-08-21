@@ -209,7 +209,7 @@ export default function TechnicianDashboard() {
   return (
     <div className='max-w-screen-2xl mx-auto p-6'>
       {/* Header */}
-      <div className='flex justify-between items-center mb-8'>
+      <div className='flex flex-col md:flex-row md:justify-between items-center mb-8'>
         <div>
           <h1 className='text-3xl font-bold text-gray-900'>
             {getGreeting()}, {technician?.name}! 👋

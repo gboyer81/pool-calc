@@ -17,7 +17,7 @@ export default function VersionCheck() {
   }
 
   return (
-    <div className='flex flex-row flex-nowrap items-center justify-center gap-1.5 mb-0 px-2 py-0.5 max-w-2xl mx-auto bg-gray-50 rounded-md text-[12.5px] text-gray-500'>
+    <div className='flex flex-row flex-nowrap items-center justify-center gap-1.5 mb-0 px-2 py-0.5 max-w-screen-lg mx-auto rounded-md text-[12.5px] text-gray-500'>
       <div>
         <strong>Version 1.1</strong>
       </div>

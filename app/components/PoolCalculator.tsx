@@ -61,6 +61,15 @@ type CalculatorType =
 type CalculationMode = 'target' | 'effect' | 'calculate'
 type PoolShape = 'rectangular' | 'circular' | 'oval' | 'kidney'
 
+interface TechnicianData {
+  _id: string
+  name: string
+  email: string
+  employeeId: string
+  role: 'technician' | 'supervisor' | 'admin'
+  assignedClients: string[]
+}
+
 const PoolCalculator: React.FC = () => {
   // State management
   const [currentCalculator, setCurrentCalculator] =
@@ -79,6 +88,9 @@ const PoolCalculator: React.FC = () => {
   const [savedPoolVolume, setSavedPoolVolume] = useState<number | null>(null)
   const [results, setResults] = useState<any>(null)
   const [showResults, setShowResults] = useState(false)
+
+  const [technician, setTechnician] = useState<TechnicianData | null>(null)
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false)
 
   // Form state
   const [poolShape, setPoolShape] = useState<PoolShape>('rectangular')
@@ -160,6 +172,106 @@ const PoolCalculator: React.FC = () => {
     estimateTargetTds: false,
     targetLsi: '0.0',
   })
+
+  // Authentication check
+  useEffect(() => {
+    const checkAuth = () => {
+      try {
+        const token = localStorage.getItem('technicianToken')
+        const technicianData = localStorage.getItem('technicianData')
+
+        if (token && technicianData) {
+          const parsedTechnician = JSON.parse(technicianData)
+          setTechnician(parsedTechnician)
+          setIsAuthenticated(true)
+        } else {
+          setTechnician(null)
+          setIsAuthenticated(false)
+        }
+      } catch (error) {
+        console.error('Error checking auth:', error)
+        setTechnician(null)
+        setIsAuthenticated(false)
+      }
+    }
+
+    checkAuth()
+
+    // Listen for storage changes (logout in another tab)
+    const handleStorageChange = () => {
+      checkAuth()
+    }
+
+    window.addEventListener('storage', handleStorageChange)
+    return () => window.removeEventListener('storage', handleStorageChange)
+  }, [])
+
+  const getNavigationItems = () => {
+    if (!technician) return []
+
+    const baseItems = [
+      {
+        name: 'Dashboard',
+        href: '/dashboard',
+        icon: '📊',
+        description: 'Your dashboard',
+      },
+      {
+        name: 'Clients',
+        href: '/clients',
+        icon: '👥',
+        description: 'Manage clients',
+      },
+      {
+        name: 'Visit Log',
+        href: '/visit/log',
+        icon: '📋',
+        description: 'Log visits',
+      },
+    ]
+
+    // Add role-specific items
+    if (technician.role === 'supervisor' || technician.role === 'admin') {
+      baseItems.push({
+        name: 'Assignments',
+        href: '/assignments',
+        icon: '🎯',
+        description: 'Client assignments',
+      })
+    }
+
+    if (technician.role === 'admin' || technician.role === 'supervisor') {
+      baseItems.push({
+        name: 'Admin',
+        href: '/admin',
+        icon: '👑',
+        description: 'Administration',
+      })
+    }
+
+    return baseItems
+  }
+
+  const handleLogout = () => {
+    localStorage.removeItem('technicianToken')
+    localStorage.removeItem('technicianData')
+    setTechnician(null)
+    setIsAuthenticated(false)
+    window.location.href = '/login'
+  }
+
+  const getRoleBadgeColor = (role: string) => {
+    switch (role) {
+      case 'admin':
+        return 'bg-red-100 text-red-800'
+      case 'supervisor':
+        return 'bg-blue-100 text-blue-800'
+      case 'technician':
+        return 'bg-green-100 text-green-800'
+      default:
+        return 'bg-gray-100 text-gray-800'
+    }
+  }
 
   // Calculation functions
   const calculatePoolVolume = (
@@ -1299,8 +1411,8 @@ const PoolCalculator: React.FC = () => {
   }
 
   return (
-    <div className='grid grid-flow-col md:grid-flow-row-dense md:grid-cols-3 lg:grid-cols-4 grid-rows-1 w-full py-4 px-24'>
-      <div className='md:col-span-2 mr-6 p-6'>
+    <div className='grid grid-flow-col md:grid-cols-4 lg:grid-cols-6 grid-rows-1 w-full p-8'>
+      <div className='md:col-span-3 lg:col-span-4 flex flex-col justify-start px-8'>
         {/* Calculator Type Selector */}
         <div className='mb-5'>
           <label className='block mb-2 font-semibold text-gray-800'>
@@ -1484,7 +1596,7 @@ const PoolCalculator: React.FC = () => {
                 placeholder='e.g., 5.5'
                 step='0.5'
               />
-              <div className='mt-2 text-sm text-gray-600 bg-gray-50 p-2 rounded'>
+              <div className='mt-2 text-sm text-gray-600 bg-gray-50 p-2 rounded py-4'>
                 <ul className='list-disc list-inside space-y-1 text-xs'>
                   <li>Average depth = (shallow depth + deep depth) / 2</li>
                   <li>eg: 3' shallow → 8' deep = (3 + 8) / 2 = 5.5</li>
@@ -3215,10 +3327,206 @@ const PoolCalculator: React.FC = () => {
           ) : null}
         </div>
       )}
-      <div
-        id='tech-sidebar'
-        className='hidden md:grid md:place-items-center md:col-span-1 border-l border-gray-300'>
-        <span className='text-2xl font-semibold text-gray-600'>Test</span>
+      <div className='hidden md:block md:col-span-2 mt-6'>
+        {isAuthenticated && technician ? (
+          // Authenticated User Sidebar
+          <div className='space-y-6 flex flex-col max-w-80 mx-auto justify-end'>
+            {/* User Info Section */}
+            <div className='bg-white rounded-lg shadow-sm border p-4'>
+              <div className='flex items-center space-x-3 mb-3'>
+                <div className='w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-semibold'>
+                  {technician.name.charAt(0).toUpperCase()}
+                </div>
+                <div className='flex-1 min-w-0 mr-[50px]'>
+                  <p className='text-sm font-medium text-gray-900 truncate'>
+                    {technician.name}
+                  </p>
+                  <p className='text-xs text-gray-500 truncate'>
+                    ID: {technician.employeeId}
+                  </p>
+                </div>
+              </div>
+              <span
+                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getRoleBadgeColor(
+                  technician.role
+                )}`}>
+                {technician.role.charAt(0).toUpperCase() +
+                  technician.role.slice(1)}
+              </span>
+            </div>
+
+            {/* Quick Navigation */}
+            <div className='bg-white rounded-lg shadow-sm border p-4'>
+              <h3 className='text-sm font-semibold text-gray-900 mb-3'>
+                Quick Navigation
+              </h3>
+              <div className='space-y-2'>
+                {getNavigationItems().map((item) => (
+                  <a
+                    key={item.href}
+                    href={item.href}
+                    className='w-full flex items-center space-x-3 p-2 rounded-md hover:bg-gray-50 transition-colors group'>
+                    <span className='text-lg'>{item.icon}</span>
+                    <div className='flex-1 min-w-0'>
+                      <p className='text-sm font-medium text-gray-900 group-hover:text-blue-600'>
+                        {item.name}
+                      </p>
+                      <p className='text-xs text-gray-500'>
+                        {item.description}
+                      </p>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </div>
+
+            {/* Quick Actions */}
+            <div className='bg-white rounded-lg shadow-sm border p-4'>
+              <h3 className='text-sm font-semibold text-gray-900 mb-3'>
+                Quick Actions
+              </h3>
+              <div className='space-y-2'>
+                {/* Emergency Visit */}
+                <button
+                  onClick={() => (window.location.href = '/visit/log')}
+                  className='w-full flex items-center space-x-2 p-2 text-left rounded-md hover:bg-red-50 transition-colors group'>
+                  <span className='text-red-600'>🚨</span>
+                  <div className='flex-1'>
+                    <p className='text-sm font-medium text-gray-900 group-hover:text-red-600'>
+                      Emergency Visit
+                    </p>
+                    <p className='text-xs text-gray-500'>Log urgent service</p>
+                  </div>
+                </button>
+
+                {/* My Clients */}
+                <button
+                  onClick={() => (window.location.href = '/clients')}
+                  className='w-full flex items-center space-x-2 p-2 text-left rounded-md hover:bg-blue-50 transition-colors group'>
+                  <span className='text-blue-600'>👥</span>
+                  <div className='flex-1'>
+                    <p className='text-sm font-medium text-gray-900 group-hover:text-blue-600'>
+                      My Clients
+                    </p>
+                    <p className='text-xs text-gray-500'>
+                      {technician.assignedClients.length} assigned
+                    </p>
+                  </div>
+                </button>
+
+                {/* Today's Route */}
+                <button
+                  onClick={() => (window.location.href = '/dashboard')}
+                  className='w-full flex items-center space-x-2 p-2 text-left rounded-md hover:bg-green-50 transition-colors group'>
+                  <span className='text-green-600'>📅</span>
+                  <div className='flex-1'>
+                    <p className='text-sm font-medium text-gray-900 group-hover:text-green-600'>
+                      Today's Route
+                    </p>
+                    <p className='text-xs text-gray-500'>
+                      View scheduled visits
+                    </p>
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            {/* Calculator Tools */}
+            <div className='bg-white rounded-lg shadow-sm border p-4'>
+              <h3 className='text-sm font-semibold text-gray-900 mb-3'>
+                Calculator Tools
+              </h3>
+              <div className='grid grid-cols-1 gap-2'>
+                <div className='text-xs text-gray-600 mb-1'>
+                  Current page - Pool Calculator
+                </div>
+                <div className='space-y-1 text-xs'>
+                  <div className='flex justify-between mr-2'>
+                    <span>• Volume Calculator</span>
+                    <span className='text-blue-600'>📐</span>
+                  </div>
+                  <div className='flex justify-between mr-2'>
+                    <span>• Chemical Dosing</span>
+                    <span className='text-green-600'>🧪</span>
+                  </div>
+                  <div className='flex justify-between mr-2'>
+                    <span>• LSI Calculator</span>
+                    <span className='text-purple-600'>⚖️</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Logout */}
+            <div className='bg-white rounded-lg shadow-sm border p-4'>
+              <button
+                onClick={handleLogout}
+                className='w-full flex items-center justify-center space-x-2 p-2 text-sm font-medium text-gray-700 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors'>
+                <span>🚪</span>
+                <span>Logout</span>
+              </button>
+            </div>
+          </div>
+        ) : (
+          // Not Authenticated Sidebar
+          <div className='space-y-6'>
+            <div className='bg-white rounded-lg shadow-sm border p-4'>
+              <div className='text-center'>
+                <div className='text-4xl mb-3'>🔐</div>
+                <h3 className='text-lg font-semibold text-gray-900 mb-2'>
+                  Technician Login
+                </h3>
+                <p className='text-sm text-gray-600 mb-4'>
+                  Access additional features and your personalized dashboard
+                </p>
+                <button
+                  onClick={() => (window.location.href = '/login')}
+                  className='w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors'>
+                  Login
+                </button>
+              </div>
+            </div>
+
+            {/* Guest Features */}
+            <div className='bg-white rounded-lg shadow-sm border p-4'>
+              <h3 className='text-sm font-semibold text-gray-900 mb-3'>
+                Available Features
+              </h3>
+              <div className='space-y-2 text-sm text-gray-600'>
+                <div className='flex items-center space-x-2'>
+                  <span className='text-green-600'>✓</span>
+                  <span>Pool Volume Calculator</span>
+                </div>
+                <div className='flex items-center space-x-2'>
+                  <span className='text-green-600'>✓</span>
+                  <span>Chemical Dosing Calculator</span>
+                </div>
+                <div className='flex items-center space-x-2'>
+                  <span className='text-green-600'>✓</span>
+                  <span>LSI Calculator</span>
+                </div>
+                <div className='flex items-center space-x-2'>
+                  <span className='text-green-600'>✓</span>
+                  <span>pH & Alkalinity Tools</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Login Benefits */}
+            <div className='bg-blue-50 rounded-lg border border-blue-200 p-4'>
+              <h3 className='text-sm font-semibold text-blue-900 mb-2'>
+                With Login:
+              </h3>
+              <div className='space-y-1 text-xs text-blue-800'>
+                <div>• Client Management</div>
+                <div>• Visit Logging</div>
+                <div>• Service History</div>
+                <div>• Dashboard & Reports</div>
+                <div>• Route Planning</div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

@@ -175,7 +175,7 @@ export default function Navigation() {
   return (
     <>
       {/* Navigation Header */}
-      <nav className='bg-white sticky top-0 z-50 border-b border-gray-200'>
+      <nav className='supports-backdrop-blur:bg-background/90 sticky top-0 z-40 w-full border-b border-border bg-background/40 backdrop-blur-lg'>
         <div className='max-w-screen-2xl mx-auto px-4'>
           <div className='flex justify-between h-16'>
             {/* Logo */}
@@ -208,7 +208,7 @@ export default function Navigation() {
 
               {/* User Info & Logout */}
               {isAuthenticated && technician && (
-                <div className='flex items-center space-x-3 ml-4 pl-4 border-l border-gray-200'>
+                <div className='hidden xl:flex xl:items-center xl:space-x-3 ml-4 pl-4 border-l border-gray-200'>
                   <div className='text-right'>
                     <div className='text-sm font-medium text-gray-900'>
                       {technician.name}

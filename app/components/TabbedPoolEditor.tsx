@@ -1,57 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-
-// Use the same Pool interface as your parent component
-interface Pool {
-  _id: string
-  clientId: string
-  name: string
-  type: 'residential' | 'commercial'
-  shape: string
-  volume: { gallons: number }
-  targetLevels: {
-    ph: { target: number }
-    freeChlorine: { target: number }
-    totalAlkalinity: { target: number }
-  }
-  dimensions?: {
-    length?: number
-    width?: number
-    diameter?: number
-    avgDepth: number
-  }
-  notes?: string
-  // Extended properties for full editing capability
-  equipment?: {
-    filter?: {
-      type: 'sand' | 'cartridge' | 'de'
-      model?: string
-      lastCleaned?: Date | string
-    }
-    pump?: {
-      model?: string
-      horsepower?: number
-    }
-    heater?: {
-      type: 'gas' | 'electric' | 'heat-pump'
-      model?: string
-    }
-    saltSystem?: {
-      model?: string
-      targetSalt: number
-    }
-  }
-  // Extended target levels for editing
-  extendedTargetLevels?: {
-    ph?: { min?: number; max?: number; target: number }
-    freeChlorine?: { min?: number; max?: number; target: number }
-    totalAlkalinity?: { min?: number; max?: number; target: number }
-    calciumHardness?: { min?: number; max?: number; target?: number }
-    cyanuricAcid?: { min?: number; max?: number; target?: number }
-    salt?: { min?: number; max?: number; target?: number }
-  }
-}
+import { Pool } from '@/types/pool-service'
 
 interface TabbedPoolEditorProps {
   pool: Pool | null
@@ -85,7 +35,7 @@ export default function TabbedPoolEditor({
     diameter: '',
 
     // Equipment
-    filterType: 'sand' as 'sand' | 'cartridge' | 'de',
+    filterType: 'de' as 'de' | 'cartridge' | 'sand',
     filterModel: '',
     pumpModel: '',
     pumpHorsepower: '',
@@ -101,6 +51,9 @@ export default function TabbedPoolEditor({
     freeChlorineTarget: '',
     freeChlorineMin: '',
     freeChlorineMax: '',
+    totalChlorineTarget: '',
+    totalChlorineMin: '',
+    totalChlorineMax: '',
     totalAlkalinityTarget: '',
     totalAlkalinityMin: '',
     totalAlkalinityMax: '',
@@ -119,6 +72,7 @@ export default function TabbedPoolEditor({
   })
 
   // Populate form when pool changes
+  // Populate form when pool changes
   useEffect(() => {
     if (pool) {
       setFormData({
@@ -132,77 +86,61 @@ export default function TabbedPoolEditor({
         width: pool.dimensions?.width?.toString() || '',
         diameter: pool.dimensions?.diameter?.toString() || '',
 
-        filterType:
-          (pool.equipment?.filter?.type as 'sand' | 'cartridge' | 'de') ||
-          'sand',
+        filterType: pool.equipment?.filter?.type || 'sand',
         filterModel: pool.equipment?.filter?.model || '',
         pumpModel: pool.equipment?.pump?.model || '',
         pumpHorsepower: pool.equipment?.pump?.horsepower?.toString() || '',
-        heaterType:
-          (pool.equipment?.heater?.type as
-            | ''
-            | 'gas'
-            | 'electric'
-            | 'heat-pump') || '',
+        heaterType: pool.equipment?.heater?.type || '',
         heaterModel: pool.equipment?.heater?.model || '',
         saltSystemModel: pool.equipment?.saltSystem?.model || '',
         saltSystemTarget:
           pool.equipment?.saltSystem?.targetSalt?.toString() || '',
 
-        // Use existing targetLevels structure, fallback to extended if available
-        phTarget:
-          pool.targetLevels?.ph?.target?.toString() ||
-          pool.extendedTargetLevels?.ph?.target?.toString() ||
-          '7.4',
-        phMin: (pool.extendedTargetLevels?.ph?.min || 7.2).toString(),
-        phMax: (pool.extendedTargetLevels?.ph?.max || 7.6).toString(),
+        // Use the enhanced targetLevels structure directly
+        phTarget: pool.targetLevels?.ph?.target?.toString() || '7.4',
+        phMin: pool.targetLevels?.ph?.min?.toString() || '7.2',
+        phMax: pool.targetLevels?.ph?.max?.toString() || '7.6',
 
         freeChlorineTarget:
-          pool.targetLevels?.freeChlorine?.target?.toString() ||
-          pool.extendedTargetLevels?.freeChlorine?.target?.toString() ||
-          '2.0',
-        freeChlorineMin: (
-          pool.extendedTargetLevels?.freeChlorine?.min || 1.0
-        ).toString(),
-        freeChlorineMax: (
-          pool.extendedTargetLevels?.freeChlorine?.max || 3.0
-        ).toString(),
+          pool.targetLevels?.freeChlorine?.target?.toString() || '2.0',
+        freeChlorineMin:
+          pool.targetLevels?.freeChlorine?.min?.toString() || '1.0',
+        freeChlorineMax:
+          pool.targetLevels?.freeChlorine?.max?.toString() || '3.0',
+
+        totalChlorineTarget:
+          pool.targetLevels?.totalChlorine?.target?.toString() || '3.0',
+        totalChlorineMin:
+          pool.targetLevels?.totalChlorine?.min?.toString() || '2.0',
+        totalChlorineMax:
+          pool.targetLevels?.totalChlorine?.max?.toString() || '5.0',
 
         totalAlkalinityTarget:
-          pool.targetLevels?.totalAlkalinity?.target?.toString() ||
-          pool.extendedTargetLevels?.totalAlkalinity?.target?.toString() ||
-          '100',
-        totalAlkalinityMin: (
-          pool.extendedTargetLevels?.totalAlkalinity?.min || 80
-        ).toString(),
-        totalAlkalinityMax: (
-          pool.extendedTargetLevels?.totalAlkalinity?.max || 120
-        ).toString(),
+          pool.targetLevels?.totalAlkalinity?.target?.toString() || '100',
+        totalAlkalinityMin:
+          pool.targetLevels?.totalAlkalinity?.min?.toString() || '80',
+        totalAlkalinityMax:
+          pool.targetLevels?.totalAlkalinity?.max?.toString() || '120',
 
         calciumHardnessTarget:
-          pool.extendedTargetLevels?.calciumHardness?.target?.toString() ||
-          '250',
-        calciumHardnessMin: (
-          pool.extendedTargetLevels?.calciumHardness?.min || 200
-        ).toString(),
-        calciumHardnessMax: (
-          pool.extendedTargetLevels?.calciumHardness?.max || 400
-        ).toString(),
+          pool.targetLevels?.calciumHardness?.target?.toString() || '250',
+        calciumHardnessMin:
+          pool.targetLevels?.calciumHardness?.min?.toString() || '200',
+        calciumHardnessMax:
+          pool.targetLevels?.calciumHardness?.max?.toString() || '400',
 
         cyanuricAcidTarget:
-          pool.extendedTargetLevels?.cyanuricAcid?.target?.toString() || '50',
-        cyanuricAcidMin: (
-          pool.extendedTargetLevels?.cyanuricAcid?.min || 30
-        ).toString(),
-        cyanuricAcidMax: (
-          pool.extendedTargetLevels?.cyanuricAcid?.max || 80
-        ).toString(),
+          pool.targetLevels?.cyanuricAcid?.target?.toString() || '50',
+        cyanuricAcidMin:
+          pool.targetLevels?.cyanuricAcid?.min?.toString() || '30',
+        cyanuricAcidMax:
+          pool.targetLevels?.cyanuricAcid?.max?.toString() || '80',
 
-        saltTarget: pool.extendedTargetLevels?.salt?.target?.toString() || '',
-        saltMin: pool.extendedTargetLevels?.salt?.min?.toString() || '',
-        saltMax: pool.extendedTargetLevels?.salt?.max?.toString() || '',
+        saltTarget: pool.targetLevels?.salt?.target?.toString() || '',
+        saltMin: pool.targetLevels?.salt?.min?.toString() || '',
+        saltMax: pool.targetLevels?.salt?.max?.toString() || '',
 
-        notes: pool.notes || '',
+        notes: pool?.notes || '',
       })
     }
   }, [pool])
@@ -217,10 +155,16 @@ export default function TabbedPoolEditor({
     const updatedPool: Partial<Pool> = {
       name: formData.name.trim(),
       type: formData.type,
-      shape: formData.shape,
+      shape: formData.shape as
+        | 'rectangular'
+        | 'circular'
+        | 'oval'
+        | 'kidney'
+        | 'freeform',
 
       volume: {
         gallons: Number(formData.gallons) || 0,
+        calculatedAt: new Date(),
       },
 
       dimensions: {
@@ -253,20 +197,8 @@ export default function TabbedPoolEditor({
         }),
       },
 
+      // Use the enhanced targetLevels structure
       targetLevels: {
-        ph: {
-          target: Number(formData.phTarget) || 7.4,
-        },
-        freeChlorine: {
-          target: Number(formData.freeChlorineTarget) || 2.0,
-        },
-        totalAlkalinity: {
-          target: Number(formData.totalAlkalinityTarget) || 100,
-        },
-      },
-
-      // Store extended target levels separately to preserve min/max values
-      extendedTargetLevels: {
         ph: {
           target: Number(formData.phTarget) || 7.4,
           min: Number(formData.phMin) || 7.2,
@@ -277,74 +209,78 @@ export default function TabbedPoolEditor({
           min: Number(formData.freeChlorineMin) || 1.0,
           max: Number(formData.freeChlorineMax) || 3.0,
         },
+        totalChlorine: {
+          target: Number(formData.totalChlorineTarget) || 3.0,
+          min: Number(formData.totalChlorineMin) || 2.0,
+          max: Number(formData.totalChlorineMax) || 5.0,
+        },
         totalAlkalinity: {
           target: Number(formData.totalAlkalinityTarget) || 100,
           min: Number(formData.totalAlkalinityMin) || 80,
           max: Number(formData.totalAlkalinityMax) || 120,
         },
-        ...(formData.calciumHardnessTarget && {
-          calciumHardness: {
-            target: Number(formData.calciumHardnessTarget),
-            min: Number(formData.calciumHardnessMin) || 200,
-            max: Number(formData.calciumHardnessMax) || 400,
-          },
-        }),
-        ...(formData.cyanuricAcidTarget && {
-          cyanuricAcid: {
-            target: Number(formData.cyanuricAcidTarget),
-            min: Number(formData.cyanuricAcidMin) || 30,
-            max: Number(formData.cyanuricAcidMax) || 80,
-          },
-        }),
+        calciumHardness: {
+          target: Number(formData.calciumHardnessTarget) || 250,
+          min: Number(formData.calciumHardnessMin) || 200,
+          max: Number(formData.calciumHardnessMax) || 400,
+        },
+        cyanuricAcid: {
+          target: Number(formData.cyanuricAcidTarget) || 50,
+          min: Number(formData.cyanuricAcidMin) || 30,
+          max: Number(formData.cyanuricAcidMax) || 80,
+        },
         ...(formData.saltTarget && {
           salt: {
             target: Number(formData.saltTarget),
-            min: Number(formData.saltMin) || Number(formData.saltTarget) - 400,
-            max: Number(formData.saltMax) || Number(formData.saltTarget) + 400,
+            min: Number(formData.saltMin) || 2700,
+            max: Number(formData.saltMax) || 3400,
           },
         }),
       },
 
+      readings: {
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
       notes: formData.notes.trim(),
     }
 
     onSave(updatedPool)
   }
 
-  if (!isOpen || !pool) return null
+  if (!isOpen) return null
 
   const tabs = [
-    { id: 'volume', label: '📏 Volume', icon: '📊' },
-    { id: 'equipment', label: '⚙️ Equipment', icon: '🔧' },
-    { id: 'targets', label: '🎯 Chemical Targets', icon: '⚗️' },
-    { id: 'notes', label: '📝 Notes', icon: '💭' },
-  ] as const
+    { id: 'volume', label: 'Volume & Shape', icon: '📏' },
+    { id: 'equipment', label: 'Equipment', icon: '⚙️' },
+    { id: 'targets', label: 'Chemical Targets', icon: '🧪' },
+    { id: 'notes', label: 'Notes', icon: '📝' },
+  ]
 
   return (
-    <div className='fixed inset-0 bg-black/70 backdrop-blur-lg flex items-center justify-center z-50'>
-      <div className='bg-white rounded-lg max-w-4xl w-full mx-4 max-h-screen overflow-hidden flex flex-col'>
+    <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50'>
+      <div className='bg-white rounded-lg w-full max-w-4xl h-full max-h-[90vh] flex flex-col'>
         {/* Header */}
-        <div className='p-6 border-b border-gray-200'>
-          <div className='flex justify-between items-center'>
-            <h2 className='text-2xl font-bold text-gray-900'>
-              Edit Pool: {pool?.name || 'Loading...'}
-            </h2>
-            <button
-              onClick={onClose}
-              className='text-gray-400 hover:text-gray-600 text-2xl'>
-              ✕
-            </button>
-          </div>
+        <div className='flex items-center justify-between p-6 border-b'>
+          <h2 className='text-xl font-semibold'>
+            {pool ? `Edit ${pool.name}` : 'Add Pool'}
+          </h2>
+          <button
+            onClick={onClose}
+            className='text-gray-400 hover:text-gray-600 text-2xl'>
+            ✕
+          </button>
         </div>
 
         {/* Tabs */}
-        <div className='border-b border-gray-200'>
-          <nav className='flex space-x-8 px-6'>
+        <div className='border-b'>
+          <nav className='flex'>
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as TabType)}
-                className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                className={`px-6 py-3 text-sm font-medium border-b-2 ${
                   activeTab === tab.id
                     ? 'border-blue-500 text-blue-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -418,6 +354,7 @@ export default function TabbedPoolEditor({
                 </div>
               </div>
 
+              {/* Shape-specific dimensions */}
               <div className='space-y-4'>
                 <h3 className='text-lg font-medium text-gray-900'>
                   Dimensions
@@ -437,7 +374,9 @@ export default function TabbedPoolEditor({
                       className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500'
                     />
                   </div>
-                  {formData.shape === 'rectangular' && (
+
+                  {(formData.shape === 'rectangular' ||
+                    formData.shape === 'oval') && (
                     <>
                       <div>
                         <label className='block text-sm font-medium text-gray-700 mb-2'>
@@ -469,6 +408,7 @@ export default function TabbedPoolEditor({
                       </div>
                     </>
                   )}
+
                   {formData.shape === 'circular' && (
                     <div>
                       <label className='block text-sm font-medium text-gray-700 mb-2'>
@@ -493,6 +433,7 @@ export default function TabbedPoolEditor({
           {/* Equipment Tab */}
           {activeTab === 'equipment' && (
             <div className='space-y-6'>
+              {/* Filter */}
               <div className='space-y-4'>
                 <h3 className='text-lg font-medium text-gray-900'>
                   Filter System
@@ -508,9 +449,9 @@ export default function TabbedPoolEditor({
                         handleInputChange('filterType', e.target.value)
                       }
                       className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500'>
-                      <option value='sand'>Sand Filter</option>
-                      <option value='cartridge'>Cartridge Filter</option>
-                      <option value='de'>DE Filter</option>
+                      <option value='sand'>Sand</option>
+                      <option value='cartridge'>Cartridge</option>
+                      <option value='de'>DE (Diatomaceous Earth)</option>
                     </select>
                   </div>
                   <div>
@@ -529,6 +470,7 @@ export default function TabbedPoolEditor({
                 </div>
               </div>
 
+              {/* Pump */}
               <div className='space-y-4'>
                 <h3 className='text-lg font-medium text-gray-900'>Pump</h3>
                 <div className='grid grid-cols-2 gap-4'>
@@ -562,6 +504,7 @@ export default function TabbedPoolEditor({
                 </div>
               </div>
 
+              {/* Heater */}
               <div className='space-y-4'>
                 <h3 className='text-lg font-medium text-gray-900'>
                   Heater (Optional)
@@ -578,8 +521,8 @@ export default function TabbedPoolEditor({
                       }
                       className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500'>
                       <option value=''>No Heater</option>
-                      <option value='gas'>Gas Heater</option>
-                      <option value='electric'>Electric Heater</option>
+                      <option value='gas'>Gas</option>
+                      <option value='electric'>Electric</option>
                       <option value='heat-pump'>Heat Pump</option>
                     </select>
                   </div>
@@ -599,6 +542,7 @@ export default function TabbedPoolEditor({
                 </div>
               </div>
 
+              {/* Salt System */}
               <div className='space-y-4'>
                 <h3 className='text-lg font-medium text-gray-900'>
                   Salt System (Optional)
@@ -639,381 +583,293 @@ export default function TabbedPoolEditor({
           {/* Chemical Targets Tab */}
           {activeTab === 'targets' && (
             <div className='space-y-6'>
-              <div className='grid gap-6'>
-                {/* pH */}
-                <div className='border border-gray-200 rounded-lg p-4'>
-                  <h4 className='text-md font-medium text-gray-900 mb-3'>
-                    pH Levels
-                  </h4>
-                  <div className='grid grid-cols-3 gap-3'>
-                    <div>
-                      <label className='block text-sm font-medium text-gray-700 mb-1'>
-                        Target
-                      </label>
-                      <input
-                        type='number'
-                        step='0.1'
-                        value={formData.phTarget}
-                        onChange={(e) =>
-                          handleInputChange('phTarget', e.target.value)
-                        }
-                        className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500'
-                      />
-                    </div>
-                    <div>
-                      <label className='block text-sm font-medium text-gray-700 mb-1'>
-                        Min
-                      </label>
-                      <input
-                        type='number'
-                        step='0.1'
-                        value={formData.phMin}
-                        onChange={(e) =>
-                          handleInputChange('phMin', e.target.value)
-                        }
-                        className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500'
-                      />
-                    </div>
-                    <div>
-                      <label className='block text-sm font-medium text-gray-700 mb-1'>
-                        Max
-                      </label>
-                      <input
-                        type='number'
-                        step='0.1'
-                        value={formData.phMax}
-                        onChange={(e) =>
-                          handleInputChange('phMax', e.target.value)
-                        }
-                        className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500'
-                      />
-                    </div>
+              {/* pH */}
+              <div className='space-y-4'>
+                <h3 className='text-lg font-medium text-gray-900'>pH Levels</h3>
+                <div className='grid grid-cols-3 gap-4'>
+                  <div>
+                    <label className='block text-sm font-medium text-gray-700 mb-2'>
+                      Target pH
+                    </label>
+                    <input
+                      type='number'
+                      step='0.1'
+                      value={formData.phTarget}
+                      onChange={(e) =>
+                        handleInputChange('phTarget', e.target.value)
+                      }
+                      className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500'
+                    />
+                  </div>
+                  <div>
+                    <label className='block text-sm font-medium text-gray-700 mb-2'>
+                      Minimum pH
+                    </label>
+                    <input
+                      type='number'
+                      step='0.1'
+                      value={formData.phMin}
+                      onChange={(e) =>
+                        handleInputChange('phMin', e.target.value)
+                      }
+                      className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500'
+                    />
+                  </div>
+                  <div>
+                    <label className='block text-sm font-medium text-gray-700 mb-2'>
+                      Maximum pH
+                    </label>
+                    <input
+                      type='number'
+                      step='0.1'
+                      value={formData.phMax}
+                      onChange={(e) =>
+                        handleInputChange('phMax', e.target.value)
+                      }
+                      className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500'
+                    />
                   </div>
                 </div>
-
-                {/* Free Chlorine */}
-                <div className='border border-gray-200 rounded-lg p-4'>
-                  <h4 className='text-md font-medium text-gray-900 mb-3'>
-                    Free Chlorine (ppm)
-                  </h4>
-                  <div className='grid grid-cols-3 gap-3'>
-                    <div>
-                      <label className='block text-sm font-medium text-gray-700 mb-1'>
-                        Target
-                      </label>
-                      <input
-                        type='number'
-                        step='0.1'
-                        value={formData.freeChlorineTarget}
-                        onChange={(e) =>
-                          handleInputChange(
-                            'freeChlorineTarget',
-                            e.target.value
-                          )
-                        }
-                        className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500'
-                      />
-                    </div>
-                    <div>
-                      <label className='block text-sm font-medium text-gray-700 mb-1'>
-                        Min
-                      </label>
-                      <input
-                        type='number'
-                        step='0.1'
-                        value={formData.freeChlorineMin}
-                        onChange={(e) =>
-                          handleInputChange('freeChlorineMin', e.target.value)
-                        }
-                        className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500'
-                      />
-                    </div>
-                    <div>
-                      <label className='block text-sm font-medium text-gray-700 mb-1'>
-                        Max
-                      </label>
-                      <input
-                        type='number'
-                        step='0.1'
-                        value={formData.freeChlorineMax}
-                        onChange={(e) =>
-                          handleInputChange('freeChlorineMax', e.target.value)
-                        }
-                        className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500'
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Total Alkalinity */}
-                <div className='border border-gray-200 rounded-lg p-4'>
-                  <h4 className='text-md font-medium text-gray-900 mb-3'>
-                    Total Alkalinity (ppm)
-                  </h4>
-                  <div className='grid grid-cols-3 gap-3'>
-                    <div>
-                      <label className='block text-sm font-medium text-gray-700 mb-1'>
-                        Target
-                      </label>
-                      <input
-                        type='number'
-                        value={formData.totalAlkalinityTarget}
-                        onChange={(e) =>
-                          handleInputChange(
-                            'totalAlkalinityTarget',
-                            e.target.value
-                          )
-                        }
-                        className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500'
-                      />
-                    </div>
-                    <div>
-                      <label className='block text-sm font-medium text-gray-700 mb-1'>
-                        Min
-                      </label>
-                      <input
-                        type='number'
-                        value={formData.totalAlkalinityMin}
-                        onChange={(e) =>
-                          handleInputChange(
-                            'totalAlkalinityMin',
-                            e.target.value
-                          )
-                        }
-                        className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500'
-                      />
-                    </div>
-                    <div>
-                      <label className='block text-sm font-medium text-gray-700 mb-1'>
-                        Max
-                      </label>
-                      <input
-                        type='number'
-                        value={formData.totalAlkalinityMax}
-                        onChange={(e) =>
-                          handleInputChange(
-                            'totalAlkalinityMax',
-                            e.target.value
-                          )
-                        }
-                        className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500'
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Calcium Hardness */}
-                <div className='border border-gray-200 rounded-lg p-4'>
-                  <h4 className='text-md font-medium text-gray-900 mb-3'>
-                    Calcium Hardness (ppm)
-                  </h4>
-                  <div className='grid grid-cols-3 gap-3'>
-                    <div>
-                      <label className='block text-sm font-medium text-gray-700 mb-1'>
-                        Target
-                      </label>
-                      <input
-                        type='number'
-                        value={formData.calciumHardnessTarget}
-                        onChange={(e) =>
-                          handleInputChange(
-                            'calciumHardnessTarget',
-                            e.target.value
-                          )
-                        }
-                        className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500'
-                      />
-                    </div>
-                    <div>
-                      <label className='block text-sm font-medium text-gray-700 mb-1'>
-                        Min
-                      </label>
-                      <input
-                        type='number'
-                        value={formData.calciumHardnessMin}
-                        onChange={(e) =>
-                          handleInputChange(
-                            'calciumHardnessMin',
-                            e.target.value
-                          )
-                        }
-                        className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500'
-                      />
-                    </div>
-                    <div>
-                      <label className='block text-sm font-medium text-gray-700 mb-1'>
-                        Max
-                      </label>
-                      <input
-                        type='number'
-                        value={formData.calciumHardnessMax}
-                        onChange={(e) =>
-                          handleInputChange(
-                            'calciumHardnessMax',
-                            e.target.value
-                          )
-                        }
-                        className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500'
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Cyanuric Acid */}
-                <div className='border border-gray-200 rounded-lg p-4'>
-                  <h4 className='text-md font-medium text-gray-900 mb-3'>
-                    Cyanuric Acid (ppm)
-                  </h4>
-                  <div className='grid grid-cols-3 gap-3'>
-                    <div>
-                      <label className='block text-sm font-medium text-gray-700 mb-1'>
-                        Target
-                      </label>
-                      <input
-                        type='number'
-                        value={formData.cyanuricAcidTarget}
-                        onChange={(e) =>
-                          handleInputChange(
-                            'cyanuricAcidTarget',
-                            e.target.value
-                          )
-                        }
-                        className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500'
-                      />
-                    </div>
-                    <div>
-                      <label className='block text-sm font-medium text-gray-700 mb-1'>
-                        Min
-                      </label>
-                      <input
-                        type='number'
-                        value={formData.cyanuricAcidMin}
-                        onChange={(e) =>
-                          handleInputChange('cyanuricAcidMin', e.target.value)
-                        }
-                        className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500'
-                      />
-                    </div>
-                    <div>
-                      <label className='block text-sm font-medium text-gray-700 mb-1'>
-                        Max
-                      </label>
-                      <input
-                        type='number'
-                        value={formData.cyanuricAcidMax}
-                        onChange={(e) =>
-                          handleInputChange('cyanuricAcidMax', e.target.value)
-                        }
-                        className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500'
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Salt (if salt system) */}
-                {formData.saltSystemModel && (
-                  <div className='border border-gray-200 rounded-lg p-4'>
-                    <h4 className='text-md font-medium text-gray-900 mb-3'>
-                      Salt Level (ppm)
-                    </h4>
-                    <div className='grid grid-cols-3 gap-3'>
-                      <div>
-                        <label className='block text-sm font-medium text-gray-700 mb-1'>
-                          Target
-                        </label>
-                        <input
-                          type='number'
-                          value={formData.saltTarget}
-                          onChange={(e) =>
-                            handleInputChange('saltTarget', e.target.value)
-                          }
-                          className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500'
-                        />
-                      </div>
-                      <div>
-                        <label className='block text-sm font-medium text-gray-700 mb-1'>
-                          Min
-                        </label>
-                        <input
-                          type='number'
-                          value={formData.saltMin}
-                          onChange={(e) =>
-                            handleInputChange('saltMin', e.target.value)
-                          }
-                          className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500'
-                        />
-                      </div>
-                      <div>
-                        <label className='block text-sm font-medium text-gray-700 mb-1'>
-                          Max
-                        </label>
-                        <input
-                          type='number'
-                          value={formData.saltMax}
-                          onChange={(e) =>
-                            handleInputChange('saltMax', e.target.value)
-                          }
-                          className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500'
-                        />
-                      </div>
-                    </div>
-                  </div>
-                )}
               </div>
+
+              {/* Free Chlorine */}
+              <div className='space-y-4'>
+                <h3 className='text-lg font-medium text-gray-900'>
+                  Free Chlorine (ppm)
+                </h3>
+                <div className='grid grid-cols-3 gap-4'>
+                  <div>
+                    <label className='block text-sm font-medium text-gray-700 mb-2'>
+                      Target
+                    </label>
+                    <input
+                      type='number'
+                      step='0.1'
+                      value={formData.freeChlorineTarget}
+                      onChange={(e) =>
+                        handleInputChange('freeChlorineTarget', e.target.value)
+                      }
+                      className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500'
+                    />
+                  </div>
+                  <div>
+                    <label className='block text-sm font-medium text-gray-700 mb-2'>
+                      Minimum
+                    </label>
+                    <input
+                      type='number'
+                      step='0.1'
+                      value={formData.freeChlorineMin}
+                      onChange={(e) =>
+                        handleInputChange('freeChlorineMin', e.target.value)
+                      }
+                      className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500'
+                    />
+                  </div>
+                  <div>
+                    <label className='block text-sm font-medium text-gray-700 mb-2'>
+                      Maximum
+                    </label>
+                    <input
+                      type='number'
+                      step='0.1'
+                      value={formData.freeChlorineMax}
+                      onChange={(e) =>
+                        handleInputChange('freeChlorineMax', e.target.value)
+                      }
+                      className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500'
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Total Alkalinity */}
+              <div className='space-y-4'>
+                <h3 className='text-lg font-medium text-gray-900'>
+                  Total Alkalinity (ppm)
+                </h3>
+                <div className='grid grid-cols-3 gap-4'>
+                  <div>
+                    <label className='block text-sm font-medium text-gray-700 mb-2'>
+                      Target
+                    </label>
+                    <input
+                      type='number'
+                      value={formData.totalAlkalinityTarget}
+                      onChange={(e) =>
+                        handleInputChange(
+                          'totalAlkalinityTarget',
+                          e.target.value
+                        )
+                      }
+                      className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500'
+                    />
+                  </div>
+                  <div>
+                    <label className='block text-sm font-medium text-gray-700 mb-2'>
+                      Minimum
+                    </label>
+                    <input
+                      type='number'
+                      value={formData.totalAlkalinityMin}
+                      onChange={(e) =>
+                        handleInputChange('totalAlkalinityMin', e.target.value)
+                      }
+                      className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500'
+                    />
+                  </div>
+                  <div>
+                    <label className='block text-sm font-medium text-gray-700 mb-2'>
+                      Maximum
+                    </label>
+                    <input
+                      type='number'
+                      value={formData.totalAlkalinityMax}
+                      onChange={(e) =>
+                        handleInputChange('totalAlkalinityMax', e.target.value)
+                      }
+                      className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500'
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Calcium Hardness */}
+              <div className='space-y-4'>
+                <h3 className='text-lg font-medium text-gray-900'>
+                  Calcium Hardness (ppm)
+                </h3>
+                <div className='grid grid-cols-3 gap-4'>
+                  <div>
+                    <label className='block text-sm font-medium text-gray-700 mb-2'>
+                      Target
+                    </label>
+                    <input
+                      type='number'
+                      value={formData.calciumHardnessTarget}
+                      onChange={(e) =>
+                        handleInputChange(
+                          'calciumHardnessTarget',
+                          e.target.value
+                        )
+                      }
+                      className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500'
+                    />
+                  </div>
+                  <div>
+                    <label className='block text-sm font-medium text-gray-700 mb-2'>
+                      Minimum
+                    </label>
+                    <input
+                      type='number'
+                      value={formData.calciumHardnessMin}
+                      onChange={(e) =>
+                        handleInputChange('calciumHardnessMin', e.target.value)
+                      }
+                      className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500'
+                    />
+                  </div>
+                  <div>
+                    <label className='block text-sm font-medium text-gray-700 mb-2'>
+                      Maximum
+                    </label>
+                    <input
+                      type='number'
+                      value={formData.calciumHardnessMax}
+                      onChange={(e) =>
+                        handleInputChange('calciumHardnessMax', e.target.value)
+                      }
+                      className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500'
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Salt Levels (if salt system) */}
+              {formData.saltSystemModel && (
+                <div className='space-y-4'>
+                  <h3 className='text-lg font-medium text-gray-900'>
+                    Salt Levels (ppm)
+                  </h3>
+                  <div className='grid grid-cols-3 gap-4'>
+                    <div>
+                      <label className='block text-sm font-medium text-gray-700 mb-2'>
+                        Target
+                      </label>
+                      <input
+                        type='number'
+                        value={formData.saltTarget}
+                        onChange={(e) =>
+                          handleInputChange('saltTarget', e.target.value)
+                        }
+                        className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500'
+                      />
+                    </div>
+                    <div>
+                      <label className='block text-sm font-medium text-gray-700 mb-2'>
+                        Minimum
+                      </label>
+                      <input
+                        type='number'
+                        value={formData.saltMin}
+                        onChange={(e) =>
+                          handleInputChange('saltMin', e.target.value)
+                        }
+                        className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500'
+                      />
+                    </div>
+                    <div>
+                      <label className='block text-sm font-medium text-gray-700 mb-2'>
+                        Maximum
+                      </label>
+                      <input
+                        type='number'
+                        value={formData.saltMax}
+                        onChange={(e) =>
+                          handleInputChange('saltMax', e.target.value)
+                        }
+                        className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500'
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
           {/* Notes Tab */}
           {activeTab === 'notes' && (
             <div className='space-y-4'>
+              <h3 className='text-lg font-medium text-gray-900'>Pool Notes</h3>
               <div>
                 <label className='block text-sm font-medium text-gray-700 mb-2'>
-                  Pool Notes & Special Instructions
+                  Additional Information
                 </label>
                 <textarea
                   value={formData.notes}
                   onChange={(e) => handleInputChange('notes', e.target.value)}
-                  rows={12}
+                  rows={10}
                   className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500'
-                  placeholder='Enter any special instructions, maintenance notes, or important information about this pool...'
+                  placeholder='Add any additional notes about this pool...'
                 />
-              </div>
-              <div className='text-sm text-gray-500'>
-                <p>Use this section for:</p>
-                <ul className='list-disc list-inside mt-1 space-y-1'>
-                  <li>Special chemical requirements or sensitivities</li>
-                  <li>Equipment maintenance schedules and history</li>
-                  <li>Client preferences or special requests</li>
-                  <li>Safety considerations or hazards</li>
-                  <li>Seasonal maintenance requirements</li>
-                </ul>
               </div>
             </div>
           )}
         </div>
 
         {/* Footer */}
-        <div className='border-t border-gray-200 px-6 py-4 flex justify-between items-center'>
-          <div className='text-sm text-gray-500'>
-            Tab {tabs.findIndex((t) => t.id === activeTab) + 1} of {tabs.length}
-          </div>
-          <div className='flex gap-3'>
-            <button
-              onClick={onClose}
-              className='bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 transition-colors'>
-              Cancel
-            </button>
-            <button
-              onClick={handleSave}
-              disabled={saving}
-              className={`px-6 py-2 rounded text-white transition-colors ${
-                saving
-                  ? 'bg-gray-400 cursor-not-allowed'
-                  : 'bg-blue-600 hover:bg-blue-700'
-              }`}>
-              {saving ? 'Saving...' : 'Save Pool'}
-            </button>
-          </div>
+        <div className='flex justify-end space-x-4 p-6 border-t'>
+          <button
+            onClick={onClose}
+            className='px-6 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50'>
+            Cancel
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className='px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50'>
+            {saving ? 'Saving...' : 'Save Pool'}
+          </button>
         </div>
       </div>
     </div>

@@ -59,7 +59,7 @@
     var(--secondarybg) 0%,
     var(--primarybg) 100%
   );
-  --breakpoint-lg: 800px;
+  --calculator-max-width: 60rem;
   --box-shadow-7xl: 0 25px 100px rgba(0, 0, 0, 0.2);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);

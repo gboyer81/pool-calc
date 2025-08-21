@@ -1,7 +1,7 @@
 'use client'
 
-import CustomerMgmt from '@/components/CustomerMgmt'
+import ClientManagement from '@/components/ClientManagement'
 
 export default function ClientsPage() {
-  return <CustomerMgmt />
+  return <ClientManagement />
 }
