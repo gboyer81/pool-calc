@@ -1,8 +1,22 @@
 'use client'
 
+import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useState, useEffect } from 'react'
+import {
+  LogOut,
+  Calculator,
+  LogIn,
+  LayoutDashboard,
+  Users,
+  ClipboardList,
+  Target,
+  Settings,
+} from 'lucide-react'
+import Footer from '@/components/Footer'
+import { AuroraText } from 'components/magicui/aurora-text'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+
 import {
   Sidebar,
   SidebarContent,
@@ -11,33 +25,101 @@ import {
   SidebarGroupContent,
   SidebarGroupLabel,
   SidebarHeader,
+  SidebarInset,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarProvider,
   SidebarTrigger,
-  SidebarInset,
-} from './ui/sidebar'
-import {
-  Home,
-  Calculator,
-  Users,
-  ClipboardList,
-  Calendar,
-  BarChart3,
-  Settings,
-  LogOut,
-  User,
-} from 'lucide-react'
+} from '@/components/ui/sidebar'
 
-interface Technician {
-  id: string
+interface TechnicianData {
+  _id: string
   name: string
   email: string
-  role: 'admin' | 'supervisor' | 'technician'
   employeeId: string
-  phone?: string
-  emergencyContact?: string
+  role: 'technician' | 'supervisor' | 'admin'
+  assignedClients: string[]
+}
+
+interface NavigationItem {
+  name: string
+  href: string
+  icon: string
+  description: string
+  roles?: string[] // If specified, only show for these roles
+  requiresAuth?: boolean // If true, only show when logged in
+}
+
+// Same navigation items as header navigation
+const navigationItems: NavigationItem[] = [
+  {
+    name: 'Calculator',
+    href: '/',
+    icon: '🧮',
+    description: 'Pool chemical calculator',
+    requiresAuth: false,
+  },
+  {
+    name: 'Login',
+    href: '/login',
+    icon: '🔐',
+    description: 'Technician login',
+    requiresAuth: false,
+  },
+  {
+    name: 'Dashboard',
+    href: '/dashboard',
+    icon: '📊',
+    description: 'Technician dashboard',
+    requiresAuth: true,
+  },
+  {
+    name: 'Clients',
+    href: '/clients',
+    icon: '👥',
+    description: 'Client management',
+    requiresAuth: true,
+  },
+  {
+    name: 'Visit Log',
+    href: '/visit/log',
+    icon: '📋',
+    description: 'Log service visits',
+    requiresAuth: true,
+    roles: ['technician', 'supervisor', 'admin'],
+  },
+  {
+    name: 'Assignments',
+    href: '/assignments',
+    icon: '🎯',
+    description: 'Manage client assignments',
+    requiresAuth: true,
+    roles: ['supervisor', 'admin'],
+  },
+  {
+    name: 'Admin',
+    href: '/admin',
+    icon: '👑',
+    description: 'System administration',
+    requiresAuth: true,
+    roles: ['admin', 'supervisor'],
+  },
+]
+
+// Map navigation item names to Lucide icons
+const getNavigationIcon = (name: string) => {
+  const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
+    Calculator: Calculator,
+    Login: LogIn,
+    Dashboard: LayoutDashboard,
+    Clients: Users,
+    'Visit Log': ClipboardList,
+    Assignments: Target,
+    Admin: Settings,
+  }
+
+  return iconMap[name] || Calculator // Default fallback
 }
 
 interface NavigationProps {
@@ -45,26 +127,67 @@ interface NavigationProps {
 }
 
 export default function Navigation({ children }: NavigationProps) {
+  const [technician, setTechnician] = useState<TechnicianData | null>(null)
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false)
+  const [isLoading, setIsLoading] = useState<boolean>(true)
   const pathname = usePathname()
-  const [technician, setTechnician] = useState<Technician | null>(null)
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
 
+  // Check authentication status
   useEffect(() => {
-    const token = localStorage.getItem('technicianToken')
-    const userData = localStorage.getItem('technicianData')
-
-    if (token && userData) {
+    const checkAuth = () => {
       try {
-        const parsedUser = JSON.parse(userData)
-        setTechnician(parsedUser)
-        setIsAuthenticated(true)
+        const token = localStorage.getItem('technicianToken')
+        const technicianData = localStorage.getItem('technicianData')
+
+        if (token && technicianData) {
+          const parsedTechnician = JSON.parse(technicianData)
+          setTechnician(parsedTechnician)
+          setIsAuthenticated(true)
+        } else {
+          setTechnician(null)
+          setIsAuthenticated(false)
+        }
       } catch (error) {
-        console.error('Error parsing user data:', error)
-        localStorage.removeItem('technicianToken')
-        localStorage.removeItem('technicianData')
+        console.error('Error checking auth:', error)
+        setTechnician(null)
+        setIsAuthenticated(false)
+      } finally {
+        setIsLoading(false)
       }
     }
+
+    checkAuth()
+
+    // Listen for storage changes (logout in another tab)
+    const handleStorageChange = () => {
+      checkAuth()
+    }
+
+    window.addEventListener('storage', handleStorageChange)
+    return () => window.removeEventListener('storage', handleStorageChange)
   }, [])
+
+  // Filter navigation items based on authentication and role
+  const getVisibleNavItems = () => {
+    return navigationItems.filter((item) => {
+      // If item requires auth but user is not authenticated, hide it
+      if (item.requiresAuth && !isAuthenticated) {
+        return false
+      }
+
+      // If item has role restrictions, check user role
+      if (item.roles && technician) {
+        return item.roles.includes(technician.role)
+      }
+
+      // Hide login if already authenticated
+      if (item.href === '/login' && isAuthenticated) {
+        return false
+      }
+
+      return true
+    })
+  }
 
   const handleLogout = () => {
     localStorage.removeItem('technicianToken')
@@ -72,67 +195,6 @@ export default function Navigation({ children }: NavigationProps) {
     setTechnician(null)
     setIsAuthenticated(false)
     window.location.href = '/login'
-  }
-
-  const getNavigationItems = () => {
-    const baseItems = [
-      {
-        name: 'Pool Calculator',
-        href: '/',
-        icon: Calculator,
-        description: 'Chemical calculations',
-      },
-      {
-        name: 'Dashboard',
-        href: '/dashboard',
-        icon: Home,
-        description: 'Overview & Quick Access',
-      },
-    ]
-
-    if (!isAuthenticated) {
-      return baseItems
-    }
-
-    const authenticatedItems = [
-      {
-        name: 'Clients',
-        href: '/clients',
-        icon: Users,
-        description: 'Customer management',
-      },
-      {
-        name: 'Work Orders',
-        href: '/work-orders',
-        icon: ClipboardList,
-        description: 'Service requests',
-      },
-      {
-        name: 'Schedule',
-        href: '/schedule',
-        icon: Calendar,
-        description: 'Appointments & Routes',
-      },
-    ]
-
-    if (technician?.role === 'admin' || technician?.role === 'supervisor') {
-      authenticatedItems.push(
-        {
-          name: 'Reports',
-          href: '/reports',
-          icon: BarChart3,
-          description: 'Analytics & Reports',
-        },
-        {
-          name: 'Settings',
-          href: '/settings',
-          icon: Settings,
-          description: 'System configuration',
-        }
-      )
-    }
-
-    return [...baseItems, ...authenticatedItems]
   }
 
   const getRoleBadgeColor = (role: string) => {
@@ -148,17 +210,27 @@ export default function Navigation({ children }: NavigationProps) {
     }
   }
 
-  const navigationItems = getNavigationItems()
+  const visibleNavItems = getVisibleNavItems()
+
+  if (isLoading) {
+    return (
+      <div className='min-h-screen flex items-center justify-center'>
+        <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600'></div>
+      </div>
+    )
+  }
 
   return (
     <SidebarProvider>
       <div className='flex min-h-screen w-full'>
-        <Sidebar variant='inset'>
+        <Sidebar variant='inset' collapsible='icon'>
           <SidebarHeader>
-            <div className='flex items-center gap-2 px-4 py-2'>
-              <span className='text-2xl'>🏊‍♀️</span>
-              <span className='text-xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent'>
-                Pool Service Pro
+            <div className='flex items-center group-data-[collapsible=icon]:justify-center gap-2 px-4 py-2'>
+              <span className='text-2xl group-data-[collapsible=icon]:text-3xl'>
+                🏊‍♀️
+              </span>
+              <span className='text-xl font-bold bg-clip-text text-transparent group-data-[collapsible=icon]:hidden'>
+                <AuroraText>Pool Service Pro</AuroraText>
               </span>
             </div>
           </SidebarHeader>
@@ -168,18 +240,25 @@ export default function Navigation({ children }: NavigationProps) {
               <SidebarGroupLabel>Navigation</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
-                  {navigationItems.map((item) => (
-                    <SidebarMenuItem key={item.name}>
-                      <SidebarMenuButton
-                        asChild
-                        isActive={pathname === item.href}>
-                        <Link href={item.href}>
-                          <item.icon className='h-4 w-4' />
-                          <span>{item.name}</span>
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  ))}
+                  {visibleNavItems.map((item) => {
+                    const IconComponent = getNavigationIcon(item.name)
+                    return (
+                      <SidebarMenuItem key={item.name}>
+                        <SidebarMenuButton
+                          asChild
+                          isActive={
+                            pathname === item.href ||
+                            (item.href !== '/' &&
+                              pathname.startsWith(item.href))
+                          }>
+                          <Link href={item.href}>
+                            <IconComponent className='h-4 w-4' />
+                            <span>{item.name}</span>
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    )
+                  })}
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
@@ -187,11 +266,21 @@ export default function Navigation({ children }: NavigationProps) {
 
           <SidebarFooter>
             {isAuthenticated && technician && (
-              <div className='px-2 py-2 space-y-3'>
+              <div className='px-2 py-2 space-y-3 '>
                 {/* User Info Section */}
                 <div className='flex items-center gap-3 p-2 rounded-md bg-muted/50'>
                   <div className='w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm font-semibold'>
-                    {technician.name.charAt(0).toUpperCase()}
+                    <Avatar>
+                      <AvatarImage
+                        src={`https://ui-avatars.com/api/?name=${encodeURIComponent(
+                          technician.name
+                        )}&background=random`}
+                        alt={technician.name}
+                      />
+                      <AvatarFallback className='w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm font-semibold'>
+                        {technician.name.charAt(0).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
                   </div>
                   <div className='flex-1 min-w-0'>
                     <p className='text-sm font-medium truncate'>
@@ -235,7 +324,12 @@ export default function Navigation({ children }: NavigationProps) {
               <div className='flex-1' />
               {/* You can add additional header content here */}
             </header>
-            <main className='flex-1 overflow-auto p-4'>{children}</main>
+            <main className='flex-1 overflow-auto'>
+              <div className='max-w-screen-2xl mx-auto p-4 min-h-full flex flex-col'>
+                <div className='flex-1'>{children}</div>
+                <Footer />
+              </div>
+            </main>
           </div>
         </SidebarInset>
       </div>

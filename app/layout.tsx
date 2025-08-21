@@ -3,8 +3,8 @@ import type { Metadata } from 'next'
 import { ThemeProvider } from './components/ThemeProvider'
 import './globals.css'
 import Navigation from '@/components/Navigation'
-import Footer from '@/components/Footer'
 import { ScrollProgress } from 'components/magicui/scroll-progress'
+import { Scroll } from 'lucide-react'
 
 export const metadata: Metadata = {
   title: 'Pool Service Pro',
@@ -86,18 +86,11 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className='antialiased w-full max-w-full overflow-x-hidden'>
+      <body className='antialiased overflow-x-hidden'>
         <ThemeProvider attribute='class' defaultTheme='system' enableSystem>
-          {/* Navigation Component */}
-          <Navigation>
-            {/* Scroll Progress Bar */}
-            <ScrollProgress className='top-[0px]' />
-            {/* Main Content */}
-            <div className='w-full max-w-screen-2xl mx-auto bg-white min-h-[calc(100vh-2rem)] overflow-x-hidden'>
-              <main className='p-3 sm:p-6 w-full max-w-full'>{children}</main>
-            </div>
-            <Footer />
-          </Navigation>
+          <ScrollProgress className='top-0 w-full h-1' />
+          {/* Navigation Component handles the complete layout structure including footer */}
+          <Navigation>{children}</Navigation>
         </ThemeProvider>
       </body>
     </html>
