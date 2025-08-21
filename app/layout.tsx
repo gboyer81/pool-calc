@@ -89,16 +89,15 @@ export default function RootLayout({
       <body className='antialiased w-full max-w-full overflow-x-hidden'>
         <ThemeProvider attribute='class' defaultTheme='system' enableSystem>
           {/* Navigation Component */}
-          <Navigation />
-          {/* Scroll Progress Bar */}
-          <ScrollProgress className='top-[64px]' />
-          {/* Main Content */}
-          <div className='w-full max-w-screen-2xl mx-auto bg-white min-h-[calc(100vh-2rem)] overflow-x-hidden'>
-            <main className='p-3 sm:p-6 w-full max-w-full'>{children}</main>
-          </div>
-
-          {/* Footer Component */}
-          <Footer />
+          <Navigation>
+            {/* Scroll Progress Bar */}
+            <ScrollProgress className='top-[0px]' />
+            {/* Main Content */}
+            <div className='w-full max-w-screen-2xl mx-auto bg-white min-h-[calc(100vh-2rem)] overflow-x-hidden'>
+              <main className='p-3 sm:p-6 w-full max-w-full'>{children}</main>
+            </div>
+            <Footer />
+          </Navigation>
         </ThemeProvider>
       </body>
     </html>

@@ -9,7 +9,7 @@ export default function Home() {
         Pool Service Pro
       </h1>
       {/* <VersionCheck /> */}
-      <div className='max-w-6xl mx-auto px-4'>
+      <div className='max-w-4xl mx-auto px-4'>
         <PoolCalculator />
       </div>
     </div>

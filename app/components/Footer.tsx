@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+import { Clock, Activity, Info } from 'lucide-react'
 
 export default function Footer() {
   const [currentTime, setCurrentTime] = useState(new Date())
@@ -11,28 +12,53 @@ export default function Footer() {
   }, [])
 
   return (
-    <footer className='sticky bottom-0 bg-white border-t border-gray-200 mt-8'>
-      <div className='max-w-screen-2xl mx-auto px-4 py-6'>
-        <div className='flex flex-col md:flex-row justify-between items-center'>
-          <div className='text-sm text-gray-600'>
-            © 2025 Pool Service Pro.{' '}
-            <span className='hidden md:inline text-xs'>
-              Professional pool maintenance management.
-            </span>
-          </div>
-          <div className='hidden md:flex items-center space-x-2 text-xs text-gray-500'>
-            <div className='truncate' suppressHydrationWarning>
-              Current Time: {currentTime.toLocaleTimeString()}
+    <footer className='shrink-0 sticky bottom-1 border-t bg-sidebar/5 backdrop-blur-sm'>
+      <div className='px-4 py-3'>
+        {/* Desktop Layout */}
+        <div className='hidden md:flex items-center justify-between text-xs'>
+          <div className='flex items-center gap-4'>
+            <div className='flex items-center gap-1.5 text-muted-foreground'>
+              <span>© 2025 Pool Service Pro</span>
+            </div>
+            <div className='flex items-center gap-1.5 text-muted-foreground'>
+              <Activity className='h-3 w-3 text-green-500' />
+              <span className='text-green-600'>System Online</span>
             </div>
           </div>
-          <div className='flex items-center space-x-4 mt-2 md:mt-0'>
-            <span className='text-xs text-gray-500'>
-              Version 1.1.0 • Built with Next.js & MongoDB
-            </span>
-            <div className='flex items-center space-x-2 text-xs text-green-600'>
-              <div className='w-2 h-2 bg-green-500 rounded-full animate-pulse'></div>
-              <span>System Online</span>
+
+          <div className='flex items-center gap-4'>
+            <div className='flex items-center gap-1.5 text-muted-foreground'>
+              <Clock className='h-3 w-3' />
+              <span suppressHydrationWarning>
+                {currentTime.toLocaleTimeString()}
+              </span>
             </div>
+            <div className='text-muted-foreground'>
+              <span>v1.1.0</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile Layout */}
+        <div className='md:hidden space-y-2'>
+          <div className='flex items-center justify-between'>
+            <div className='flex items-center gap-1.5 text-xs text-muted-foreground'>
+              <Info className='h-3 w-3' />
+              <span>© 2025 Pool Service Pro</span>
+            </div>
+            <div className='flex items-center gap-1.5 text-xs'>
+              <Activity className='h-3 w-3 text-green-500' />
+              <span className='text-green-600'>Online</span>
+            </div>
+          </div>
+          <div className='flex items-center justify-between text-xs text-muted-foreground'>
+            <div className='flex items-center gap-1.5'>
+              <Clock className='h-3 w-3' />
+              <span suppressHydrationWarning>
+                {currentTime.toLocaleTimeString()}
+              </span>
+            </div>
+            <span>v1.1.0</span>
           </div>
         </div>
       </div>
