@@ -225,16 +225,30 @@ export interface Pool {
     cyanuricAcid: { min: number; max: number; target: number }
     salt?: { min: number; max: number; target: number }
   }
-
-  readings: {
-    freeChlorine?: number
-    totalChlorine?: number // Optional - measured when testing
-    combinedChlorine?: number // Calculated: totalChlorine - freeChlorine
-    isActive: boolean
-    createdAt: Date
-    updatedAt: Date
-  }
   notes?: string
+  isActive: boolean // ✅ Top-level property, not inside readings
+  createdAt: Date
+  updatedAt: Date
+}
+
+// If you need readings for water test results, create a separate interface:
+export interface PoolReadings {
+  _id: ObjectId
+  poolId: ObjectId
+  visitId?: ObjectId
+  freeChlorine?: number
+  totalChlorine?: number
+  combinedChlorine?: number // Calculated: totalChlorine - freeChlorine
+  ph?: number
+  totalAlkalinity?: number
+  calciumHardness?: number
+  cyanuricAcid?: number
+  salt?: number
+  phosphates?: number
+  temperature?: number
+  testedAt: Date
+  createdAt: Date
+  updatedAt: Date
 }
 
 // ============================================================================

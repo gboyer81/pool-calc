@@ -213,11 +213,10 @@ export default function ClientManagement() {
     const colors = {
       retail: 'bg-blue-100 text-blue-800',
       service: 'bg-orange-100 text-orange-800',
-      maintenance: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
+      maintenance:
+        'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
     }
-    return (
-      colors[clientType as keyof typeof colors] || 'bg-muted text-gray-800'
-    )
+    return colors[clientType as keyof typeof colors] || 'bg-muted text-gray-800'
   }
 
   // Client specific information display
@@ -1147,14 +1146,149 @@ export default function ClientManagement() {
                   ✕
                 </button>
               </div>
-              <div className='text-center text-gray-500'>
-                Pool list will be displayed here
-              </div>
+
+              {/* Loading state */}
+              {poolsLoading && (
+                <div className='flex justify-center items-center py-8'>
+                  <div className='text-lg'>Loading pools...</div>
+                </div>
+              )}
+
+              {/* No pools found */}
+              {!poolsLoading && clientPools.length === 0 && (
+                <div className='text-center text-gray-500 py-8'>
+                  <div className='text-4xl mb-4'>🏊‍♀️</div>
+                  <p className='text-lg mb-2'>No pools found for this client</p>
+                  <p className='text-sm'>Add a pool to get started</p>
+                  <button
+                    onClick={() => {
+                      setSelectedPool(null)
+                      setShowPoolEditor(true)
+                    }}
+                    className='mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700'>
+                    Add First Pool
+                  </button>
+                </div>
+              )}
+
+              {/* Pools list */}
+              {!poolsLoading && clientPools.length > 0 && (
+                <div className='space-y-4'>
+                  <div className='flex justify-between items-center'>
+                    <p className='text-sm text-gray-600'>
+                      {clientPools.length} pool
+                      {clientPools.length !== 1 ? 's' : ''} found
+                    </p>
+                    <button
+                      onClick={() => {
+                        setSelectedPool(null)
+                        setShowPoolEditor(true)
+                      }}
+                      className='bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700'>
+                      Add Pool
+                    </button>
+                  </div>
+
+                  <div className='grid gap-4 md:grid-cols-2'>
+                    {clientPools.map((pool) => (
+                      <div
+                        key={pool._id.toString()}
+                        className='border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow'>
+                        <div className='flex justify-between items-start mb-2'>
+                          <h4 className='font-semibold text-lg'>{pool.name}</h4>
+                          <span
+                            className={`px-2 py-1 text-xs rounded-full ${
+                              pool.isActive
+                                ? 'bg-green-100 text-green-800'
+                                : 'bg-red-100 text-red-800'
+                            }`}>
+                            {pool.isActive ? 'Active' : 'Inactive'}
+                          </span>
+                        </div>
+
+                        <div className='text-sm text-gray-600 space-y-1'>
+                          <p>
+                            <strong>Type:</strong> {pool.type}
+                          </p>
+                          <p>
+                            <strong>Shape:</strong> {pool.shape}
+                          </p>
+                          {pool.volume && (
+                            <p>
+                              <strong>Volume:</strong>{' '}
+                              {pool.volume.gallons.toLocaleString()} gallons
+                            </p>
+                          )}
+                          {pool.dimensions && (
+                            <div>
+                              <strong>Dimensions:</strong>
+                              {pool.shape === 'rectangular' &&
+                                pool.dimensions.length &&
+                                pool.dimensions.width && (
+                                  <span>
+                                    {' '}
+                                    {pool.dimensions.length}' ×{' '}
+                                    {pool.dimensions.width}' ×{' '}
+                                    {pool.dimensions.avgDepth}'
+                                  </span>
+                                )}
+                              {pool.shape === 'circular' &&
+                                pool.dimensions.diameter && (
+                                  <span>
+                                    {' '}
+                                    {pool.dimensions.diameter}' diameter ×{' '}
+                                    {pool.dimensions.avgDepth}' deep
+                                  </span>
+                                )}
+                              {(pool.shape === 'oval' ||
+                                pool.shape === 'kidney') &&
+                                pool.dimensions.length &&
+                                pool.dimensions.width && (
+                                  <span>
+                                    {' '}
+                                    {pool.dimensions.length}' ×{' '}
+                                    {pool.dimensions.width}' ×{' '}
+                                    {pool.dimensions.avgDepth}'
+                                  </span>
+                                )}
+                            </div>
+                          )}
+                          {pool.notes && (
+                            <p>
+                              <strong>Notes:</strong> {pool.notes}
+                            </p>
+                          )}
+                        </div>
+
+                        <div className='flex justify-end space-x-2 mt-4'>
+                          <button
+                            onClick={() => {
+                              setSelectedPool(pool)
+                              setShowPoolEditor(true)
+                            }}
+                            className='bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700'>
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => {
+                              // Navigate to visit logging for this pool
+                              window.location.href = `/visit/log?clientId=${selectedClient._id}&poolId=${pool._id}`
+                            }}
+                            className='bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700'>
+                            Log Visit
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
 
-      {showPoolEditor && (
+      {/* Pool Editor Modal */}
+      {showPoolEditor && selectedPool && (
         <TabbedPoolEditor
           pool={selectedPool}
           isOpen={showPoolEditor}
