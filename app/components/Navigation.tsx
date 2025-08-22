@@ -266,9 +266,9 @@ export default function Navigation({ children }: NavigationProps) {
 
           <SidebarFooter>
             {isAuthenticated && technician && (
-              <div className='px-2 py-2 space-y-3 '>
-                {/* User Info Section */}
-                <div className='flex items-center gap-3 p-2 rounded-md bg-muted/50'>
+              <div className='px-2 py-2 space-y-3'>
+                {/* User Info Section - Hidden when collapsed */}
+                <div className='group-data-[collapsible=icon]:hidden flex items-center gap-3 p-2 rounded-md bg-muted/50'>
                   <div className='w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm font-semibold'>
                     <Avatar>
                       <AvatarImage
@@ -292,8 +292,23 @@ export default function Navigation({ children }: NavigationProps) {
                   </div>
                 </div>
 
-                {/* Role and Logout Row */}
-                <div className='flex items-center justify-between gap-2 px-2'>
+                {/* Collapsed state - Only Avatar centered */}
+                <div className='group-data-[collapsible=icon]:flex hidden justify-center'>
+                  <Avatar className='w-8 h-8'>
+                    <AvatarImage
+                      src={`https://ui-avatars.com/api/?name=${encodeURIComponent(
+                        technician.name
+                      )}&background=random`}
+                      alt={technician.name}
+                    />
+                    <AvatarFallback className='w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm font-semibold'>
+                      {technician.name.charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                </div>
+
+                {/* Role and Logout Row - Hidden when collapsed */}
+                <div className='group-data-[collapsible=icon]:hidden flex items-center justify-between gap-2 px-2'>
                   <span
                     className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getRoleBadgeColor(
                       technician.role
@@ -307,9 +322,7 @@ export default function Navigation({ children }: NavigationProps) {
                     className='flex items-center gap-1.5 px-2 py-1 rounded-md text-xs text-red-600 hover:text-red-700 hover:bg-red-50 transition-colors'
                     title='Logout'>
                     <LogOut className='h-3 w-3' />
-                    <span className='group-data-[collapsible=icon]:hidden'>
-                      Logout
-                    </span>
+                    <span>Logout</span>
                   </button>
                 </div>
               </div>
