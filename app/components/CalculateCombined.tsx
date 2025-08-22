@@ -79,8 +79,8 @@ export default function ChlorineReadingsForm() {
   const status = getChlorineStatus()
 
   return (
-    <div className='max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-lg'>
-      <h2 className='text-2xl font-bold text-gray-900 mb-6'>
+    <div className='max-w-2xl mx-auto p-6 bg-background rounded-lg shadow-lg'>
+      <h2 className='text-2xl font-bold text-foreground mb-6'>
         Pool Chemistry Readings
       </h2>
 
@@ -95,7 +95,7 @@ export default function ChlorineReadingsForm() {
             step='0.1'
             value={readings.freeChlorine}
             onChange={(e) => handleInputChange('freeChlorine', e.target.value)}
-            className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+            className='w-full px-3 py-2 border border-input rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
             placeholder='e.g., 2.0'
           />
           <p className='text-xs text-gray-500 mt-1'>
@@ -112,7 +112,7 @@ export default function ChlorineReadingsForm() {
             step='0.1'
             value={readings.totalChlorine}
             onChange={(e) => handleInputChange('totalChlorine', e.target.value)}
-            className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+            className='w-full px-3 py-2 border border-input rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
             placeholder='e.g., 2.3'
           />
           <p className='text-xs text-gray-500 mt-1'>
@@ -129,7 +129,7 @@ export default function ChlorineReadingsForm() {
             step='0.1'
             value={readings.ph}
             onChange={(e) => handleInputChange('ph', e.target.value)}
-            className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+            className='w-full px-3 py-2 border border-input rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
             placeholder='e.g., 7.4'
           />
           <p className='text-xs text-gray-500 mt-1'>Ideal range: 7.2 - 7.6</p>
@@ -145,7 +145,7 @@ export default function ChlorineReadingsForm() {
             onChange={(e) =>
               handleInputChange('totalAlkalinity', e.target.value)
             }
-            className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+            className='w-full px-3 py-2 border border-input rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
             placeholder='e.g., 100'
           />
           <p className='text-xs text-gray-500 mt-1'>
@@ -155,17 +155,17 @@ export default function ChlorineReadingsForm() {
       </div>
 
       {/* Calculated Values */}
-      <div className='bg-gray-50 rounded-lg p-4 mb-6'>
-        <h3 className='text-lg font-semibold text-gray-900 mb-3'>
+      <div className='bg-muted/50 rounded-lg p-4 mb-6'>
+        <h3 className='text-lg font-semibold text-foreground mb-3'>
           Calculated Values
         </h3>
 
         <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-          <div className='bg-white rounded-md p-3'>
+          <div className='bg-background rounded-md p-3'>
             <div className='text-sm font-medium text-gray-700'>
               Combined Chlorine
             </div>
-            <div className='text-xl font-bold text-gray-900'>
+            <div className='text-xl font-bold text-foreground'>
               {calculatedValues.combinedChlorine !== undefined
                 ? `${calculatedValues.combinedChlorine.toFixed(1)} ppm`
                 : '-- ppm'}
@@ -173,7 +173,7 @@ export default function ChlorineReadingsForm() {
             <div className='text-xs text-gray-500'>Total - Free Chlorine</div>
           </div>
 
-          <div className='bg-white rounded-md p-3'>
+          <div className='bg-background rounded-md p-3'>
             <div className='text-sm font-medium text-gray-700'>Status</div>
             <div className={`text-lg font-semibold ${status.color}`}>
               {status.message}

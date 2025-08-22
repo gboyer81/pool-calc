@@ -160,13 +160,13 @@ export default function TechnicianDashboard() {
   const getStatusColor = (status: TodaysRoute['status']) => {
     switch (status) {
       case 'completed':
-        return 'bg-green-100 text-green-800'
+        return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
       case 'in-progress':
         return 'bg-blue-100 text-blue-800'
       case 'skipped':
-        return 'bg-red-100 text-red-800'
+        return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
       default:
-        return 'bg-gray-100 text-gray-800'
+        return 'bg-muted text-gray-800'
     }
   }
 
@@ -194,7 +194,7 @@ export default function TechnicianDashboard() {
   if (error) {
     return (
       <div className='max-w-4xl mx-auto p-6'>
-        <div className='bg-red-100 text-red-800 p-4 rounded-lg'>
+        <div className='bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 p-4 rounded-lg'>
           <strong>Error:</strong> {error}
           <button
             onClick={() => window.location.reload()}
@@ -211,10 +211,10 @@ export default function TechnicianDashboard() {
       {/* Header */}
       <div className='flex flex-col md:flex-row md:justify-between items-center mb-8'>
         <div>
-          <h1 className='text-3xl font-bold text-gray-900'>
+          <h1 className='text-3xl font-bold text-foreground dark:text-gray-50'>
             {getGreeting()}, {technician?.name}! 👋
           </h1>
-          <p className='text-gray-600 mt-1'>
+          <p className='text-muted-foreground dark:text-gray-200 mt-1'>
             {currentTime.toLocaleDateString('en-US', {
               weekday: 'long',
               year: 'numeric',
@@ -241,7 +241,7 @@ export default function TechnicianDashboard() {
           </button>
           <button
             onClick={handleLogout}
-            className='bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors'>
+            className='bg-muted/500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors'>
             🚪 Logout
           </button>
         </div>
@@ -249,56 +249,56 @@ export default function TechnicianDashboard() {
 
       {/* Stats Cards */}
       <div className='grid grid-cols-1 md:grid-cols-4 gap-6 mb-8'>
-        <div className='bg-white rounded-lg shadow p-6'>
+        <div className='bg-background rounded-lg shadow p-6 '>
           <div className='flex items-center'>
             <div className='p-2 bg-blue-100 rounded-lg'>
               <span className='text-2xl'>👥</span>
             </div>
             <div className='ml-4'>
-              <p className='text-sm text-gray-600'>Total Clients</p>
-              <p className='text-2xl font-bold text-gray-900'>
+              <p className='text-sm text-muted-foreground'>Total Clients</p>
+              <p className='text-2xl font-bold text-foreground'>
                 {clients.length}
               </p>
             </div>
           </div>
         </div>
 
-        <div className='bg-white rounded-lg shadow p-6'>
+        <div className='bg-background rounded-lg shadow p-6'>
           <div className='flex items-center'>
             <div className='p-2 bg-green-100 rounded-lg'>
               <span className='text-2xl'>📅</span>
             </div>
             <div className='ml-4'>
-              <p className='text-sm text-gray-600'>Today's Visits</p>
-              <p className='text-2xl font-bold text-gray-900'>
+              <p className='text-sm text-muted-foreground'>Today's Visits</p>
+              <p className='text-2xl font-bold text-foreground'>
                 {todaysRoute.length}
               </p>
             </div>
           </div>
         </div>
 
-        <div className='bg-white rounded-lg shadow p-6'>
+        <div className='bg-background rounded-lg shadow p-6'>
           <div className='flex items-center'>
             <div className='p-2 bg-yellow-100 rounded-lg'>
               <span className='text-2xl'>⏱️</span>
             </div>
             <div className='ml-4'>
-              <p className='text-sm text-gray-600'>Completed</p>
-              <p className='text-2xl font-bold text-gray-900'>
+              <p className='text-sm text-muted-foreground'>Completed</p>
+              <p className='text-2xl font-bold text-foreground'>
                 {todaysRoute.filter((r) => r.status === 'completed').length}
               </p>
             </div>
           </div>
         </div>
 
-        <div className='bg-white rounded-lg shadow p-6'>
+        <div className='bg-background rounded-lg shadow p-6'>
           <div className='flex items-center'>
             <div className='p-2 bg-purple-100 rounded-lg'>
               <span className='text-2xl'>🏊‍♀️</span>
             </div>
             <div className='ml-4'>
-              <p className='text-sm text-gray-600'>Total Pools</p>
-              <p className='text-2xl font-bold text-gray-900'>
+              <p className='text-sm text-muted-foreground'>Total Pools</p>
+              <p className='text-2xl font-bold text-foreground'>
                 {todaysRoute.reduce((sum, r) => sum + r.pools, 0)}
               </p>
             </div>
@@ -307,8 +307,8 @@ export default function TechnicianDashboard() {
       </div>
 
       {/* Today's Route */}
-      <div className='bg-white rounded-lg shadow-md mb-8'>
-        <div className='p-6 border-b border-gray-200'>
+      <div className='bg-background rounded-lg shadow-md mb-8'>
+        <div className='p-6 border-b border-border'>
           <h2 className='text-xl font-semibold flex items-center'>
             🗺️ Today's Route
             {todaysRoute.length === 0 && (
@@ -333,17 +333,17 @@ export default function TechnicianDashboard() {
               {todaysRoute.map((visit, index) => (
                 <div
                   key={visit.client._id}
-                  className='flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow'>
+                  className='flex items-center justify-between p-4 border border-border rounded-lg hover:shadow-md transition-shadow'>
                   <div className='flex items-center space-x-4'>
                     <div className='text-2xl font-bold text-blue-600 min-w-16'>
                       {visit.estimatedTime}
                     </div>
 
                     <div className='flex-1'>
-                      <h3 className='font-semibold text-gray-900'>
+                      <h3 className='font-semibold text-foreground'>
                         {visit.client.name}
                       </h3>
-                      <p className='text-sm text-gray-600'>
+                      <p className='text-sm text-muted-foreground'>
                         📍 {visit.client.address.street},{' '}
                         {visit.client.address.city}
                       </p>
@@ -381,7 +381,7 @@ export default function TechnicianDashboard() {
                             onClick={() =>
                               updateRouteStatus(visit.client._id, 'skipped')
                             }
-                            className='bg-gray-500 text-white px-3 py-1 rounded text-sm hover:bg-gray-600'>
+                            className='bg-muted/500 text-white px-3 py-1 rounded text-sm hover:bg-gray-600'>
                             Skip
                           </button>
                         </>
@@ -430,9 +430,9 @@ export default function TechnicianDashboard() {
 
       {/* Quick Actions */}
       <div className='grid grid-cols-1 md:grid-cols-3 gap-6'>
-        <div className='bg-white rounded-lg shadow p-6'>
+        <div className='bg-background rounded-lg shadow p-6'>
           <h3 className='text-lg font-semibold mb-4'>🧮 Quick Calculator</h3>
-          <p className='text-gray-600 text-sm mb-4'>
+          <p className='text-muted-foreground text-sm mb-4'>
             Access chemical calculators for pool maintenance
           </p>
           <button
@@ -442,9 +442,9 @@ export default function TechnicianDashboard() {
           </button>
         </div>
 
-        <div className='bg-white rounded-lg shadow p-6'>
+        <div className='bg-background rounded-lg shadow p-6'>
           <h3 className='text-lg font-semibold mb-4'>📋 Log Emergency Visit</h3>
-          <p className='text-gray-600 text-sm mb-4'>
+          <p className='text-muted-foreground text-sm mb-4'>
             Record an unscheduled service call
           </p>
           <button className='w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 transition-colors'>
@@ -452,9 +452,9 @@ export default function TechnicianDashboard() {
           </button>
         </div>
 
-        <div className='bg-white rounded-lg shadow p-6'>
+        <div className='bg-background rounded-lg shadow p-6'>
           <h3 className='text-lg font-semibold mb-4'>📊 Today's Summary</h3>
-          <p className='text-gray-600 text-sm mb-4'>
+          <p className='text-muted-foreground text-sm mb-4'>
             View completed visits and chemical usage
           </p>
           <button className='w-full bg-purple-600 text-white py-2 rounded hover:bg-purple-700 transition-colors'>

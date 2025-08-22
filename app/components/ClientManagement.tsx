@@ -213,10 +213,10 @@ export default function ClientManagement() {
     const colors = {
       retail: 'bg-blue-100 text-blue-800',
       service: 'bg-orange-100 text-orange-800',
-      maintenance: 'bg-green-100 text-green-800',
+      maintenance: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
     }
     return (
-      colors[clientType as keyof typeof colors] || 'bg-gray-100 text-gray-800'
+      colors[clientType as keyof typeof colors] || 'bg-muted text-gray-800'
     )
   }
 
@@ -225,7 +225,7 @@ export default function ClientManagement() {
     switch (client.clientType) {
       case 'retail':
         return (
-          <div className='text-sm text-gray-600'>
+          <div className='text-sm text-muted-foreground'>
             <div>
               Tier:{' '}
               <span className='font-medium'>{client.retail.pricingTier}</span>
@@ -238,7 +238,7 @@ export default function ClientManagement() {
         )
       case 'service':
         return (
-          <div className='text-sm text-gray-600'>
+          <div className='text-sm text-muted-foreground'>
             <div>
               Standard:{' '}
               <span className='font-medium'>
@@ -256,7 +256,7 @@ export default function ClientManagement() {
         )
       case 'maintenance':
         return (
-          <div className='text-sm text-gray-600'>
+          <div className='text-sm text-muted-foreground'>
             <div>
               Frequency:{' '}
               <span className='font-medium'>
@@ -508,10 +508,10 @@ export default function ClientManagement() {
       {/* Header */}
       <div className='flex justify-between items-center mb-6'>
         <div>
-          <h1 className='text-3xl font-bold text-gray-900'>
+          <h1 className='text-3xl font-bold text-foreground'>
             Client Management
           </h1>
-          <p className='text-gray-600'>
+          <p className='text-muted-foreground'>
             Manage retail, service, and maintenance clients
           </p>
         </div>
@@ -528,46 +528,46 @@ export default function ClientManagement() {
 
       {/* Stats Cards */}
       <div className='grid grid-cols-1 md:grid-cols-4 gap-6 mb-6'>
-        <div className='bg-white p-6 rounded-lg shadow border'>
+        <div className='bg-background p-6 rounded-lg shadow border'>
           <div className='flex items-center justify-between'>
             <div>
-              <div className='text-2xl font-bold text-gray-900'>
+              <div className='text-2xl font-bold text-foreground'>
                 {clients.length}
               </div>
-              <div className='text-sm text-gray-600'>Total Clients</div>
+              <div className='text-sm text-muted-foreground'>Total Clients</div>
             </div>
             <Users className='w-8 h-8 text-gray-400' />
           </div>
         </div>
-        <div className='bg-white p-6 rounded-lg shadow border'>
+        <div className='bg-background p-6 rounded-lg shadow border'>
           <div className='flex items-center justify-between'>
             <div>
               <div className='text-2xl font-bold text-green-600'>
                 {clientTypeStats.maintenance}
               </div>
-              <div className='text-sm text-gray-600'>Maintenance</div>
+              <div className='text-sm text-muted-foreground'>Maintenance</div>
             </div>
             <Calendar className='w-8 h-8 text-green-400' />
           </div>
         </div>
-        <div className='bg-white p-6 rounded-lg shadow border'>
+        <div className='bg-background p-6 rounded-lg shadow border'>
           <div className='flex items-center justify-between'>
             <div>
               <div className='text-2xl font-bold text-orange-600'>
                 {clientTypeStats.service}
               </div>
-              <div className='text-sm text-gray-600'>Service</div>
+              <div className='text-sm text-muted-foreground'>Service</div>
             </div>
             <Wrench className='w-8 h-8 text-orange-400' />
           </div>
         </div>
-        <div className='bg-white p-6 rounded-lg shadow border'>
+        <div className='bg-background p-6 rounded-lg shadow border'>
           <div className='flex items-center justify-between'>
             <div>
               <div className='text-2xl font-bold text-blue-600'>
                 {clientTypeStats.retail}
               </div>
-              <div className='text-sm text-gray-600'>Retail</div>
+              <div className='text-sm text-muted-foreground'>Retail</div>
             </div>
             <ShoppingCart className='w-8 h-8 text-blue-400' />
           </div>
@@ -575,7 +575,7 @@ export default function ClientManagement() {
       </div>
 
       {/* Enhanced Filters */}
-      <div className='bg-white p-4 rounded-lg shadow border mb-6'>
+      <div className='bg-background p-4 rounded-lg shadow border mb-6'>
         <div className='grid grid-cols-1 md:grid-cols-5 gap-4'>
           <div className='md:col-span-2'>
             <label className='block text-sm font-medium text-gray-700 mb-1'>
@@ -588,7 +588,7 @@ export default function ClientManagement() {
                 placeholder='Search clients...'
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className='pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+                className='pl-10 pr-4 py-2 w-full border border-input rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent'
               />
             </div>
           </div>
@@ -600,7 +600,7 @@ export default function ClientManagement() {
             <select
               value={clientTypeFilter}
               onChange={(e) => setClientTypeFilter(e.target.value as any)}
-              className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500'>
+              className='w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-blue-500'>
               <option value='all'>All Types</option>
               <option value='maintenance'>Maintenance</option>
               <option value='service'>Service</option>
@@ -615,7 +615,7 @@ export default function ClientManagement() {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value as any)}
-              className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500'>
+              className='w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-blue-500'>
               <option value='all'>All Status</option>
               <option value='active'>Active</option>
               <option value='inactive'>Inactive</option>
@@ -629,7 +629,7 @@ export default function ClientManagement() {
             <select
               value={frequencyFilter}
               onChange={(e) => setFrequencyFilter(e.target.value as any)}
-              className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500'
+              className='w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-blue-500'
               disabled={
                 clientTypeFilter !== 'all' && clientTypeFilter !== 'maintenance'
               }>
@@ -644,9 +644,9 @@ export default function ClientManagement() {
       </div>
 
       {/* Client Table */}
-      <div className='bg-white rounded-lg shadow border overflow-hidden'>
-        <div className='px-6 py-4 border-b border-gray-200'>
-          <h2 className='text-lg font-semibold text-gray-900'>
+      <div className='bg-background rounded-lg shadow border overflow-hidden'>
+        <div className='px-6 py-4 border-b border-border'>
+          <h2 className='text-lg font-semibold text-foreground'>
             Clients ({filteredClients.length})
           </h2>
         </div>
@@ -656,7 +656,7 @@ export default function ClientManagement() {
         ) : (
           <div className='overflow-x-auto'>
             <table className='min-w-full divide-y divide-gray-200'>
-              <thead className='bg-gray-50'>
+              <thead className='bg-muted/50'>
                 <tr>
                   <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
                     Client
@@ -678,13 +678,13 @@ export default function ClientManagement() {
                   </th>
                 </tr>
               </thead>
-              <tbody className='bg-white divide-y divide-gray-200'>
+              <tbody className='bg-background divide-y divide-gray-200'>
                 {filteredClients.map((client) => (
-                  <tr key={client._id.toString()} className='hover:bg-gray-50'>
+                  <tr key={client._id.toString()} className='hover:bg-muted/50'>
                     <td className='px-6 py-4 whitespace-nowrap'>
                       <div className='flex items-center'>
                         <div>
-                          <div className='text-sm font-medium text-gray-900'>
+                          <div className='text-sm font-medium text-foreground'>
                             {client.name}
                           </div>
                           <div className='text-sm text-gray-500'>
@@ -705,7 +705,7 @@ export default function ClientManagement() {
                       </div>
                     </td>
                     <td className='px-6 py-4 whitespace-nowrap'>
-                      <div className='text-sm text-gray-900'>
+                      <div className='text-sm text-foreground'>
                         📧 {client.email}
                       </div>
                       <div className='text-sm text-gray-500'>
@@ -719,8 +719,8 @@ export default function ClientManagement() {
                       <span
                         className={`px-2 py-1 rounded-full text-xs font-medium ${
                           client.isActive
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-red-100 text-red-800'
+                            ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+                            : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
                         }`}>
                         {client.isActive ? 'Active' : 'Inactive'}
                       </span>
@@ -748,7 +748,7 @@ export default function ClientManagement() {
       {/* Client Creation Modal */}
       {showAddClient && !showCreateForm && (
         <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50'>
-          <div className='bg-white rounded-lg p-6 w-full max-w-md'>
+          <div className='bg-background rounded-lg p-6 w-full max-w-md'>
             <h3 className='text-lg font-semibold mb-4'>Add New Client</h3>
 
             <div className='mb-4'>
@@ -758,14 +758,14 @@ export default function ClientManagement() {
               <select
                 value={selectedClientType}
                 onChange={(e) => setSelectedClientType(e.target.value as any)}
-                className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500'>
+                className='w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-blue-500'>
                 <option value='maintenance'>Maintenance Client</option>
                 <option value='service'>Service Client</option>
                 <option value='retail'>Retail Client</option>
               </select>
             </div>
 
-            <div className='flex items-center space-x-4 p-4 bg-gray-50 rounded-lg mb-4'>
+            <div className='flex items-center space-x-4 p-4 bg-muted/50 rounded-lg mb-4'>
               {getClientTypeIcon(selectedClientType)}
               <div>
                 <div className='font-medium'>
@@ -775,7 +775,7 @@ export default function ClientManagement() {
                     'Equipment Service & Repair'}
                   {selectedClientType === 'retail' && 'Product Sales & Supply'}
                 </div>
-                <div className='text-sm text-gray-600'>
+                <div className='text-sm text-muted-foreground'>
                   {selectedClientType === 'maintenance' &&
                     'Regular pool cleaning and chemical balancing'}
                   {selectedClientType === 'service' &&
@@ -789,7 +789,7 @@ export default function ClientManagement() {
             <div className='flex justify-end space-x-3'>
               <button
                 onClick={() => setShowAddClient(false)}
-                className='px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50'>
+                className='px-4 py-2 text-muted-foreground border border-input rounded-lg hover:bg-muted/50'>
                 Cancel
               </button>
               <button
@@ -805,7 +805,7 @@ export default function ClientManagement() {
       {/* Client Creation Form */}
       {showAddClient && showCreateForm && (
         <div className='fixed inset-0 bg-black/50 backdrop-blur-xl flex items-center justify-center z-50'>
-          <div className='bg-white rounded-lg max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto'>
+          <div className='bg-background rounded-lg max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto'>
             <div className='p-6'>
               <div className='flex justify-between items-center mb-6'>
                 <h2 className='text-2xl font-bold'>
@@ -838,7 +838,7 @@ export default function ClientManagement() {
                       className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                         clientFormErrors.name
                           ? 'border-red-500'
-                          : 'border-gray-300'
+                          : 'border-input'
                       }`}
                       placeholder='Enter client name'
                     />
@@ -862,7 +862,7 @@ export default function ClientManagement() {
                       className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                         clientFormErrors.email
                           ? 'border-red-500'
-                          : 'border-gray-300'
+                          : 'border-input'
                       }`}
                       placeholder='client@email.com'
                     />
@@ -886,7 +886,7 @@ export default function ClientManagement() {
                       className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                         clientFormErrors.phone
                           ? 'border-red-500'
-                          : 'border-gray-300'
+                          : 'border-input'
                       }`}
                       placeholder='(555) 123-4567'
                     />
@@ -900,7 +900,7 @@ export default function ClientManagement() {
 
                 {/* Address */}
                 <div className='space-y-4'>
-                  <h3 className='text-lg font-semibold text-gray-900'>
+                  <h3 className='text-lg font-semibold text-foreground'>
                     Address
                   </h3>
                   <div className='grid grid-cols-1 gap-4'>
@@ -920,7 +920,7 @@ export default function ClientManagement() {
                         className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                           clientFormErrors.street
                             ? 'border-red-500'
-                            : 'border-gray-300'
+                            : 'border-input'
                         }`}
                         placeholder='123 Main Street'
                       />
@@ -948,7 +948,7 @@ export default function ClientManagement() {
                           className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                             clientFormErrors.city
                               ? 'border-red-500'
-                              : 'border-gray-300'
+                              : 'border-input'
                           }`}
                           placeholder='Miami'
                         />
@@ -975,7 +975,7 @@ export default function ClientManagement() {
                           className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                             clientFormErrors.state
                               ? 'border-red-500'
-                              : 'border-gray-300'
+                              : 'border-input'
                           }`}
                           placeholder='FL'
                         />
@@ -1002,7 +1002,7 @@ export default function ClientManagement() {
                           className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                             clientFormErrors.zipCode
                               ? 'border-red-500'
-                              : 'border-gray-300'
+                              : 'border-input'
                           }`}
                           placeholder='33101'
                         />
@@ -1019,7 +1019,7 @@ export default function ClientManagement() {
                 {/* Type-specific fields would go here */}
                 {selectedClientType === 'maintenance' && (
                   <div className='space-y-4'>
-                    <h3 className='text-lg font-semibold text-gray-900'>
+                    <h3 className='text-lg font-semibold text-foreground'>
                       Maintenance Details
                     </h3>
                     <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
@@ -1038,7 +1038,7 @@ export default function ClientManagement() {
                               },
                             }))
                           }
-                          className='w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500'>
+                          className='w-full px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500'>
                           <option value='weekly'>Weekly</option>
                           <option value='bi-weekly'>Bi-weekly</option>
                           <option value='twice-weekly'>Twice Weekly</option>
@@ -1061,7 +1061,7 @@ export default function ClientManagement() {
                               },
                             }))
                           }
-                          className='w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500'>
+                          className='w-full px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500'>
                           <option value=''>Select day</option>
                           <option value='monday'>Monday</option>
                           <option value='tuesday'>Tuesday</option>
@@ -1095,7 +1095,7 @@ export default function ClientManagement() {
                             },
                           }))
                         }
-                        className='w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500'>
+                        className='w-full px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500'>
                         <option value='technician-provided'>
                           Technician Provided
                         </option>
@@ -1115,7 +1115,7 @@ export default function ClientManagement() {
                       setShowCreateForm(false)
                       resetClientForm()
                     }}
-                    className='px-6 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50'>
+                    className='px-6 py-2 text-muted-foreground border border-input rounded-md hover:bg-muted/50'>
                     Cancel
                   </button>
                   <button
@@ -1136,7 +1136,7 @@ export default function ClientManagement() {
         selectedClient &&
         isMaintenanceClient(selectedClient) && (
           <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50'>
-            <div className='bg-white rounded-lg p-6 w-full max-w-4xl max-h-[80vh] overflow-y-auto'>
+            <div className='bg-background rounded-lg p-6 w-full max-w-4xl max-h-[80vh] overflow-y-auto'>
               <div className='flex justify-between items-center mb-4'>
                 <h3 className='text-lg font-semibold'>
                   Pools for {selectedClient.name}

@@ -32,7 +32,7 @@ export default function VersionCheck() {
       <div>
         <button
           onClick={forceRefresh}
-          className='ml-2.5 px-0.5 py-0.5 text-xs bg-gray-200 border border-gray-300 rounded cursor-pointer hover:bg-gray-300 hover:border-gray-400 transition-colors'
+          className='ml-2.5 px-0.5 py-0.5 text-xs bg-gray-200 border border-input rounded cursor-pointer hover:bg-gray-300 hover:border-gray-400 transition-colors'
           title="Force refresh if you don't see the latest features">
           🔄
         </button>

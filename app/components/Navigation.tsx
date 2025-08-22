@@ -16,6 +16,7 @@ import {
 import Footer from '@/components/Footer'
 import { AuroraText } from 'components/magicui/aurora-text'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { ModeToggle } from '@/components/ModeToggle'
 
 import {
   Sidebar,
@@ -200,13 +201,13 @@ export default function Navigation({ children }: NavigationProps) {
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
       case 'admin':
-        return 'bg-red-100 text-red-800'
+        return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 dark:bg-red-900/30 dark:text-red-300'
       case 'supervisor':
-        return 'bg-yellow-100 text-yellow-800'
+        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300'
       case 'technician':
-        return 'bg-green-100 text-green-800'
+        return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300 dark:bg-green-900/30 dark:text-green-300'
       default:
-        return 'bg-gray-100 text-gray-800'
+        return 'bg-muted text-gray-800 dark:bg-gray-800 dark:text-gray-300'
     }
   }
 
@@ -214,15 +215,15 @@ export default function Navigation({ children }: NavigationProps) {
 
   if (isLoading) {
     return (
-      <div className='min-h-screen flex items-center justify-center'>
-        <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600'></div>
+      <div className='min-h-screen flex items-center justify-center bg-background'>
+        <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-primary'></div>
       </div>
     )
   }
 
   return (
     <SidebarProvider>
-      <div className='flex min-h-screen w-full'>
+      <div className='flex min-h-screen w-full bg-background'>
         <Sidebar variant='inset' collapsible='icon'>
           <SidebarHeader>
             <div className='flex items-center group-data-[collapsible=icon]:justify-center gap-2 px-4 py-2'>
@@ -242,15 +243,16 @@ export default function Navigation({ children }: NavigationProps) {
                 <SidebarMenu>
                   {visibleNavItems.map((item) => {
                     const IconComponent = getNavigationIcon(item.name)
+                    const isActive =
+                      pathname === item.href ||
+                      (item.href !== '/' && pathname.startsWith(item.href))
+
                     return (
                       <SidebarMenuItem key={item.name}>
                         <SidebarMenuButton
                           asChild
-                          isActive={
-                            pathname === item.href ||
-                            (item.href !== '/' &&
-                              pathname.startsWith(item.href))
-                          }>
+                          isActive={isActive}
+                          tooltip={item.description}>
                           <Link href={item.href}>
                             <IconComponent className='h-4 w-4' />
                             <span>{item.name}</span>
@@ -266,23 +268,23 @@ export default function Navigation({ children }: NavigationProps) {
 
           <SidebarFooter>
             {isAuthenticated && technician && (
-              <div className='px-2 py-2 space-y-3'>
-                {/* User Info Section - Hidden when collapsed */}
-                <div className='group-data-[collapsible=icon]:hidden flex items-center gap-3 p-2 rounded-md bg-muted/50'>
-                  <div className='w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm font-semibold'>
-                    <Avatar>
-                      <AvatarImage
-                        src={`https://ui-avatars.com/api/?name=${encodeURIComponent(
-                          technician.name
-                        )}&background=random`}
-                        alt={technician.name}
-                      />
-                      <AvatarFallback className='w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm font-semibold'>
-                        {technician.name.charAt(0).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                  </div>
-                  <div className='flex-1 min-w-0'>
+              <div className='px-2 py-2 space-y-3 group-data-[collapsible=icon]:space-y-2'>
+                {/* User Info Row */}
+                <div className='flex items-center gap-3 p-2 rounded-md bg-muted/50 group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:gap-2 group-data-[collapsible=icon]:items-center'>
+                  <Avatar className='h-8 w-8 border'>
+                    <AvatarImage
+                      src={`https://avatar.vercel.sh/${technician.email}`}
+                      alt={technician.name}
+                    />
+                    <AvatarFallback className='text-xs bg-primary/10'>
+                      {technician.name
+                        .split(' ')
+                        .map((n) => n[0])
+                        .join('')
+                        .toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className='flex-1 min-w-0 group-data-[collapsible=icon]:hidden'>
                     <p className='text-sm font-medium truncate'>
                       {technician.name}
                     </p>
@@ -292,38 +294,42 @@ export default function Navigation({ children }: NavigationProps) {
                   </div>
                 </div>
 
-                {/* Collapsed state - Only Avatar centered */}
-                <div className='group-data-[collapsible=icon]:flex hidden justify-center'>
-                  <Avatar className='w-8 h-8'>
-                    <AvatarImage
-                      src={`https://ui-avatars.com/api/?name=${encodeURIComponent(
-                        technician.name
-                      )}&background=random`}
-                      alt={technician.name}
-                    />
-                    <AvatarFallback className='w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm font-semibold'>
-                      {technician.name.charAt(0).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                </div>
-
-                {/* Role and Logout Row - Hidden when collapsed */}
-                <div className='group-data-[collapsible=icon]:hidden flex items-center justify-between gap-2 px-2'>
-                  <span
-                    className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getRoleBadgeColor(
-                      technician.role
-                    )}`}>
+                {/* Role, Theme Toggle and Logout Row */}
+                <div className='flex items-center justify-between gap-2 px-2 group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:gap-1 group-data-[collapsible=icon]:items-center'>
+                  <span className='group-data-[collapsible=icon]:hidden'>
                     {technician.role.charAt(0).toUpperCase() +
                       technician.role.slice(1)}
                   </span>
+                  <span className='hidden group-data-[collapsible=icon]:inline'>
+                    {technician.role.charAt(0).toUpperCase()}
+                  </span>
 
-                  <button
-                    onClick={handleLogout}
-                    className='flex items-center gap-1.5 px-2 py-1 rounded-md text-xs text-red-600 hover:text-red-700 hover:bg-red-50 transition-colors'
-                    title='Logout'>
-                    <LogOut className='h-3 w-3' />
-                    <span>Logout</span>
-                  </button>
+                  <div className='flex items-center gap-1'>
+                    {/* Theme Toggle */}
+                    <div className='group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:justify-center '>
+                      <ModeToggle />
+                    </div>
+
+                    {/* Logout Button */}
+                    <button
+                      onClick={handleLogout}
+                      className='flex items-center gap-1.5 px-2 py-1 rounded-md text-xs text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-900/20 transition-colors'
+                      title='Logout'>
+                      <LogOut className='h-3 w-3' />
+                      <span className='group-data-[collapsible=icon]:hidden'>
+                        Logout
+                      </span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Theme toggle for non-authenticated users */}
+            {!isAuthenticated && (
+              <div className='px-2 py-4'>
+                <div className='flex justify-center group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:justify-center'>
+                  <ModeToggle />
                 </div>
               </div>
             )}
@@ -332,12 +338,16 @@ export default function Navigation({ children }: NavigationProps) {
 
         <SidebarInset>
           <div className='flex flex-col h-screen'>
-            <header className='flex h-16 shrink-0 items-center gap-2 border-b px-4'>
+            <header className='flex h-16 shrink-0 items-center gap-2 border-b px-4 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60'>
               <SidebarTrigger />
               <div className='flex-1' />
-              {/* You can add additional header content here */}
+              {/* Additional header content can be added here */}
+              {/* For collapsed sidebar state, show theme toggle in header */}
+              <div className='group-data-[collapsible=icon]:block hidden'>
+                <ModeToggle />
+              </div>
             </header>
-            <main className='flex-1 overflow-auto'>
+            <main className='flex-1 overflow-auto bg-background'>
               <div className='max-w-screen-2xl mx-auto p-4 min-h-full flex flex-col'>
                 <div className='flex-1'>{children}</div>
                 <Footer />

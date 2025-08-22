@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react'
 import ProtectedRoute from '../components/ProtectedRoute'
-// import DatabaseDiagnostic from '@/components/DBDiagnostics'
 
 interface Technician {
   _id: string
@@ -45,41 +44,10 @@ export default function AdminPanel() {
     serviceAreas: [],
   })
   const [formLoading, setFormLoading] = useState(false)
-  const [seeding, setSeeding] = useState(false)
 
   useEffect(() => {
     fetchTechnicians()
   }, [])
-
-  // const handleSeedPools = async () => {
-  //   if (!confirm('Create sample pools for all clients without pools?')) return
-
-  //   try {
-  //     setSeeding(true)
-  //     const token = localStorage.getItem('technicianToken')
-
-  //     const response = await fetch('/api/admin/seed-pools', {
-  //       method: 'POST',
-  //       headers: {
-  //         Authorization: `Bearer ${token}`,
-  //         'Content-Type': 'application/json',
-  //       },
-  //     })
-
-  //     const data = await response.json()
-
-  //     if (data.success) {
-  //       alert(`✅ ${data.message}`)
-  //     } else {
-  //       alert(`❌ Error: ${data.error}`)
-  //     }
-  //   } catch (error) {
-  //     console.error('Error seeding pools:', error)
-  //     alert('❌ Failed to create sample pools')
-  //   } finally {
-  //     setSeeding(false)
-  //   }
-  // }
 
   const fetchTechnicians = async () => {
     try {
@@ -133,11 +101,23 @@ export default function AdminPanel() {
     setShowAddForm(false)
   }
 
-  const handleSubmit = async () => {
-    if (!formData.name || !formData.email || !formData.employeeId) {
-      alert('Please fill in all required fields')
-      return
+  const validateForm = () => {
+    const errors = []
+    if (!formData.name) errors.push('Name')
+    if (!formData.email) errors.push('Email')
+    if (!formData.phone) errors.push('Phone')
+    if (!formData.employeeId) errors.push('Employee ID')
+    if (!formData.password) errors.push('Password')
+
+    if (errors.length > 0) {
+      alert(`Please fill in these required fields: ${errors.join(', ')}`)
+      return false
     }
+    return true
+  }
+
+  const handleSubmit = async () => {
+    if (!validateForm()) return
 
     setFormLoading(true)
 
@@ -171,11 +151,19 @@ export default function AdminPanel() {
           alert('Error: ' + data.error)
         }
       } else {
-        alert('Failed to save technician')
+        const responseText = await response.text()
+        try {
+          const errorData = JSON.parse(responseText)
+          alert(
+            'Failed to save technician: ' + (errorData.error || responseText)
+          )
+        } catch {
+          alert('Failed to save technician: ' + responseText)
+        }
       }
     } catch (error) {
       console.error('Error saving technician:', error)
-      alert('Error saving technician')
+      alert('Error saving technician: ' + error)
     } finally {
       setFormLoading(false)
     }
@@ -212,6 +200,9 @@ export default function AdminPanel() {
 
       if (response.ok) {
         await fetchTechnicians()
+        alert(
+          `Technician ${!isActive ? 'activated' : 'deactivated'} successfully`
+        )
       } else {
         alert('Failed to update technician status')
       }
@@ -224,13 +215,13 @@ export default function AdminPanel() {
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
       case 'admin':
-        return 'bg-red-100 text-red-800'
+        return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 dark:bg-red-900/30 dark:text-red-300'
       case 'supervisor':
-        return 'bg-blue-100 text-blue-800'
+        return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
       case 'technician':
-        return 'bg-green-100 text-green-800'
+        return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300 dark:bg-green-900/30 dark:text-green-300'
       default:
-        return 'bg-gray-100 text-gray-800'
+        return 'bg-muted text-gray-800 dark:bg-gray-800 dark:text-gray-300'
     }
   }
 
@@ -246,226 +237,144 @@ export default function AdminPanel() {
 
   if (loading) {
     return (
-      <div className='flex justify-center items-center h-64'>Loading...</div>
+      <div className='flex justify-center items-center h-64 bg-background'>
+        <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-primary'></div>
+      </div>
     )
   }
 
   return (
     <ProtectedRoute requiredRoles={['admin', 'supervisor']}>
-      <div className='max-w-screen-2xl mx-auto p-6'>
+      <div className='max-w-screen-2xl mx-auto p-6 bg-background min-h-screen'>
         {/* Header */}
         <div className='flex justify-between items-center mb-6'>
           <div>
-            <h1 className='text-3xl font-bold text-gray-900'>
+            <h1 className='text-3xl font-bold text-foreground'>
               Technician Management
             </h1>
-            <p className='text-gray-600 mt-1'>
+            <p className='text-muted-foreground mt-1'>
               {technicians.length} technicians
             </p>
           </div>
           <div className='flex gap-3'>
             <button
               onClick={() => setShowAddForm(true)}
-              className='bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors'>
+              className='bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors'>
               + Add Technician
             </button>
             <button
               onClick={() => (window.location.href = '/assignments')}
-              className='bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors'>
+              className='bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-600 transition-colors'>
               👥 Manage Assignments
             </button>
             <button
               onClick={() => (window.location.href = '/dashboard')}
-              className='bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors'>
+              className='bg-secondary text-secondary-foreground px-4 py-2 rounded-lg hover:bg-secondary/80 transition-colors'>
               ← Dashboard
             </button>
           </div>
         </div>
 
-        {/* <DatabaseDiagnostic /> */}
-
-        {/* Quick Add Pools for clients with none */}
-        {/* <div className='mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200'>
-          <h3 className='text-lg font-semibold text-blue-900 mb-2'>
-            Quick Setup
-          </h3>
-          <p className='text-blue-700 mb-3'>
-            Create sample pools for clients that don't have any pools yet.
-          </p>
-          <button
-            onClick={handleSeedPools}
-            disabled={seeding}
-            className={`px-4 py-2 rounded text-white ${
-              seeding
-                ? 'bg-gray-400 cursor-not-allowed'
-                : 'bg-blue-600 hover:bg-blue-700'
-            }`}>
-            {seeding ? '🔄 Creating Pools...' : '🏊‍♂️ Create Sample Pools'}
-          </button>
-        </div> */}
-
+        {/* Error Message */}
         {error && (
-          <div className='bg-red-100 text-red-800 p-4 rounded-lg mb-6'>
-            <strong>Error:</strong> {error}
-            <button
-              onClick={fetchTechnicians}
-              className='ml-4 bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700'>
-              Retry
-            </button>
+          <div className='bg-destructive/10 border border-destructive/20 text-destructive px-4 py-3 rounded mb-6'>
+            {error}
           </div>
         )}
 
-        {/* Stats */}
-        <div className='grid grid-cols-1 md:grid-cols-4 gap-6 mb-8'>
-          <div className='bg-white rounded-lg shadow p-6'>
-            <div className='flex items-center'>
-              <div className='p-2 bg-blue-100 rounded-lg'>
-                <span className='text-2xl'>👥</span>
-              </div>
-              <div className='ml-4'>
-                <p className='text-sm text-gray-600'>Total Technicians</p>
-                <p className='text-2xl font-bold text-gray-900'>
-                  {technicians.length}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className='bg-white rounded-lg shadow p-6'>
-            <div className='flex items-center'>
-              <div className='p-2 bg-green-100 rounded-lg'>
-                <span className='text-2xl'>✅</span>
-              </div>
-              <div className='ml-4'>
-                <p className='text-sm text-gray-600'>Active</p>
-                <p className='text-2xl font-bold text-gray-900'>
-                  {technicians.filter((t) => t.isActive).length}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className='bg-white rounded-lg shadow p-6'>
-            <div className='flex items-center'>
-              <div className='p-2 bg-yellow-100 rounded-lg'>
-                <span className='text-2xl'>🔧</span>
-              </div>
-              <div className='ml-4'>
-                <p className='text-sm text-gray-600'>Field Techs</p>
-                <p className='text-2xl font-bold text-gray-900'>
-                  {technicians.filter((t) => t.role === 'technician').length}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className='bg-white rounded-lg shadow p-6'>
-            <div className='flex items-center'>
-              <div className='p-2 bg-purple-100 rounded-lg'>
-                <span className='text-2xl'>👨‍💼</span>
-              </div>
-              <div className='ml-4'>
-                <p className='text-sm text-gray-600'>Supervisors</p>
-                <p className='text-2xl font-bold text-gray-900'>
-                  {technicians.filter((t) => t.role === 'supervisor').length}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
         {/* Technicians Table */}
-        <div className='bg-white rounded-lg shadow-md overflow-hidden'>
-          <div className='p-6 border-b border-gray-200'>
-            <h2 className='text-xl font-semibold'>All Technicians</h2>
-          </div>
-
+        <div className='bg-card rounded-lg shadow border border-border overflow-hidden'>
           <div className='overflow-x-auto'>
             <table className='w-full'>
-              <thead className='bg-gray-50'>
+              <thead className='bg-muted/50 border-b border-border'>
                 <tr>
-                  <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-                    Technician
+                  <th className='text-left py-3 px-4 font-medium text-foreground'>
+                    Name
                   </th>
-                  <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                  <th className='text-left py-3 px-4 font-medium text-foreground'>
+                    Email
+                  </th>
+                  <th className='text-left py-3 px-4 font-medium text-foreground'>
+                    Phone
+                  </th>
+                  <th className='text-left py-3 px-4 font-medium text-foreground'>
+                    Employee ID
+                  </th>
+                  <th className='text-left py-3 px-4 font-medium text-foreground'>
                     Role
                   </th>
-                  <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-                    Clients
-                  </th>
-                  <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-                    Last Login
-                  </th>
-                  <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                  <th className='text-left py-3 px-4 font-medium text-foreground'>
                     Status
                   </th>
-                  <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                  <th className='text-left py-3 px-4 font-medium text-foreground'>
+                    Clients
+                  </th>
+                  <th className='text-left py-3 px-4 font-medium text-foreground'>
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className='bg-white divide-y divide-gray-200'>
+              <tbody className='divide-y divide-border'>
                 {technicians.map((technician) => (
-                  <tr key={technician._id} className='hover:bg-gray-50'>
-                    <td className='px-6 py-4 whitespace-nowrap'>
-                      <div>
-                        <div className='text-sm font-medium text-gray-900'>
-                          {technician.name}
-                        </div>
-                        <div className='text-sm text-gray-500'>
-                          {technician.email}
-                        </div>
-                        <div className='text-xs text-gray-400'>
-                          ID: {technician.employeeId}
-                        </div>
-                      </div>
+                  <tr
+                    key={technician._id}
+                    className='hover:bg-muted/50 transition-colors'>
+                    <td className='py-3 px-4 text-foreground'>
+                      {technician.name}
                     </td>
-                    <td className='px-6 py-4 whitespace-nowrap'>
+                    <td className='py-3 px-4 text-muted-foreground'>
+                      {technician.email}
+                    </td>
+                    <td className='py-3 px-4 text-muted-foreground'>
+                      {technician.phone}
+                    </td>
+                    <td className='py-3 px-4 text-muted-foreground'>
+                      {technician.employeeId}
+                    </td>
+                    <td className='py-3 px-4'>
                       <span
-                        className={`px-2 py-1 rounded-full text-xs font-medium ${getRoleBadgeColor(
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getRoleBadgeColor(
                           technician.role
                         )}`}>
-                        {technician.role.toUpperCase()}
+                        {technician.role.charAt(0).toUpperCase() +
+                          technician.role.slice(1)}
                       </span>
                     </td>
-                    <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>
-                      {technician.assignedClients.length} assigned
-                    </td>
-                    <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
-                      {technician.lastLogin
-                        ? formatDate(technician.lastLogin)
-                        : 'Never'}
-                    </td>
-                    <td className='px-6 py-4 whitespace-nowrap'>
+                    <td className='py-3 px-4'>
                       <span
-                        className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                           technician.isActive
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-red-100 text-red-800'
+                            ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+                            : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
                         }`}>
                         {technician.isActive ? 'Active' : 'Inactive'}
                       </span>
                     </td>
-                    <td className='px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2'>
-                      <button
-                        onClick={() => handleEdit(technician)}
-                        className='text-blue-600 hover:text-blue-800'>
-                        Edit
-                      </button>
-                      <button
-                        onClick={() =>
-                          toggleTechnicianStatus(
-                            technician._id,
+                    <td className='py-3 px-4 text-muted-foreground'>
+                      {technician.assignedClients.length}
+                    </td>
+                    <td className='py-3 px-4'>
+                      <div className='flex gap-2'>
+                        <button
+                          onClick={() => handleEdit(technician)}
+                          className='text-primary hover:text-primary/80 text-sm'>
+                          Edit
+                        </button>
+                        <button
+                          onClick={() =>
+                            toggleTechnicianStatus(
+                              technician._id,
+                              technician.isActive
+                            )
+                          }
+                          className={`text-sm ${
                             technician.isActive
-                          )
-                        }
-                        className={
-                          technician.isActive
-                            ? 'text-red-600 hover:text-red-800'
-                            : 'text-green-600 hover:text-green-800'
-                        }>
-                        {technician.isActive ? 'Deactivate' : 'Activate'}
-                      </button>
+                              ? 'text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300'
+                              : 'text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300'
+                          }`}>
+                          {technician.isActive ? 'Deactivate' : 'Activate'}
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -474,137 +383,118 @@ export default function AdminPanel() {
           </div>
         </div>
 
-        {/* Add/Edit Technician Modal */}
+        {/* Add/Edit Form Modal */}
         {showAddForm && (
-          <div className='fixed inset-0 bg-black/70 backdrop-blur-lg flex items-center justify-center z-50'>
-            <div className='bg-white rounded-lg max-w-2xl w-full mx-4 max-h-fit overflow-y-auto'>
-              <div className='p-6'>
-                <div className='flex justify-between items-center mb-4'>
-                  <h2 className='text-xl font-bold'>
-                    {editingTechnician
-                      ? 'Edit Technician'
-                      : 'Add New Technician'}
-                  </h2>
-                  <button
-                    onClick={resetForm}
-                    className='text-gray-500 hover:text-gray-700 text-xl'>
-                    ✕
-                  </button>
+          <div className='fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50'>
+            <div className='bg-card rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-border'>
+              <h2 className='text-xl font-bold mb-4 text-foreground'>
+                {editingTechnician ? 'Edit Technician' : 'Add New Technician'}
+              </h2>
+
+              <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                <div>
+                  <label className='block text-sm font-medium text-foreground mb-1'>
+                    Name *
+                  </label>
+                  <input
+                    type='text'
+                    value={formData.name}
+                    onChange={(e) => handleInputChange('name', e.target.value)}
+                    className='w-full px-3 py-2 border border-input rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring'
+                    placeholder='Full Name'
+                  />
                 </div>
 
-                <div className='space-y-4'>
-                  <div>
-                    <label className='block text-sm font-medium text-gray-700 mb-1'>
-                      Full Name *
-                    </label>
-                    <input
-                      type='text'
-                      value={formData.name}
-                      onChange={(e) =>
-                        handleInputChange('name', e.target.value)
-                      }
-                      className='w-full px-3 py-2 border border-gray-300 rounded-md'
-                      placeholder='John Doe'
-                    />
-                  </div>
-
-                  <div>
-                    <label className='block text-sm font-medium text-gray-700 mb-1'>
-                      Email *
-                    </label>
-                    <input
-                      type='email'
-                      value={formData.email}
-                      onChange={(e) =>
-                        handleInputChange('email', e.target.value)
-                      }
-                      className='w-full px-3 py-2 border border-gray-300 rounded-md'
-                      placeholder='john@poolservice.com'
-                    />
-                  </div>
-
-                  <div>
-                    <label className='block text-sm font-medium text-gray-700 mb-1'>
-                      Phone
-                    </label>
-                    <input
-                      type='tel'
-                      value={formData.phone}
-                      onChange={(e) =>
-                        handleInputChange('phone', e.target.value)
-                      }
-                      className='w-full px-3 py-2 border border-gray-300 rounded-md'
-                      placeholder='(555) 123-4567'
-                    />
-                  </div>
-
-                  <div>
-                    <label className='block text-sm font-medium text-gray-700 mb-1'>
-                      Employee ID *
-                    </label>
-                    <input
-                      type='text'
-                      value={formData.employeeId}
-                      onChange={(e) =>
-                        handleInputChange('employeeId', e.target.value)
-                      }
-                      className='w-full px-3 py-2 border border-gray-300 rounded-md'
-                      placeholder='TECH001'
-                    />
-                  </div>
-
-                  <div>
-                    <label className='block text-sm font-medium text-gray-700 mb-1'>
-                      Password{' '}
-                      {editingTechnician
-                        ? '(leave blank to keep current)'
-                        : '*'}
-                    </label>
-                    <input
-                      type='password'
-                      value={formData.password}
-                      onChange={(e) =>
-                        handleInputChange('password', e.target.value)
-                      }
-                      className='w-full px-3 py-2 border border-gray-300 rounded-md'
-                      placeholder='••••••••'
-                    />
-                  </div>
-
-                  <div>
-                    <label className='block text-sm font-medium text-gray-700 mb-1'>
-                      Role *
-                    </label>
-                    <select
-                      value={formData.role}
-                      onChange={(e) =>
-                        handleInputChange('role', e.target.value as any)
-                      }
-                      className='w-full px-3 py-2 border border-gray-300 rounded-md'>
-                      <option value='technician'>Technician</option>
-                      <option value='supervisor'>Supervisor</option>
-                      <option value='admin'>Admin</option>
-                    </select>
-                  </div>
+                <div>
+                  <label className='block text-sm font-medium text-foreground mb-1'>
+                    Email *
+                  </label>
+                  <input
+                    type='email'
+                    value={formData.email}
+                    onChange={(e) => handleInputChange('email', e.target.value)}
+                    className='w-full px-3 py-2 border border-input rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring'
+                    placeholder='email@example.com'
+                  />
                 </div>
 
-                <div className='mt-6 flex justify-end gap-3'>
-                  <button
-                    onClick={resetForm}
-                    className='bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400'>
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleSubmit}
-                    disabled={formLoading}
-                    className='bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:bg-gray-400'>
-                    {formLoading
-                      ? 'Saving...'
-                      : editingTechnician
-                      ? 'Update'
-                      : 'Create'}
-                  </button>
+                <div>
+                  <label className='block text-sm font-medium text-foreground mb-1'>
+                    Phone *
+                  </label>
+                  <input
+                    type='tel'
+                    value={formData.phone}
+                    onChange={(e) => handleInputChange('phone', e.target.value)}
+                    className='w-full px-3 py-2 border border-input rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring'
+                    placeholder='555-123-4567'
+                  />
                 </div>
+
+                <div>
+                  <label className='block text-sm font-medium text-foreground mb-1'>
+                    Employee ID *
+                  </label>
+                  <input
+                    type='text'
+                    value={formData.employeeId}
+                    onChange={(e) =>
+                      handleInputChange('employeeId', e.target.value)
+                    }
+                    className='w-full px-3 py-2 border border-input rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring'
+                    placeholder='TECH001'
+                  />
+                </div>
+
+                <div>
+                  <label className='block text-sm font-medium text-foreground mb-1'>
+                    Password *
+                  </label>
+                  <input
+                    type='password'
+                    value={formData.password}
+                    onChange={(e) =>
+                      handleInputChange('password', e.target.value)
+                    }
+                    className='w-full px-3 py-2 border border-input rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring'
+                    placeholder='Enter password'
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className='block text-sm font-medium text-foreground mb-1'>
+                    Role *
+                  </label>
+                  <select
+                    value={formData.role}
+                    onChange={(e) =>
+                      handleInputChange('role', e.target.value as any)
+                    }
+                    className='w-full px-3 py-2 border border-input rounded-md bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring'>
+                    <option value='technician'>Technician</option>
+                    <option value='supervisor'>Supervisor</option>
+                    <option value='admin'>Admin</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className='mt-6 flex justify-end gap-3'>
+                <button
+                  onClick={resetForm}
+                  className='bg-secondary text-secondary-foreground px-4 py-2 rounded hover:bg-secondary/80 transition-colors'>
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSubmit}
+                  disabled={formLoading}
+                  className='bg-primary text-primary-foreground px-4 py-2 rounded hover:bg-primary/90 disabled:opacity-50 transition-colors'>
+                  {formLoading
+                    ? 'Saving...'
+                    : editingTechnician
+                    ? 'Update'
+                    : 'Create'}
+                </button>
               </div>
             </div>
           </div>

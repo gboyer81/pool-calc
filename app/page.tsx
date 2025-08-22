@@ -3,9 +3,9 @@ import { AuroraText } from 'components/magicui/aurora-text'
 
 export default function Home() {
   return (
-    <div className='bg-white rounded-4xl text-center'>
+    <div className='bg-background rounded-4xl text-center'>
       <div className='text-6xl'>🏊‍♀️</div>
-      <h1 className='text-4xl font-bold text-gray-900 mb-4'>
+      <h1 className='text-4xl font-bold text-foreground mb-4'>
         <AuroraText>Pool Service Pro</AuroraText>
       </h1>
       {/* <VersionCheck /> */}

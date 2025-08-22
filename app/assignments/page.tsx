@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import ProtectedRoute from '../components/ProtectedRoute'
+import { Search } from 'lucide-react'
 
 interface Technician {
   _id: string
@@ -30,6 +31,7 @@ interface Client {
   serviceDay?: string
   isActive: boolean
   assignedTechnician?: string // populated client data
+  clientType?: 'maintenance' | 'service' | 'retail'
 }
 
 interface AssignmentStats {
@@ -56,6 +58,28 @@ export default function AssignmentsPage() {
   const [view, setView] = useState<'overview' | 'technicians' | 'clients'>(
     'overview'
   )
+  // Search and filter state
+  const [searchTerm, setSearchTerm] = useState('')
+  const [clientTypeFilter, setClientTypeFilter] = useState<
+    'all' | 'maintenance' | 'service' | 'retail'
+  >('all')
+  const [statusFilter, setStatusFilter] = useState<
+    'all' | 'active' | 'inactive'
+  >('all')
+  const [frequencyFilter, setFrequencyFilter] = useState<
+    'all' | 'twice-weekly' | 'weekly' | 'bi-weekly' | 'monthly'
+  >('all')
+  const [assignmentFilter, setAssignmentFilter] = useState<
+    'all' | 'assigned' | 'unassigned'
+  >('all')
+  const [filteredClients, setFilteredClients] = useState<Client[]>([])
+
+  const formatServiceFrequency = (
+    frequency: string | undefined | null
+  ): string => {
+    if (!frequency || typeof frequency !== 'string') return 'Not set'
+    return frequency.replace('-', ' ')
+  }
 
   useEffect(() => {
     fetchData()
@@ -66,6 +90,69 @@ export default function AssignmentsPage() {
       calculateStats()
     }
   }, [technicians, clients])
+
+  useEffect(() => {
+    let filtered = clients
+
+    // Search filter
+    if (searchTerm) {
+      filtered = filtered.filter(
+        (client) =>
+          client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          client.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          client.phone.includes(searchTerm) ||
+          client.address.street
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
+          client.address.city
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
+          client.address.state.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    }
+
+    // Client type filter
+    if (clientTypeFilter !== 'all') {
+      filtered = filtered.filter(
+        (client) => client.clientType === clientTypeFilter
+      )
+    }
+
+    // Status filter
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter((client) =>
+        statusFilter === 'active' ? client.isActive : !client.isActive
+      )
+    }
+
+    // Frequency filter (only for maintenance clients)
+    if (frequencyFilter !== 'all') {
+      filtered = filtered.filter((client) => {
+        if (client.clientType !== 'maintenance') return true // Show all non-maintenance clients
+        return client.serviceFrequency === frequencyFilter
+      })
+    }
+
+    // Assignment filter
+    if (assignmentFilter !== 'all') {
+      filtered = filtered.filter((client) => {
+        const isAssigned = technicians.some((tech) =>
+          tech.assignedClients.includes(client._id)
+        )
+        return assignmentFilter === 'assigned' ? isAssigned : !isAssigned
+      })
+    }
+
+    setFilteredClients(filtered)
+  }, [
+    clients,
+    searchTerm,
+    clientTypeFilter,
+    statusFilter,
+    frequencyFilter,
+    assignmentFilter,
+    technicians,
+  ])
 
   const fetchData = async () => {
     try {
@@ -230,31 +317,33 @@ export default function AssignmentsPage() {
     }
   }
 
-  const getFrequencyBadgeColor = (frequency: string) => {
+  const getFrequencyBadgeColor = (frequency: string | undefined | null) => {
+    if (!frequency) return 'bg-muted text-gray-800' // Default for undefined/null
+
     switch (frequency) {
       case 'twice-weekly':
         return 'bg-purple-100 text-purple-800'
       case 'weekly':
         return 'bg-blue-100 text-blue-800'
       case 'bi-weekly':
-        return 'bg-green-100 text-green-800'
+        return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
       case 'monthly':
         return 'bg-orange-100 text-orange-800'
       default:
-        return 'bg-gray-100 text-gray-800'
+        return 'bg-muted text-gray-800'
     }
   }
 
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
       case 'admin':
-        return 'bg-red-100 text-red-800'
+        return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
       case 'supervisor':
         return 'bg-blue-100 text-blue-800'
       case 'technician':
-        return 'bg-green-100 text-green-800'
+        return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
       default:
-        return 'bg-gray-100 text-gray-800'
+        return 'bg-muted text-gray-800'
     }
   }
 
@@ -274,10 +363,10 @@ export default function AssignmentsPage() {
         {/* Header */}
         <div className='flex flex-col items-center md:flex-row md:justify-between md:items-center mb-6'>
           <div>
-            <h1 className='md:mb-0 text-3xl font-bold text-gray-900'>
+            <h1 className='md:mb-0 text-3xl font-bold text-foreground'>
               Client Assignments
             </h1>
-            <p className='text-gray-600 mb-2 md:mb-0'>
+            <p className='text-muted-foreground mb-2 md:mb-0'>
               Manage technician-client assignments
             </p>
           </div>
@@ -289,27 +378,27 @@ export default function AssignmentsPage() {
             </button>
             <button
               onClick={() => (window.location.href = '/admin')}
-              className='bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors'>
+              className='bg-muted/500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors'>
               ← Admin Panel
             </button>
           </div>
         </div>
 
         {error && (
-          <div className='bg-red-100 text-red-800 p-4 rounded-lg mb-6'>
+          <div className='bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 p-4 rounded-lg mb-6'>
             <strong>Error:</strong> {error}
           </div>
         )}
 
         {/* View Toggle */}
-        <div className='flex space-x-1 bg-gray-100 p-1 rounded-lg mb-6 w-fit'>
+        <div className='flex space-x-1 bg-muted p-1 rounded-lg mb-6 w-fit'>
           {(['overview', 'technicians', 'clients'] as const).map((viewType) => (
             <button
               key={viewType}
               onClick={() => setView(viewType)}
               className={`px-4 py-2 rounded-md font-medium transition-colors ${
                 view === viewType
-                  ? 'bg-white text-blue-600 shadow-sm'
+                  ? 'bg-background text-blue-600 shadow-sm'
                   : 'text-gray-500 hover:text-gray-700'
               }`}>
               {viewType.charAt(0).toUpperCase() + viewType.slice(1)}
@@ -320,56 +409,56 @@ export default function AssignmentsPage() {
         {/* Stats Overview */}
         {view === 'overview' && stats && (
           <div className='grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-6 mb-8'>
-            <div className='bg-white p-6 rounded-lg shadow-sm border'>
+            <div className='bg-background p-6 rounded-lg shadow-sm border'>
               <div className='text-2xl font-bold text-blue-600'>
                 {stats.totalTechnicians}
               </div>
-              <div className='text-sm text-gray-600'>Total Technicians</div>
+              <div className='text-sm text-muted-foreground'>Total Technicians</div>
             </div>
-            <div className='bg-white p-6 rounded-lg shadow-sm border'>
+            <div className='bg-background p-6 rounded-lg shadow-sm border'>
               <div className='text-2xl font-bold text-green-600'>
                 {stats.activeTechnicians}
               </div>
-              <div className='text-sm text-gray-600'>Active Technicians</div>
+              <div className='text-sm text-muted-foreground'>Active Technicians</div>
             </div>
-            <div className='bg-white p-6 rounded-lg shadow-sm border'>
+            <div className='bg-background p-6 rounded-lg shadow-sm border'>
               <div className='text-2xl font-bold text-purple-600'>
                 {stats.totalClients}
               </div>
-              <div className='text-sm text-gray-600'>Total Clients</div>
+              <div className='text-sm text-muted-foreground'>Total Clients</div>
             </div>
-            <div className='bg-white p-6 rounded-lg shadow-sm border'>
+            <div className='bg-background p-6 rounded-lg shadow-sm border'>
               <div className='text-2xl font-bold text-blue-600'>
                 {stats.assignedClients}
               </div>
-              <div className='text-sm text-gray-600'>Assigned Clients</div>
+              <div className='text-sm text-muted-foreground'>Assigned Clients</div>
             </div>
-            <div className='bg-white p-6 rounded-lg shadow-sm border'>
+            <div className='bg-background p-6 rounded-lg shadow-sm border'>
               <div className='text-2xl font-bold text-orange-600'>
                 {stats.unassignedClients}
               </div>
-              <div className='text-sm text-gray-600'>Unassigned Clients</div>
+              <div className='text-sm text-muted-foreground'>Unassigned Clients</div>
             </div>
-            <div className='bg-white p-6 rounded-lg shadow-sm border'>
+            <div className='bg-background p-6 rounded-lg shadow-sm border'>
               <div className='text-2xl font-bold text-indigo-600'>
                 {stats.avgClientsPerTechnician}
               </div>
-              <div className='text-sm text-gray-600'>Avg per Technician</div>
+              <div className='text-sm text-muted-foreground'>Avg per Technician</div>
             </div>
           </div>
         )}
 
         {/* Technicians View */}
         {view === 'technicians' && (
-          <div className='bg-white rounded-lg shadow-sm border overflow-hidden'>
-            <div className='px-6 py-4 border-b border-gray-200'>
-              <h2 className='text-lg font-semibold text-gray-900'>
+          <div className='bg-background rounded-lg shadow-sm border overflow-hidden'>
+            <div className='px-6 py-4 border-b border-border'>
+              <h2 className='text-lg font-semibold text-foreground'>
                 Technicians & Their Assignments
               </h2>
             </div>
             <div className='overflow-x-auto'>
               <table className='min-w-full divide-y divide-gray-200'>
-                <thead className='bg-gray-50'>
+                <thead className='bg-muted/50'>
                   <tr>
                     <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
                       Technician
@@ -388,12 +477,12 @@ export default function AssignmentsPage() {
                     </th>
                   </tr>
                 </thead>
-                <tbody className='bg-white divide-y divide-gray-200'>
+                <tbody className='bg-background divide-y divide-gray-200'>
                   {technicians.map((technician) => (
-                    <tr key={technician._id} className='hover:bg-gray-50'>
+                    <tr key={technician._id} className='hover:bg-muted/50'>
                       <td className='px-6 py-4 whitespace-nowrap'>
                         <div>
-                          <div className='text-sm font-medium text-gray-900'>
+                          <div className='text-sm font-medium text-foreground'>
                             {technician.name}
                           </div>
                           <div className='text-sm text-gray-500'>
@@ -414,7 +503,7 @@ export default function AssignmentsPage() {
                       </td>
                       <td className='px-6 py-4'>
                         <div className='space-y-1'>
-                          <div className='text-sm font-medium text-gray-900'>
+                          <div className='text-sm font-medium text-foreground'>
                             {technician.assignedClients.length} clients assigned
                           </div>
                           {technician.assignedClients
@@ -424,7 +513,7 @@ export default function AssignmentsPage() {
                               return client ? (
                                 <div
                                   key={clientId}
-                                  className='flex items-center justify-between bg-gray-50 p-2 rounded text-xs'>
+                                  className='flex items-center justify-between bg-muted/50 p-2 rounded text-xs'>
                                   <div>
                                     <span className='font-medium'>
                                       {client.name}
@@ -463,8 +552,8 @@ export default function AssignmentsPage() {
                         <span
                           className={`px-2 py-1 rounded-full text-xs font-medium ${
                             technician.isActive
-                              ? 'bg-green-100 text-green-800'
-                              : 'bg-red-100 text-red-800'
+                              ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+                              : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
                           }`}>
                           {technician.isActive ? 'Active' : 'Inactive'}
                         </span>
@@ -477,77 +566,234 @@ export default function AssignmentsPage() {
           </div>
         )}
 
-        {/* Clients View */}
+        {/* Clients View with Search */}
         {view === 'clients' && (
           <div className='space-y-6'>
-            {/* Unassigned Clients */}
-            {unassignedClients.length > 0 && (
-              <div className='bg-orange-50 rounded-lg shadow-sm border border-orange-200'>
-                <div className='px-6 py-4 border-b border-orange-200'>
-                  <h2 className='text-lg font-semibold text-orange-900'>
-                    Unassigned Clients ({unassignedClients.length})
-                  </h2>
-                </div>
-                <div className='p-6'>
-                  <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
-                    {unassignedClients.map((client) => (
-                      <div
-                        key={client._id}
-                        className='bg-white p-4 rounded-lg border'>
-                        <div className='flex justify-between items-start mb-2'>
-                          <div>
-                            <h3 className='font-medium text-gray-900'>
-                              {client.name}
-                            </h3>
-                            <p className='text-sm text-gray-500'>
-                              {client.address.city}, {client.address.state}
-                            </p>
-                          </div>
-                          <button
-                            onClick={() => {
-                              setSelectedClient(client)
-                              setShowAssignModal(true)
-                            }}
-                            className='text-green-600 hover:text-green-800 text-sm'>
-                            Assign
-                          </button>
-                        </div>
-                        <div className='flex items-center space-x-2'>
-                          <span
-                            className={`px-2 py-1 rounded text-xs font-medium ${getFrequencyBadgeColor(
-                              client.serviceFrequency
-                            )}`}>
-                            {client.serviceFrequency.replace('-', ' ')}
-                          </span>
-                          {client.serviceDay && (
-                            <span className='text-xs text-gray-500'>
-                              {client.serviceDay}s
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    ))}
+            {/* Search and Filters */}
+            <div className='bg-background p-4 rounded-lg shadow border'>
+              <div className='grid grid-cols-1 md:grid-cols-6 gap-4'>
+                <div className='md:col-span-2'>
+                  <label className='block text-sm font-medium text-gray-700 mb-1'>
+                    Search Clients
+                  </label>
+                  <div className='relative'>
+                    <Search className='absolute left-3 top-3 h-4 w-4 text-gray-400' />
+                    <input
+                      type='text'
+                      placeholder='Search by name, email, phone, or address...'
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className='pl-10 pr-4 py-2 w-full border border-input rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+                    />
                   </div>
                 </div>
-              </div>
-            )}
 
-            {/* All Clients */}
-            <div className='bg-white rounded-lg shadow-sm border overflow-hidden'>
-              <div className='px-6 py-4 border-b border-gray-200'>
-                <h2 className='text-lg font-semibold text-gray-900'>
-                  All Clients & Their Assignments
+                <div>
+                  <label className='block text-sm font-medium text-gray-700 mb-1'>
+                    Client Type
+                  </label>
+                  <select
+                    value={clientTypeFilter}
+                    onChange={(e) => setClientTypeFilter(e.target.value as any)}
+                    className='w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-blue-500'>
+                    <option value='all'>All Types</option>
+                    <option value='maintenance'>Maintenance</option>
+                    <option value='service'>Service</option>
+                    <option value='retail'>Retail</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className='block text-sm font-medium text-gray-700 mb-1'>
+                    Status
+                  </label>
+                  <select
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value as any)}
+                    className='w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-blue-500'>
+                    <option value='all'>All Status</option>
+                    <option value='active'>Active</option>
+                    <option value='inactive'>Inactive</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className='block text-sm font-medium text-gray-700 mb-1'>
+                    Assignment
+                  </label>
+                  <select
+                    value={assignmentFilter}
+                    onChange={(e) => setAssignmentFilter(e.target.value as any)}
+                    className='w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-blue-500'>
+                    <option value='all'>All Clients</option>
+                    <option value='assigned'>Assigned</option>
+                    <option value='unassigned'>Unassigned</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className='block text-sm font-medium text-gray-700 mb-1'>
+                    Frequency
+                  </label>
+                  <select
+                    value={frequencyFilter}
+                    onChange={(e) => setFrequencyFilter(e.target.value as any)}
+                    className='w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-blue-500'
+                    disabled={
+                      clientTypeFilter !== 'all' &&
+                      clientTypeFilter !== 'maintenance'
+                    }>
+                    <option value='all'>All Frequencies</option>
+                    <option value='twice-weekly'>Twice Weekly</option>
+                    <option value='weekly'>Weekly</option>
+                    <option value='bi-weekly'>Bi-weekly</option>
+                    <option value='monthly'>Monthly</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Results summary */}
+              <div className='mt-3 text-sm text-muted-foreground'>
+                Showing {filteredClients.length} of {clients.length} clients
+                {searchTerm && ` matching "${searchTerm}"`}
+              </div>
+            </div>
+
+            {/* Quick Stats for Filtered Results */}
+            <div className='grid grid-cols-2 md:grid-cols-4 gap-4'>
+              <div className='bg-blue-50 p-4 rounded-lg border'>
+                <div className='text-lg font-bold text-blue-600'>
+                  {
+                    filteredClients.filter((c) =>
+                      technicians.some((t) => t.assignedClients.includes(c._id))
+                    ).length
+                  }
+                </div>
+                <div className='text-sm text-muted-foreground'>Assigned</div>
+              </div>
+              <div className='bg-orange-50 p-4 rounded-lg border'>
+                <div className='text-lg font-bold text-orange-600'>
+                  {
+                    filteredClients.filter(
+                      (c) =>
+                        !technicians.some((t) =>
+                          t.assignedClients.includes(c._id)
+                        )
+                    ).length
+                  }
+                </div>
+                <div className='text-sm text-muted-foreground'>Unassigned</div>
+              </div>
+              <div className='bg-green-50 p-4 rounded-lg border'>
+                <div className='text-lg font-bold text-green-600'>
+                  {filteredClients.filter((c) => c.isActive).length}
+                </div>
+                <div className='text-sm text-muted-foreground'>Active</div>
+              </div>
+              <div className='bg-purple-50 p-4 rounded-lg border'>
+                <div className='text-lg font-bold text-purple-600'>
+                  {
+                    filteredClients.filter(
+                      (c) => c.clientType === 'maintenance'
+                    ).length
+                  }
+                </div>
+                <div className='text-sm text-muted-foreground'>Maintenance</div>
+              </div>
+            </div>
+
+            {/* Unassigned Clients - Now filtered */}
+            {filteredClients.filter(
+              (c) =>
+                !technicians.some((t) => t.assignedClients.includes(c._id)) &&
+                c.isActive
+            ).length > 0 &&
+              (assignmentFilter === 'all' ||
+                assignmentFilter === 'unassigned') && (
+                <div className='bg-orange-50 rounded-lg shadow-sm border border-orange-200'>
+                  <div className='px-6 py-4 border-b border-orange-200'>
+                    <h2 className='text-lg font-semibold text-orange-900'>
+                      Unassigned Clients (
+                      {
+                        filteredClients.filter(
+                          (c) =>
+                            !technicians.some((t) =>
+                              t.assignedClients.includes(c._id)
+                            ) && c.isActive
+                        ).length
+                      }
+                      )
+                    </h2>
+                  </div>
+                  <div className='p-6'>
+                    <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
+                      {filteredClients
+                        .filter(
+                          (c) =>
+                            !technicians.some((t) =>
+                              t.assignedClients.includes(c._id)
+                            ) && c.isActive
+                        )
+                        .map((client) => (
+                          <div
+                            key={client._id}
+                            className='bg-background p-4 rounded-lg border'>
+                            <div className='flex justify-between items-start mb-2'>
+                              <div>
+                                <h3 className='font-medium text-foreground'>
+                                  {client.name}
+                                </h3>
+                                <p className='text-sm text-gray-500'>
+                                  {client.address.city}, {client.address.state}
+                                </p>
+                              </div>
+                              <button
+                                onClick={() => {
+                                  setSelectedClient(client)
+                                  setShowAssignModal(true)
+                                }}
+                                className='text-green-600 hover:text-green-800 text-sm'>
+                                Assign
+                              </button>
+                            </div>
+                            <div className='flex items-center space-x-2'>
+                              <span
+                                className={`px-2 py-1 rounded text-xs font-medium ${getFrequencyBadgeColor(
+                                  client.serviceFrequency || ''
+                                )}`}>
+                                {formatServiceFrequency(
+                                  client.serviceFrequency
+                                )}
+                              </span>
+                              {client.serviceDay && (
+                                <span className='text-xs text-gray-500'>
+                                  {client.serviceDay}s
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+            {/* All Clients Table - Now with filtered results */}
+            <div className='bg-background rounded-lg shadow-sm border overflow-hidden'>
+              <div className='px-6 py-4 border-b border-border'>
+                <h2 className='text-lg font-semibold text-foreground'>
+                  Client Assignments ({filteredClients.length})
                 </h2>
               </div>
               <div className='overflow-x-auto'>
                 <table className='min-w-full divide-y divide-gray-200'>
-                  <thead className='bg-gray-50'>
+                  <thead className='bg-muted/50'>
                     <tr>
                       <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
                         Client
                       </th>
                       <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-                        Service Details
+                        Service Info
                       </th>
                       <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
                         Assigned Technician
@@ -557,16 +803,23 @@ export default function AssignmentsPage() {
                       </th>
                     </tr>
                   </thead>
-                  <tbody className='bg-white divide-y divide-gray-200'>
-                    {clients
-                      .filter((c) => c.isActive)
-                      .map((client) => {
+                  <tbody className='bg-background divide-y divide-gray-200'>
+                    {filteredClients.length === 0 ? (
+                      <tr>
+                        <td
+                          colSpan={4}
+                          className='px-6 py-8 text-center text-gray-500'>
+                          No clients found matching your filters
+                        </td>
+                      </tr>
+                    ) : (
+                      filteredClients.map((client) => {
                         const assignedTech = getTechnicianForClient(client._id)
                         return (
-                          <tr key={client._id} className='hover:bg-gray-50'>
+                          <tr key={client._id} className='hover:bg-muted/50'>
                             <td className='px-6 py-4 whitespace-nowrap'>
                               <div>
-                                <div className='text-sm font-medium text-gray-900'>
+                                <div className='text-sm font-medium text-foreground'>
                                   {client.name}
                                 </div>
                                 <div className='text-sm text-gray-500'>
@@ -581,21 +834,26 @@ export default function AssignmentsPage() {
                               <div className='space-y-1'>
                                 <span
                                   className={`px-2 py-1 rounded text-xs font-medium ${getFrequencyBadgeColor(
-                                    client.serviceFrequency
+                                    client.serviceFrequency || ''
                                   )}`}>
-                                  {client.serviceFrequency.replace('-', ' ')}
+                                  {formatServiceFrequency(
+                                    client.serviceFrequency
+                                  )}
                                 </span>
                                 {client.serviceDay && (
                                   <div className='text-xs text-gray-500'>
                                     {client.serviceDay}s
                                   </div>
                                 )}
+                                <div className='text-xs text-gray-500'>
+                                  Type: {client.clientType || 'maintenance'}
+                                </div>
                               </div>
                             </td>
                             <td className='px-6 py-4 whitespace-nowrap'>
                               {assignedTech ? (
                                 <div>
-                                  <div className='text-sm font-medium text-gray-900'>
+                                  <div className='text-sm font-medium text-foreground'>
                                     {assignedTech.name}
                                   </div>
                                   <div className='text-xs text-gray-500'>
@@ -634,7 +892,8 @@ export default function AssignmentsPage() {
                             </td>
                           </tr>
                         )
-                      })}
+                      })
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -645,13 +904,13 @@ export default function AssignmentsPage() {
         {/* Assignment Modal */}
         {showAssignModal && (
           <div className='fixed inset-0 bg-black/70 backdrop-blur-lg flex items-center justify-center p-4 z-50'>
-            <div className='bg-white rounded-lg p-6 w-full max-w-md'>
+            <div className='bg-background rounded-lg p-6 w-full max-w-md'>
               <h3 className='text-lg font-semibold mb-4'>
                 Assign Client to Technician
               </h3>
 
               {selectedClient && (
-                <div className='mb-4 p-3 bg-gray-50 rounded'>
+                <div className='mb-4 p-3 bg-muted/50 rounded'>
                   <div className='font-medium'>{selectedClient.name}</div>
                   <div className='text-sm text-gray-500'>
                     {selectedClient.address.city},{' '}
@@ -695,7 +954,7 @@ export default function AssignmentsPage() {
                     setShowAssignModal(false)
                     setSelectedClient(null)
                   }}
-                  className='px-4 py-2 text-gray-600 border border-gray-300 rounded hover:bg-gray-50'>
+                  className='px-4 py-2 text-muted-foreground border border-input rounded hover:bg-muted/50'>
                   Cancel
                 </button>
               </div>

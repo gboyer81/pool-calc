@@ -260,7 +260,7 @@ export default function TabbedPoolEditor({
 
   return (
     <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50'>
-      <div className='bg-white rounded-lg w-full max-w-4xl h-full max-h-[90vh] flex flex-col'>
+      <div className='bg-background rounded-lg w-full max-w-4xl h-full max-h-[90vh] flex flex-col'>
         {/* Header */}
         <div className='flex items-center justify-between p-6 border-b'>
           <h2 className='text-xl font-semibold'>
@@ -268,7 +268,7 @@ export default function TabbedPoolEditor({
           </h2>
           <button
             onClick={onClose}
-            className='text-gray-400 hover:text-gray-600 text-2xl'>
+            className='text-gray-400 hover:text-muted-foreground text-2xl'>
             ✕
           </button>
         </div>
@@ -283,7 +283,7 @@ export default function TabbedPoolEditor({
                 className={`px-6 py-3 text-sm font-medium border-b-2 ${
                   activeTab === tab.id
                     ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-input'
                 }`}>
                 <span className='mr-2'>{tab.icon}</span>
                 {tab.label}
@@ -306,7 +306,7 @@ export default function TabbedPoolEditor({
                     type='text'
                     value={formData.name}
                     onChange={(e) => handleInputChange('name', e.target.value)}
-                    className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500'
+                    className='w-full px-3 py-2 border border-input rounded-md focus:ring-blue-500 focus:border-blue-500'
                   />
                 </div>
                 <div>
@@ -316,7 +316,7 @@ export default function TabbedPoolEditor({
                   <select
                     value={formData.type}
                     onChange={(e) => handleInputChange('type', e.target.value)}
-                    className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500'>
+                    className='w-full px-3 py-2 border border-input rounded-md focus:ring-blue-500 focus:border-blue-500'>
                     <option value='residential'>Residential</option>
                     <option value='commercial'>Commercial</option>
                   </select>
@@ -331,7 +331,7 @@ export default function TabbedPoolEditor({
                   <select
                     value={formData.shape}
                     onChange={(e) => handleInputChange('shape', e.target.value)}
-                    className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500'>
+                    className='w-full px-3 py-2 border border-input rounded-md focus:ring-blue-500 focus:border-blue-500'>
                     <option value='rectangular'>Rectangular</option>
                     <option value='circular'>Circular</option>
                     <option value='oval'>Oval</option>
@@ -349,14 +349,14 @@ export default function TabbedPoolEditor({
                     onChange={(e) =>
                       handleInputChange('gallons', e.target.value)
                     }
-                    className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500'
+                    className='w-full px-3 py-2 border border-input rounded-md focus:ring-blue-500 focus:border-blue-500'
                   />
                 </div>
               </div>
 
               {/* Shape-specific dimensions */}
               <div className='space-y-4'>
-                <h3 className='text-lg font-medium text-gray-900'>
+                <h3 className='text-lg font-medium text-foreground'>
                   Dimensions
                 </h3>
                 <div className='grid grid-cols-3 gap-4'>
@@ -371,7 +371,7 @@ export default function TabbedPoolEditor({
                       onChange={(e) =>
                         handleInputChange('avgDepth', e.target.value)
                       }
-                      className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500'
+                      className='w-full px-3 py-2 border border-input rounded-md focus:ring-blue-500 focus:border-blue-500'
                     />
                   </div>
 
@@ -389,7 +389,7 @@ export default function TabbedPoolEditor({
                           onChange={(e) =>
                             handleInputChange('length', e.target.value)
                           }
-                          className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500'
+                          className='w-full px-3 py-2 border border-input rounded-md focus:ring-blue-500 focus:border-blue-500'
                         />
                       </div>
                       <div>
@@ -403,7 +403,7 @@ export default function TabbedPoolEditor({
                           onChange={(e) =>
                             handleInputChange('width', e.target.value)
                           }
-                          className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500'
+                          className='w-full px-3 py-2 border border-input rounded-md focus:ring-blue-500 focus:border-blue-500'
                         />
                       </div>
                     </>
@@ -421,7 +421,7 @@ export default function TabbedPoolEditor({
                         onChange={(e) =>
                           handleInputChange('diameter', e.target.value)
                         }
-                        className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500'
+                        className='w-full px-3 py-2 border border-input rounded-md focus:ring-blue-500 focus:border-blue-500'
                       />
                     </div>
                   )}
@@ -435,7 +435,7 @@ export default function TabbedPoolEditor({
             <div className='space-y-6'>
               {/* Filter */}
               <div className='space-y-4'>
-                <h3 className='text-lg font-medium text-gray-900'>
+                <h3 className='text-lg font-medium text-foreground'>
                   Filter System
                 </h3>
                 <div className='grid grid-cols-2 gap-4'>
@@ -448,7 +448,7 @@ export default function TabbedPoolEditor({
                       onChange={(e) =>
                         handleInputChange('filterType', e.target.value)
                       }
-                      className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500'>
+                      className='w-full px-3 py-2 border border-input rounded-md focus:ring-blue-500 focus:border-blue-500'>
                       <option value='sand'>Sand</option>
                       <option value='cartridge'>Cartridge</option>
                       <option value='de'>DE (Diatomaceous Earth)</option>
@@ -464,7 +464,7 @@ export default function TabbedPoolEditor({
                       onChange={(e) =>
                         handleInputChange('filterModel', e.target.value)
                       }
-                      className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500'
+                      className='w-full px-3 py-2 border border-input rounded-md focus:ring-blue-500 focus:border-blue-500'
                     />
                   </div>
                 </div>
@@ -472,7 +472,7 @@ export default function TabbedPoolEditor({
 
               {/* Pump */}
               <div className='space-y-4'>
-                <h3 className='text-lg font-medium text-gray-900'>Pump</h3>
+                <h3 className='text-lg font-medium text-foreground'>Pump</h3>
                 <div className='grid grid-cols-2 gap-4'>
                   <div>
                     <label className='block text-sm font-medium text-gray-700 mb-2'>
@@ -484,7 +484,7 @@ export default function TabbedPoolEditor({
                       onChange={(e) =>
                         handleInputChange('pumpModel', e.target.value)
                       }
-                      className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500'
+                      className='w-full px-3 py-2 border border-input rounded-md focus:ring-blue-500 focus:border-blue-500'
                     />
                   </div>
                   <div>
@@ -498,7 +498,7 @@ export default function TabbedPoolEditor({
                       onChange={(e) =>
                         handleInputChange('pumpHorsepower', e.target.value)
                       }
-                      className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500'
+                      className='w-full px-3 py-2 border border-input rounded-md focus:ring-blue-500 focus:border-blue-500'
                     />
                   </div>
                 </div>
@@ -506,7 +506,7 @@ export default function TabbedPoolEditor({
 
               {/* Heater */}
               <div className='space-y-4'>
-                <h3 className='text-lg font-medium text-gray-900'>
+                <h3 className='text-lg font-medium text-foreground'>
                   Heater (Optional)
                 </h3>
                 <div className='grid grid-cols-2 gap-4'>
@@ -519,7 +519,7 @@ export default function TabbedPoolEditor({
                       onChange={(e) =>
                         handleInputChange('heaterType', e.target.value)
                       }
-                      className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500'>
+                      className='w-full px-3 py-2 border border-input rounded-md focus:ring-blue-500 focus:border-blue-500'>
                       <option value=''>No Heater</option>
                       <option value='gas'>Gas</option>
                       <option value='electric'>Electric</option>
@@ -536,7 +536,7 @@ export default function TabbedPoolEditor({
                       onChange={(e) =>
                         handleInputChange('heaterModel', e.target.value)
                       }
-                      className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500'
+                      className='w-full px-3 py-2 border border-input rounded-md focus:ring-blue-500 focus:border-blue-500'
                     />
                   </div>
                 </div>
@@ -544,7 +544,7 @@ export default function TabbedPoolEditor({
 
               {/* Salt System */}
               <div className='space-y-4'>
-                <h3 className='text-lg font-medium text-gray-900'>
+                <h3 className='text-lg font-medium text-foreground'>
                   Salt System (Optional)
                 </h3>
                 <div className='grid grid-cols-2 gap-4'>
@@ -558,7 +558,7 @@ export default function TabbedPoolEditor({
                       onChange={(e) =>
                         handleInputChange('saltSystemModel', e.target.value)
                       }
-                      className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500'
+                      className='w-full px-3 py-2 border border-input rounded-md focus:ring-blue-500 focus:border-blue-500'
                     />
                   </div>
                   <div>
@@ -571,7 +571,7 @@ export default function TabbedPoolEditor({
                       onChange={(e) =>
                         handleInputChange('saltSystemTarget', e.target.value)
                       }
-                      className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500'
+                      className='w-full px-3 py-2 border border-input rounded-md focus:ring-blue-500 focus:border-blue-500'
                       placeholder='3200'
                     />
                   </div>
@@ -585,7 +585,7 @@ export default function TabbedPoolEditor({
             <div className='space-y-6'>
               {/* pH */}
               <div className='space-y-4'>
-                <h3 className='text-lg font-medium text-gray-900'>pH Levels</h3>
+                <h3 className='text-lg font-medium text-foreground'>pH Levels</h3>
                 <div className='grid grid-cols-3 gap-4'>
                   <div>
                     <label className='block text-sm font-medium text-gray-700 mb-2'>
@@ -598,7 +598,7 @@ export default function TabbedPoolEditor({
                       onChange={(e) =>
                         handleInputChange('phTarget', e.target.value)
                       }
-                      className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500'
+                      className='w-full px-3 py-2 border border-input rounded-md focus:ring-blue-500 focus:border-blue-500'
                     />
                   </div>
                   <div>
@@ -612,7 +612,7 @@ export default function TabbedPoolEditor({
                       onChange={(e) =>
                         handleInputChange('phMin', e.target.value)
                       }
-                      className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500'
+                      className='w-full px-3 py-2 border border-input rounded-md focus:ring-blue-500 focus:border-blue-500'
                     />
                   </div>
                   <div>
@@ -626,7 +626,7 @@ export default function TabbedPoolEditor({
                       onChange={(e) =>
                         handleInputChange('phMax', e.target.value)
                       }
-                      className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500'
+                      className='w-full px-3 py-2 border border-input rounded-md focus:ring-blue-500 focus:border-blue-500'
                     />
                   </div>
                 </div>
@@ -634,7 +634,7 @@ export default function TabbedPoolEditor({
 
               {/* Free Chlorine */}
               <div className='space-y-4'>
-                <h3 className='text-lg font-medium text-gray-900'>
+                <h3 className='text-lg font-medium text-foreground'>
                   Free Chlorine (ppm)
                 </h3>
                 <div className='grid grid-cols-3 gap-4'>
@@ -649,7 +649,7 @@ export default function TabbedPoolEditor({
                       onChange={(e) =>
                         handleInputChange('freeChlorineTarget', e.target.value)
                       }
-                      className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500'
+                      className='w-full px-3 py-2 border border-input rounded-md focus:ring-blue-500 focus:border-blue-500'
                     />
                   </div>
                   <div>
@@ -663,7 +663,7 @@ export default function TabbedPoolEditor({
                       onChange={(e) =>
                         handleInputChange('freeChlorineMin', e.target.value)
                       }
-                      className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500'
+                      className='w-full px-3 py-2 border border-input rounded-md focus:ring-blue-500 focus:border-blue-500'
                     />
                   </div>
                   <div>
@@ -677,7 +677,7 @@ export default function TabbedPoolEditor({
                       onChange={(e) =>
                         handleInputChange('freeChlorineMax', e.target.value)
                       }
-                      className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500'
+                      className='w-full px-3 py-2 border border-input rounded-md focus:ring-blue-500 focus:border-blue-500'
                     />
                   </div>
                 </div>
@@ -685,7 +685,7 @@ export default function TabbedPoolEditor({
 
               {/* Total Alkalinity */}
               <div className='space-y-4'>
-                <h3 className='text-lg font-medium text-gray-900'>
+                <h3 className='text-lg font-medium text-foreground'>
                   Total Alkalinity (ppm)
                 </h3>
                 <div className='grid grid-cols-3 gap-4'>
@@ -702,7 +702,7 @@ export default function TabbedPoolEditor({
                           e.target.value
                         )
                       }
-                      className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500'
+                      className='w-full px-3 py-2 border border-input rounded-md focus:ring-blue-500 focus:border-blue-500'
                     />
                   </div>
                   <div>
@@ -715,7 +715,7 @@ export default function TabbedPoolEditor({
                       onChange={(e) =>
                         handleInputChange('totalAlkalinityMin', e.target.value)
                       }
-                      className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500'
+                      className='w-full px-3 py-2 border border-input rounded-md focus:ring-blue-500 focus:border-blue-500'
                     />
                   </div>
                   <div>
@@ -728,7 +728,7 @@ export default function TabbedPoolEditor({
                       onChange={(e) =>
                         handleInputChange('totalAlkalinityMax', e.target.value)
                       }
-                      className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500'
+                      className='w-full px-3 py-2 border border-input rounded-md focus:ring-blue-500 focus:border-blue-500'
                     />
                   </div>
                 </div>
@@ -736,7 +736,7 @@ export default function TabbedPoolEditor({
 
               {/* Calcium Hardness */}
               <div className='space-y-4'>
-                <h3 className='text-lg font-medium text-gray-900'>
+                <h3 className='text-lg font-medium text-foreground'>
                   Calcium Hardness (ppm)
                 </h3>
                 <div className='grid grid-cols-3 gap-4'>
@@ -753,7 +753,7 @@ export default function TabbedPoolEditor({
                           e.target.value
                         )
                       }
-                      className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500'
+                      className='w-full px-3 py-2 border border-input rounded-md focus:ring-blue-500 focus:border-blue-500'
                     />
                   </div>
                   <div>
@@ -766,7 +766,7 @@ export default function TabbedPoolEditor({
                       onChange={(e) =>
                         handleInputChange('calciumHardnessMin', e.target.value)
                       }
-                      className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500'
+                      className='w-full px-3 py-2 border border-input rounded-md focus:ring-blue-500 focus:border-blue-500'
                     />
                   </div>
                   <div>
@@ -779,7 +779,7 @@ export default function TabbedPoolEditor({
                       onChange={(e) =>
                         handleInputChange('calciumHardnessMax', e.target.value)
                       }
-                      className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500'
+                      className='w-full px-3 py-2 border border-input rounded-md focus:ring-blue-500 focus:border-blue-500'
                     />
                   </div>
                 </div>
@@ -788,7 +788,7 @@ export default function TabbedPoolEditor({
               {/* Salt Levels (if salt system) */}
               {formData.saltSystemModel && (
                 <div className='space-y-4'>
-                  <h3 className='text-lg font-medium text-gray-900'>
+                  <h3 className='text-lg font-medium text-foreground'>
                     Salt Levels (ppm)
                   </h3>
                   <div className='grid grid-cols-3 gap-4'>
@@ -802,7 +802,7 @@ export default function TabbedPoolEditor({
                         onChange={(e) =>
                           handleInputChange('saltTarget', e.target.value)
                         }
-                        className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500'
+                        className='w-full px-3 py-2 border border-input rounded-md focus:ring-blue-500 focus:border-blue-500'
                       />
                     </div>
                     <div>
@@ -815,7 +815,7 @@ export default function TabbedPoolEditor({
                         onChange={(e) =>
                           handleInputChange('saltMin', e.target.value)
                         }
-                        className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500'
+                        className='w-full px-3 py-2 border border-input rounded-md focus:ring-blue-500 focus:border-blue-500'
                       />
                     </div>
                     <div>
@@ -828,7 +828,7 @@ export default function TabbedPoolEditor({
                         onChange={(e) =>
                           handleInputChange('saltMax', e.target.value)
                         }
-                        className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500'
+                        className='w-full px-3 py-2 border border-input rounded-md focus:ring-blue-500 focus:border-blue-500'
                       />
                     </div>
                   </div>
@@ -840,7 +840,7 @@ export default function TabbedPoolEditor({
           {/* Notes Tab */}
           {activeTab === 'notes' && (
             <div className='space-y-4'>
-              <h3 className='text-lg font-medium text-gray-900'>Pool Notes</h3>
+              <h3 className='text-lg font-medium text-foreground'>Pool Notes</h3>
               <div>
                 <label className='block text-sm font-medium text-gray-700 mb-2'>
                   Additional Information
@@ -849,7 +849,7 @@ export default function TabbedPoolEditor({
                   value={formData.notes}
                   onChange={(e) => handleInputChange('notes', e.target.value)}
                   rows={10}
-                  className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500'
+                  className='w-full px-3 py-2 border border-input rounded-md focus:ring-blue-500 focus:border-blue-500'
                   placeholder='Add any additional notes about this pool...'
                 />
               </div>
@@ -861,7 +861,7 @@ export default function TabbedPoolEditor({
         <div className='flex justify-end space-x-4 p-6 border-t'>
           <button
             onClick={onClose}
-            className='px-6 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50'>
+            className='px-6 py-2 text-muted-foreground border border-input rounded-md hover:bg-muted/50'>
             Cancel
           </button>
           <button

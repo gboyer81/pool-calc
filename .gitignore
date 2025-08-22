@@ -53,6 +53,7 @@ Cluster0-*.json
 pooolCalc.tsx
 
 playground-*.mongodb.js
+MongoDB_PG/
 
 # dev scripts
 /dev-scripts
@@ -69,3 +70,5 @@ app/api/admin/*
 # debug components
 DBDiagnostics.tsx
 APIDebugTool.tsx
+
+backups/

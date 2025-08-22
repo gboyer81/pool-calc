@@ -22,12 +22,12 @@ export function MobileLayout({
         <div className='flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 sm:gap-6 mb-4 sm:mb-6'>
           <div className='min-w-0 flex-1'>
             {title && (
-              <h1 className='text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 truncate'>
+              <h1 className='text-xl sm:text-2xl md:text-3xl font-bold text-foreground truncate'>
                 {title}
               </h1>
             )}
             {subtitle && (
-              <p className='text-sm sm:text-base text-gray-600 mt-1 break-words'>
+              <p className='text-sm sm:text-base text-muted-foreground mt-1 break-words'>
                 {subtitle}
               </p>
             )}
@@ -60,10 +60,10 @@ export function MobileTable({
 }: MobileTableProps) {
   return (
     <div
-      className={`bg-white rounded-lg shadow-sm border overflow-hidden ${className}`}>
+      className={`bg-background rounded-lg shadow-sm border overflow-hidden ${className}`}>
       {title && (
-        <div className='px-3 sm:px-6 py-4 border-b border-gray-200'>
-          <h2 className='text-base sm:text-lg font-semibold text-gray-900'>
+        <div className='px-3 sm:px-6 py-4 border-b border-border'>
+          <h2 className='text-base sm:text-lg font-semibold text-foreground'>
             {title}
           </h2>
         </div>

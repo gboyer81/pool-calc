@@ -169,7 +169,7 @@ export default function VisitLogging() {
     field: keyof typeof visit.readings,
     value: number | null
   ) => {
-    if (value === null) return 'border-gray-300'
+    if (value === null) return 'border-input'
 
     const ranges = {
       ph: { min: 7.2, max: 7.6, ideal: 7.4 },
@@ -179,7 +179,7 @@ export default function VisitLogging() {
     }
 
     const range = ranges[field as keyof typeof ranges]
-    if (!range) return 'border-gray-300'
+    if (!range) return 'border-input'
 
     if (value >= range.min && value <= range.max) {
       return 'border-green-500 bg-green-50'
@@ -195,14 +195,14 @@ export default function VisitLogging() {
   }
 
   return (
-    <div className='max-w-4xl mx-auto p-6 bg-white'>
+    <div className='max-w-4xl mx-auto p-6 bg-background'>
       {/* Header */}
       <div className='flex justify-between items-center mb-6'>
         <div>
-          <h1 className='text-3xl font-bold text-gray-900'>
+          <h1 className='text-3xl font-bold text-foreground'>
             Service Visit Log
           </h1>
-          <p className='text-gray-600'>
+          <p className='text-muted-foreground'>
             {visit.clientName} - {visit.poolName}
           </p>
         </div>
@@ -211,7 +211,7 @@ export default function VisitLogging() {
             <div className='text-2xl font-bold text-blue-600'>
               {formatDuration(visit.duration)}
             </div>
-            <div className='text-sm text-gray-600'>Duration</div>
+            <div className='text-sm text-muted-foreground'>Duration</div>
           </div>
           {!isTimerRunning ? (
             <button
@@ -231,7 +231,7 @@ export default function VisitLogging() {
 
       <div className='space-y-8'>
         {/* Water Testing Results */}
-        <div className='bg-white border border-gray-200 rounded-lg p-6'>
+        <div className='bg-background border border-border rounded-lg p-6'>
           <h2 className='text-xl font-semibold mb-4 flex items-center'>
             🧪 Water Testing Results
             <button
@@ -282,7 +282,7 @@ export default function VisitLogging() {
                 step='0.1'
                 value={visit.readings.totalChlorine || ''}
                 onChange={(e) => updateReading('totalChlorine', e.target.value)}
-                className='w-full px-3 py-2 border border-gray-300 rounded-md'
+                className='w-full px-3 py-2 border border-input rounded-md'
                 placeholder='2.2'
               />
             </div>
@@ -328,7 +328,7 @@ export default function VisitLogging() {
                 type='number'
                 value={visit.readings.cyanuricAcid || ''}
                 onChange={(e) => updateReading('cyanuricAcid', e.target.value)}
-                className='w-full px-3 py-2 border border-gray-300 rounded-md'
+                className='w-full px-3 py-2 border border-input rounded-md'
                 placeholder='50'
               />
             </div>
@@ -340,7 +340,7 @@ export default function VisitLogging() {
                 type='number'
                 value={visit.readings.salt || ''}
                 onChange={(e) => updateReading('salt', e.target.value)}
-                className='w-full px-3 py-2 border border-gray-300 rounded-md'
+                className='w-full px-3 py-2 border border-input rounded-md'
                 placeholder='3200'
               />
             </div>
@@ -352,7 +352,7 @@ export default function VisitLogging() {
                 type='number'
                 value={visit.readings.temperature || ''}
                 onChange={(e) => updateReading('temperature', e.target.value)}
-                className='w-full px-3 py-2 border border-gray-300 rounded-md'
+                className='w-full px-3 py-2 border border-input rounded-md'
                 placeholder='82'
               />
             </div>
@@ -360,7 +360,7 @@ export default function VisitLogging() {
         </div>
 
         {/* Chemicals Added */}
-        <div className='bg-white border border-gray-200 rounded-lg p-6'>
+        <div className='bg-background border border-border rounded-lg p-6'>
           <div className='flex justify-between items-center mb-4'>
             <h2 className='text-xl font-semibold'>⚗️ Chemicals Added</h2>
             <button
@@ -381,7 +381,7 @@ export default function VisitLogging() {
                     onChange={(e) =>
                       updateChemical(index, 'chemical', e.target.value)
                     }
-                    className='w-full px-3 py-2 border border-gray-300 rounded-md'>
+                    className='w-full px-3 py-2 border border-input rounded-md'>
                     <option value=''>Select...</option>
                     {commonChemicals.map((chem) => (
                       <option key={chem.name} value={chem.name}>
@@ -405,7 +405,7 @@ export default function VisitLogging() {
                         parseFloat(e.target.value) || 0
                       )
                     }
-                    className='w-full px-3 py-2 border border-gray-300 rounded-md'
+                    className='w-full px-3 py-2 border border-input rounded-md'
                   />
                 </div>
                 <div>
@@ -417,7 +417,7 @@ export default function VisitLogging() {
                     onChange={(e) =>
                       updateChemical(index, 'unit', e.target.value)
                     }
-                    className='w-full px-3 py-2 border border-gray-300 rounded-md'>
+                    className='w-full px-3 py-2 border border-input rounded-md'>
                     <option value=''>Unit...</option>
                     <option value='pounds'>Pounds</option>
                     <option value='ounces'>Ounces</option>
@@ -436,7 +436,7 @@ export default function VisitLogging() {
                     onChange={(e) =>
                       updateChemical(index, 'reason', e.target.value)
                     }
-                    className='w-full px-3 py-2 border border-gray-300 rounded-md'
+                    className='w-full px-3 py-2 border border-input rounded-md'
                     placeholder='Adjust pH, etc.'
                   />
                 </div>
@@ -451,7 +451,7 @@ export default function VisitLogging() {
         </div>
 
         {/* Service Tasks */}
-        <div className='bg-white border border-gray-200 rounded-lg p-6'>
+        <div className='bg-background border border-border rounded-lg p-6'>
           <h2 className='text-xl font-semibold mb-4'>✅ Service Tasks</h2>
           <div className='grid grid-cols-2 gap-3'>
             {visit.tasksCompleted.map((task, index) => (
@@ -474,7 +474,7 @@ export default function VisitLogging() {
         </div>
 
         {/* Pool Condition */}
-        <div className='bg-white border border-gray-200 rounded-lg p-6'>
+        <div className='bg-background border border-border rounded-lg p-6'>
           <h2 className='text-xl font-semibold mb-4'>🏊 Pool Condition</h2>
           <div className='grid grid-cols-3 gap-6'>
             <div>
@@ -492,7 +492,7 @@ export default function VisitLogging() {
                     },
                   }))
                 }
-                className='w-full px-3 py-2 border border-gray-300 rounded-md'>
+                className='w-full px-3 py-2 border border-input rounded-md'>
                 <option value='clear'>Clear</option>
                 <option value='cloudy'>Cloudy</option>
                 <option value='green'>Green</option>
@@ -514,7 +514,7 @@ export default function VisitLogging() {
                     },
                   }))
                 }
-                className='w-full px-3 py-2 border border-gray-300 rounded-md'>
+                className='w-full px-3 py-2 border border-input rounded-md'>
                 <option value='none'>None</option>
                 <option value='light'>Light</option>
                 <option value='moderate'>Moderate</option>
@@ -536,7 +536,7 @@ export default function VisitLogging() {
                     },
                   }))
                 }
-                className='w-full px-3 py-2 border border-gray-300 rounded-md'>
+                className='w-full px-3 py-2 border border-input rounded-md'>
                 <option value='normal'>Normal</option>
                 <option value='issues'>Issues Noted</option>
                 <option value='service-needed'>Service Needed</option>
@@ -546,14 +546,14 @@ export default function VisitLogging() {
         </div>
 
         {/* Visit Notes */}
-        <div className='bg-white border border-gray-200 rounded-lg p-6'>
+        <div className='bg-background border border-border rounded-lg p-6'>
           <h2 className='text-xl font-semibold mb-4'>📝 Visit Notes</h2>
           <textarea
             value={visit.notes}
             onChange={(e) =>
               setVisit((prev) => ({ ...prev, notes: e.target.value }))
             }
-            className='w-full px-3 py-2 border border-gray-300 rounded-md h-32'
+            className='w-full px-3 py-2 border border-input rounded-md h-32'
             placeholder='Additional notes, equipment issues, client requests, etc.'
           />
         </div>

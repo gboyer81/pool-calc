@@ -88,7 +88,7 @@ export const PhCalculatorForm: React.FC<PhCalculatorProps> = ({
             step='0.1'
             value={currentPh || ''}
             disabled
-            className='w-full px-3 py-2 border rounded-md bg-gray-50'
+            className='w-full px-3 py-2 border rounded-md bg-muted/50'
           />
         </div>
         <div>
@@ -203,7 +203,7 @@ export const ChlorineCalculatorForm: React.FC<ChlorineCalculatorProps> = ({
             step='0.1'
             value={currentCl || ''}
             disabled
-            className='w-full px-3 py-2 border rounded-md bg-gray-50'
+            className='w-full px-3 py-2 border rounded-md bg-muted/50'
           />
         </div>
         <div>
@@ -215,7 +215,7 @@ export const ChlorineCalculatorForm: React.FC<ChlorineCalculatorProps> = ({
             step='0.1'
             value={targetCl}
             disabled
-            className='w-full px-3 py-2 border rounded-md bg-gray-50'
+            className='w-full px-3 py-2 border rounded-md bg-muted/50'
           />
         </div>
       </div>
@@ -318,7 +318,7 @@ export const AlkalinityCalculatorForm: React.FC<AlkalinityCalculatorProps> = ({
             type='number'
             value={currentAlk || ''}
             disabled
-            className='w-full px-3 py-2 border rounded-md bg-gray-50'
+            className='w-full px-3 py-2 border rounded-md bg-muted/50'
           />
         </div>
         <div>
@@ -329,7 +329,7 @@ export const AlkalinityCalculatorForm: React.FC<AlkalinityCalculatorProps> = ({
             type='number'
             value={targetAlk}
             disabled
-            className='w-full px-3 py-2 border rounded-md bg-gray-50'
+            className='w-full px-3 py-2 border rounded-md bg-muted/50'
           />
         </div>
       </div>

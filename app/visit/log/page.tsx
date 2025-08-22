@@ -200,11 +200,11 @@ export default function EnhancedVisitLogging() {
     field: keyof typeof visit.readings,
     value: number | undefined
   ) => {
-    if (value === undefined || !selectedPool) return 'border-gray-300'
+    if (value === undefined || !selectedPool) return 'border-input'
 
     const target =
       selectedPool.targetLevels[field as keyof typeof selectedPool.targetLevels]
-    if (!target) return 'border-gray-300'
+    if (!target) return 'border-input'
 
     // Simple range check (you can make this more sophisticated)
     const tolerance = target.target * 0.1 // 10% tolerance
@@ -289,10 +289,10 @@ export default function EnhancedVisitLogging() {
         {/* Header */}
         <div className='flex justify-between items-center mb-6'>
           <div>
-            <h1 className='text-3xl font-bold text-gray-900'>
+            <h1 className='text-3xl font-bold text-foreground'>
               Service Visit Log
             </h1>
-            <p className='text-gray-600'>
+            <p className='text-muted-foreground'>
               {client?.name} - {client?.address.street}, {client?.address.city}
             </p>
           </div>
@@ -301,7 +301,7 @@ export default function EnhancedVisitLogging() {
               <div className='text-2xl font-bold text-blue-600'>
                 {Math.floor(visit.duration / 60)}h {visit.duration % 60}m
               </div>
-              <div className='text-sm text-gray-600'>Duration</div>
+              <div className='text-sm text-muted-foreground'>Duration</div>
             </div>
             {!isTimerRunning ? (
               <button
@@ -332,7 +332,7 @@ export default function EnhancedVisitLogging() {
                 setSelectedPool(pool || null)
                 setVisit((prev) => ({ ...prev, poolId: e.target.value }))
               }}
-              className='w-full px-3 py-2 border border-gray-300 rounded-md'>
+              className='w-full px-3 py-2 border border-input rounded-md'>
               <option value=''>Select a pool...</option>
               {pools.map((pool) => (
                 <option key={pool._id} value={pool._id}>
@@ -346,7 +346,7 @@ export default function EnhancedVisitLogging() {
         {selectedPool && (
           <>
             {/* Water Testing with Calculator Integration */}
-            <div className='bg-white border border-gray-200 rounded-lg p-6 max-w-screen-2xl mx-auto'>
+            <div className='bg-background border border-border rounded-lg p-6 max-w-screen-2xl mx-auto'>
               <h2 className='text-xl font-semibold mb-4 flex items-center'>
                 🧪 Water Testing Results
                 <button
@@ -405,7 +405,7 @@ export default function EnhancedVisitLogging() {
                     onChange={(e) =>
                       updateReading('totalChlorine', e.target.value)
                     }
-                    className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+                    className='w-full px-3 py-2 border border-input rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
                     placeholder='2.2'
                   />
                 </div>
@@ -456,7 +456,7 @@ export default function EnhancedVisitLogging() {
                     onChange={(e) =>
                       updateReading('cyanuricAcid', e.target.value)
                     }
-                    className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+                    className='w-full px-3 py-2 border border-input rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
                     placeholder='50'
                   />
                 </div>
@@ -469,7 +469,7 @@ export default function EnhancedVisitLogging() {
                     type='number'
                     value={visit.readings.salt || ''}
                     onChange={(e) => updateReading('salt', e.target.value)}
-                    className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+                    className='w-full px-3 py-2 border border-input rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
                     placeholder='3200'
                   />
                 </div>
@@ -484,7 +484,7 @@ export default function EnhancedVisitLogging() {
                     onChange={(e) =>
                       updateReading('temperature', e.target.value)
                     }
-                    className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+                    className='w-full px-3 py-2 border border-input rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
                     placeholder='82'
                   />
                 </div>
@@ -492,7 +492,7 @@ export default function EnhancedVisitLogging() {
             </div>
 
             {/* Chemicals Added */}
-            <div className='bg-white border border-gray-200 rounded-lg p-6 mb-6'>
+            <div className='bg-background border border-border rounded-lg p-6 mb-6'>
               <div className='flex justify-between items-center mb-4'>
                 <h2 className='text-xl font-semibold'>⚗️ Chemicals Added</h2>
                 <button
@@ -514,9 +514,9 @@ export default function EnhancedVisitLogging() {
                 {visit.chemicalsAdded.map((chemical, index) => (
                   <div
                     key={index}
-                    className='grid grid-cols-5 gap-3 items-end p-3 bg-gray-50 rounded'>
+                    className='grid grid-cols-5 gap-3 items-end p-3 bg-muted/50 rounded'>
                     <div>
-                      <label className='block text-xs text-gray-600 mb-1'>
+                      <label className='block text-xs text-muted-foreground mb-1'>
                         Chemical
                       </label>
                       <input
@@ -532,12 +532,12 @@ export default function EnhancedVisitLogging() {
                             ),
                           }))
                         }
-                        className='w-full px-2 py-1 border border-gray-300 rounded text-sm'
+                        className='w-full px-2 py-1 border border-input rounded text-sm'
                         placeholder='Liquid Chlorine'
                       />
                     </div>
                     <div>
-                      <label className='block text-xs text-gray-600 mb-1'>
+                      <label className='block text-xs text-muted-foreground mb-1'>
                         Amount
                       </label>
                       <input
@@ -557,11 +557,11 @@ export default function EnhancedVisitLogging() {
                             ),
                           }))
                         }
-                        className='w-full px-2 py-1 border border-gray-300 rounded text-sm'
+                        className='w-full px-2 py-1 border border-input rounded text-sm'
                       />
                     </div>
                     <div>
-                      <label className='block text-xs text-gray-600 mb-1'>
+                      <label className='block text-xs text-muted-foreground mb-1'>
                         Unit
                       </label>
                       <select
@@ -574,7 +574,7 @@ export default function EnhancedVisitLogging() {
                             ),
                           }))
                         }
-                        className='w-full px-2 py-1 border border-gray-300 rounded text-sm'>
+                        className='w-full px-2 py-1 border border-input rounded text-sm'>
                         <option value=''>Unit...</option>
                         <option value='gallons'>Gallons</option>
                         <option value='fluid ounces'>Fluid Ounces</option>
@@ -583,7 +583,7 @@ export default function EnhancedVisitLogging() {
                       </select>
                     </div>
                     <div>
-                      <label className='block text-xs text-gray-600 mb-1'>
+                      <label className='block text-xs text-muted-foreground mb-1'>
                         Reason
                       </label>
                       <input
@@ -597,7 +597,7 @@ export default function EnhancedVisitLogging() {
                             ),
                           }))
                         }
-                        className='w-full px-2 py-1 border border-gray-300 rounded text-sm'
+                        className='w-full px-2 py-1 border border-input rounded text-sm'
                         placeholder='Adjust pH'
                       />
                     </div>
@@ -629,7 +629,7 @@ export default function EnhancedVisitLogging() {
                 </button>
               </div>
 
-              <div className='basis-[35%] border border-gray-200 rounded-lg'>
+              <div className='basis-[35%] border border-border rounded-lg'>
                 <h2 className='text-2xl font-semibold font-stretch-semi-condensed leading-relaxed text-center align-middle'>
                   TODO: Add Note button
                 </h2>
@@ -637,7 +637,7 @@ export default function EnhancedVisitLogging() {
               <div className='basis-1/4'>
                 <button
                   onClick={() => (window.location.href = '/dashboard')}
-                  className='bg-gray-500 text-white py-3 mr-6 w-full rounded-lg hover:bg-gray-600 transition-colors'>
+                  className='bg-muted/500 text-white py-3 mr-6 w-full rounded-lg hover:bg-gray-600 transition-colors'>
                   Cancel
                 </button>
               </div>
@@ -648,7 +648,7 @@ export default function EnhancedVisitLogging() {
         {/* Mini Calculator Modal */}
         {showCalculator && selectedPool && (
           <div className='fixed inset-0 bg-black/70 backdrop-blur-lg flex items-center justify-center z-50'>
-            <div className='bg-white rounded-lg max-w-lg w-full mx-4 p-6 max-h-[90vh] overflow-y-auto'>
+            <div className='bg-background rounded-lg max-w-lg w-full mx-4 p-6 max-h-[90vh] overflow-y-auto'>
               <div className='flex justify-between items-center mb-4'>
                 <h3 className='text-lg font-semibold'>
                   {calculatorType.charAt(0).toUpperCase() +
