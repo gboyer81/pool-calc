@@ -17,6 +17,8 @@ import Footer from '@/components/Footer'
 import { AuroraText } from 'components/magicui/aurora-text'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { ModeToggle } from '@/components/ModeToggle'
+import { Badge } from '@/components/ui/badge'
+import { RoleBadge } from '@/lib/badge-utils'
 
 import {
   Sidebar,
@@ -198,16 +200,18 @@ export default function Navigation({ children }: NavigationProps) {
     window.location.href = '/login'
   }
 
-  const getRoleBadgeColor = (role: string) => {
+  const getRoleBadgeVariant = (
+    role: string
+  ): { variant: 'default' | 'secondary' | 'destructive' | 'outline' } => {
     switch (role) {
       case 'admin':
-        return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 dark:bg-red-900/30 dark:text-red-300'
+        return { variant: 'destructive' }
       case 'supervisor':
-        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300'
+        return { variant: 'default' }
       case 'technician':
-        return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300 dark:bg-green-900/30 dark:text-green-300'
+        return { variant: 'secondary' }
       default:
-        return 'bg-muted text-gray-800 dark:bg-gray-800 dark:text-gray-300'
+        return { variant: 'outline' }
     }
   }
 
@@ -268,15 +272,15 @@ export default function Navigation({ children }: NavigationProps) {
 
           <SidebarFooter>
             {isAuthenticated && technician && (
-              <div className='px-2 py-2 space-y-3 group-data-[collapsible=icon]:space-y-2'>
-                {/* User Info Row */}
-                <div className='flex items-center gap-3 p-2 rounded-md bg-muted/50 group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:gap-2 group-data-[collapsible=icon]:items-center'>
-                  <Avatar className='h-8 w-8 border'>
+              <div className='px-2 py-2 space-y-3 group-data-[collapsible=icon]:px-1 group-data-[collapsible=icon]:py-1 group-data-[collapsible=icon]:space-y-1'>
+                {/* User Info Section */}
+                <div className='flex items-center gap-3 p-2 rounded-md bg-muted/50 group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:gap-1 group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:p-1'>
+                  <Avatar className='h-8 w-8 border group-data-[collapsible=icon]:h-6 group-data-[collapsible=icon]:w-6'>
                     <AvatarImage
                       src={`https://avatar.vercel.sh/${technician.email}`}
                       alt={technician.name}
                     />
-                    <AvatarFallback className='text-xs bg-primary/10'>
+                    <AvatarFallback className='text-xs bg-primary/10 group-data-[collapsible=icon]:text-[10px]'>
                       {technician.name
                         .split(' ')
                         .map((n) => n[0])
@@ -294,26 +298,24 @@ export default function Navigation({ children }: NavigationProps) {
                   </div>
                 </div>
 
-                {/* Role, Theme Toggle and Logout Row */}
+                {/* Role Badge - Using proper Badge component */}
                 <div className='flex items-center justify-between gap-2 px-2 group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:gap-1 group-data-[collapsible=icon]:items-center'>
-                  <span className='group-data-[collapsible=icon]:hidden'>
-                    {technician.role.charAt(0).toUpperCase() +
-                      technician.role.slice(1)}
-                  </span>
-                  <span className='hidden group-data-[collapsible=icon]:inline'>
-                    {technician.role.charAt(0).toUpperCase()}
-                  </span>
+                  {/* Role Badge - responsive sizing */}
+                  <RoleBadge
+                    role={technician.role}
+                    className='group-data-[collapsible=icon]:text-[9px] group-data-[collapsible=icon]:px-1 group-data-[collapsible=icon]:py-0.5 group-data-[collapsible=icon]:h-4'
+                  />
 
-                  <div className='flex items-center gap-1'>
+                  <div className='flex items-center gap-1 group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:gap-1'>
                     {/* Theme Toggle */}
-                    <div className='group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:justify-center '>
+                    <div className='group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:justify-center'>
                       <ModeToggle />
                     </div>
 
                     {/* Logout Button */}
                     <button
                       onClick={handleLogout}
-                      className='flex items-center gap-1.5 px-2 py-1 rounded-md text-xs text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-900/20 transition-colors'
+                      className='flex items-center gap-1.5 px-2 py-1 rounded-md text-xs text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-900/20 transition-colors group-data-[collapsible=icon]:w-full group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-1 group-data-[collapsible=icon]:py-1'
                       title='Logout'>
                       <LogOut className='h-3 w-3' />
                       <span className='group-data-[collapsible=icon]:hidden'>
@@ -327,9 +329,11 @@ export default function Navigation({ children }: NavigationProps) {
 
             {/* Theme toggle for non-authenticated users */}
             {!isAuthenticated && (
-              <div className='px-2 py-4'>
-                <div className='flex justify-center group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:justify-center'>
-                  <ModeToggle />
+              <div className='px-2 py-4 group-data-[collapsible=icon]:px-1 group-data-[collapsible=icon]:py-2'>
+                <div className='flex justify-center'>
+                  <div className='group-data-[collapsible=icon]:scale-90'>
+                    <ModeToggle />
+                  </div>
                 </div>
               </div>
             )}
