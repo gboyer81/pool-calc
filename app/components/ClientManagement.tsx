@@ -1,4 +1,4 @@
-// app/components/CustomerMgmt.tsx
+// app/components/ClientManagement.tsx
 'use client'
 
 import React, { useState, useEffect } from 'react'
@@ -10,6 +10,9 @@ import {
   Users,
   Plus,
   Search,
+  UserCheck,
+  UserX,
+  Target,
 } from 'lucide-react'
 
 // Import types from the enhanced pool-service.ts schema
@@ -23,6 +26,18 @@ import {
   isServiceClient,
   isMaintenanceClient,
 } from '@/types/pool-service'
+
+interface Technician {
+  _id: string
+  name: string
+  email: string
+  phone: string
+  employeeId: string
+  role: 'technician' | 'supervisor' | 'admin'
+  assignedClients: string[]
+  isActive: boolean
+  serviceAreas: string[]
+}
 
 export default function ClientManagement() {
   const [clients, setClients] = useState<Client[]>([])
@@ -60,6 +75,15 @@ export default function ClientManagement() {
   const [showPoolEditor, setShowPoolEditor] = useState(false)
   const [poolSaving, setPoolSaving] = useState(false)
 
+  // Assignment state
+  const [technicians, setTechnicians] = useState<Technician[]>([])
+  const [showAssignmentSection, setShowAssignmentSection] = useState(false)
+  const [selectedTechnician, setSelectedTechnician] = useState<string>('')
+  const [assignmentLoading, setAssignmentLoading] = useState(false)
+  const [currentAssignment, setCurrentAssignment] = useState<Technician | null>(
+    null
+  )
+
   // Client form data
   const [clientFormData, setClientFormData] = useState({
     name: '',
@@ -86,21 +110,23 @@ export default function ClientManagement() {
       serviceTypes: [] as string[],
       emergencyService: {
         enabled: true,
-        afterHoursRate: 1.5,
-        weekendRate: 1.25,
+        afterHours: true,
       },
     },
     maintenance: {
       serviceFrequency: 'weekly' as const,
-      serviceDay: '',
-      chemicalProgram: {
-        chemicalSupply: 'technician-provided' as const,
+      serviceDay: 'Monday',
+      specialInstructions: '',
+      accessInstructions: {
+        gateCode: '',
+        keyLocation: '',
+        dogOnProperty: false,
+        specialAccess: '',
       },
-      serviceIntervals: {
-        waterTesting: 1,
-        equipmentCheck: 1,
-        filterCleaning: 4,
-        deepCleaning: 8,
+      maintenancePreferences: {
+        cleaningIntensity: 'standard' as const,
+        chemicalBalance: 'standard' as const,
+        equipmentMonitoring: 'comprehensive' as const,
       },
     },
   })
@@ -109,25 +135,31 @@ export default function ClientManagement() {
     Record<string, string>
   >({})
 
-  // Enhanced filtering logic
+  // Fetch clients and technicians on component mount
+  useEffect(() => {
+    fetchClients()
+    fetchTechnicians()
+  }, [])
+
+  // Apply filters
   useEffect(() => {
     let filtered = clients
 
     // Search filter
     if (searchTerm) {
+      const search = searchTerm.toLowerCase()
       filtered = filtered.filter(
         (client) =>
-          client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          client.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          client.phone.includes(searchTerm) ||
-          client.address.street
+          client.name.toLowerCase().includes(search) ||
+          client.email.toLowerCase().includes(search) ||
+          client.phone.includes(search) ||
+          `${client.address.street} ${client.address.city}`
             .toLowerCase()
-            .includes(searchTerm.toLowerCase()) ||
-          client.address.city.toLowerCase().includes(searchTerm.toLowerCase())
+            .includes(search)
       )
     }
 
-    // Client type filter
+    // Type filter
     if (clientTypeFilter !== 'all') {
       filtered = filtered.filter(
         (client) => client.clientType === clientTypeFilter
@@ -144,9 +176,10 @@ export default function ClientManagement() {
     // Frequency filter (only for maintenance clients)
     if (frequencyFilter !== 'all') {
       filtered = filtered.filter((client) => {
+        if (client.clientType !== 'maintenance') return true
+        const maintenanceClient = client as MaintenanceClient
         return (
-          isMaintenanceClient(client) &&
-          client.maintenance.serviceFrequency === frequencyFilter
+          maintenanceClient.maintenance.serviceFrequency === frequencyFilter
         )
       })
     }
@@ -154,16 +187,10 @@ export default function ClientManagement() {
     setFilteredClients(filtered)
   }, [clients, searchTerm, clientTypeFilter, statusFilter, frequencyFilter])
 
-  // Fetch clients from API
   const fetchClients = async () => {
     try {
       setLoading(true)
       const token = localStorage.getItem('technicianToken')
-      if (!token) {
-        window.location.href = '/login'
-        return
-      }
-
       const response = await fetch('/api/clients', {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -175,110 +202,54 @@ export default function ClientManagement() {
         const data = await response.json()
         if (data.success) {
           setClients(data.clients || [])
-          setError(null)
         } else {
-          setError(data.error || 'Failed to fetch clients')
+          setError('Failed to fetch clients')
         }
       } else {
         setError('Failed to fetch clients')
       }
     } catch (err) {
       setError('Network error')
-      console.error('Fetch error:', err)
+      console.error('Error:', err)
     } finally {
       setLoading(false)
     }
   }
 
-  useEffect(() => {
-    fetchClients()
-  }, [])
+  const fetchTechnicians = async () => {
+    try {
+      const token = localStorage.getItem('technicianToken')
+      const response = await fetch('/api/technicians', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      })
 
-  // Client type icon
-  const getClientTypeIcon = (clientType: string) => {
-    switch (clientType) {
+      if (response.ok) {
+        const data = await response.json()
+        if (data.success) {
+          setTechnicians(data.technicians || [])
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching technicians:', err)
+    }
+  }
+
+  const getClientTypeIcon = (type: string) => {
+    switch (type) {
       case 'retail':
-        return <ShoppingCart className='w-4 h-4' />
+        return <ShoppingCart className='h-6 w-6 text-green-600' />
       case 'service':
-        return <Wrench className='w-4 h-4' />
+        return <Wrench className='h-6 w-6 text-orange-600' />
       case 'maintenance':
-        return <Calendar className='w-4 h-4' />
+        return <Calendar className='h-6 w-6 text-blue-600' />
       default:
-        return <Users className='w-4 h-4' />
+        return <Users className='h-6 w-6 text-gray-600' />
     }
   }
 
-  // Client type badge colors
-  const getClientTypeBadge = (clientType: string) => {
-    const colors = {
-      retail: 'bg-blue-100 text-blue-800',
-      service: 'bg-orange-100 text-orange-800',
-      maintenance:
-        'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
-    }
-    return colors[clientType as keyof typeof colors] || 'bg-muted text-gray-800'
-  }
-
-  // Client specific information display
-  const getClientSpecificInfo = (client: Client) => {
-    switch (client.clientType) {
-      case 'retail':
-        return (
-          <div className='text-sm text-muted-foreground'>
-            <div>
-              Tier:{' '}
-              <span className='font-medium'>{client.retail.pricingTier}</span>
-            </div>
-            <div>Terms: {client.retail.paymentTerms}</div>
-            {client.retail.creditLimit && (
-              <div>Credit: ${client.retail.creditLimit.toLocaleString()}</div>
-            )}
-          </div>
-        )
-      case 'service':
-        return (
-          <div className='text-sm text-muted-foreground'>
-            <div>
-              Standard:{' '}
-              <span className='font-medium'>
-                ${client.service.laborRates.standard}/hr
-              </span>
-            </div>
-            <div>
-              Emergency:{' '}
-              <span className='font-medium'>
-                ${client.service.laborRates.emergency}/hr
-              </span>
-            </div>
-            <div>Services: {client.service.serviceTypes.length} types</div>
-          </div>
-        )
-      case 'maintenance':
-        return (
-          <div className='text-sm text-muted-foreground'>
-            <div>
-              Frequency:{' '}
-              <span className='font-medium'>
-                {client.maintenance.serviceFrequency}
-              </span>
-            </div>
-            <div>Day: {client.maintenance.serviceDay || 'Not set'}</div>
-            <div>
-              Chemicals: {client.maintenance.chemicalProgram.chemicalSupply}
-            </div>
-          </div>
-        )
-    }
-  }
-
-  // Statistics calculation
-  const clientTypeStats = {
-    retail: clients.filter((c) => c.clientType === 'retail').length,
-    service: clients.filter((c) => c.clientType === 'service').length,
-    maintenance: clients.filter((c) => c.clientType === 'maintenance').length,
-  }
-
-  // Reset client form
   const resetClientForm = () => {
     setClientFormData({
       name: '',
@@ -304,136 +275,30 @@ export default function ClientManagement() {
         serviceTypes: [],
         emergencyService: {
           enabled: true,
-          afterHoursRate: 1.5,
-          weekendRate: 1.25,
+          afterHours: true,
         },
       },
       maintenance: {
         serviceFrequency: 'weekly',
-        serviceDay: '',
-        chemicalProgram: {
-          chemicalSupply: 'technician-provided',
+        serviceDay: 'Monday',
+        specialInstructions: '',
+        accessInstructions: {
+          gateCode: '',
+          keyLocation: '',
+          dogOnProperty: false,
+          specialAccess: '',
         },
-        serviceIntervals: {
-          waterTesting: 1,
-          equipmentCheck: 1,
-          filterCleaning: 4,
-          deepCleaning: 8,
+        maintenancePreferences: {
+          cleaningIntensity: 'standard',
+          chemicalBalance: 'standard',
+          equipmentMonitoring: 'comprehensive',
         },
       },
     })
     setClientFormErrors({})
   }
 
-  // Validate client form
-  const validateClientForm = () => {
-    const errors: Record<string, string> = {}
-
-    if (!clientFormData.name.trim()) {
-      errors.name = 'Client name is required'
-    }
-
-    if (!clientFormData.email.trim()) {
-      errors.email = 'Email is required'
-    } else if (!/\S+@\S+\.\S+/.test(clientFormData.email)) {
-      errors.email = 'Email is invalid'
-    }
-
-    if (!clientFormData.phone.trim()) {
-      errors.phone = 'Phone number is required'
-    }
-
-    if (!clientFormData.address.street.trim()) {
-      errors.street = 'Street address is required'
-    }
-
-    if (!clientFormData.address.city.trim()) {
-      errors.city = 'City is required'
-    }
-
-    if (!clientFormData.address.state.trim()) {
-      errors.state = 'State is required'
-    }
-
-    if (!clientFormData.address.zipCode.trim()) {
-      errors.zipCode = 'ZIP code is required'
-    }
-
-    return errors
-  }
-
-  // Handle client form submission
-  const handleSubmitClient = async (e: React.FormEvent) => {
-    e.preventDefault()
-
-    const errors = validateClientForm()
-    if (Object.keys(errors).length > 0) {
-      setClientFormErrors(errors)
-      return
-    }
-
-    setClientSaving(true)
-    try {
-      const token = localStorage.getItem('technicianToken')
-
-      // Build client data based on selected type
-      const baseClientData = {
-        name: clientFormData.name,
-        email: clientFormData.email,
-        phone: clientFormData.phone,
-        address: clientFormData.address,
-        clientType: selectedClientType,
-        isActive: true,
-      }
-
-      let clientData: any = baseClientData
-
-      // Add type-specific data
-      switch (selectedClientType) {
-        case 'retail':
-          clientData.retail = clientFormData.retail
-          break
-        case 'service':
-          clientData.service = clientFormData.service
-          break
-        case 'maintenance':
-          clientData.isMaintenance = true
-          clientData.maintenance = clientFormData.maintenance
-          break
-      }
-
-      const response = await fetch('/api/clients', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(clientData),
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        if (data.success) {
-          await fetchClients() // Refresh the list
-          setShowAddClient(false)
-          setShowCreateForm(false)
-          resetClientForm()
-        } else {
-          alert(data.error || 'Failed to create client')
-        }
-      } else {
-        alert('Failed to create client. Please try again.')
-      }
-    } catch (error) {
-      console.error('Error creating client:', error)
-      alert('Network error. Please check your connection and try again.')
-    } finally {
-      setClientSaving(false)
-    }
-  }
-
-  // Handle form field changes
-  const handleClientFormChange = (field: string, value: string) => {
+  const handleClientFormChange = (field: string, value: any) => {
     if (field.startsWith('address.')) {
       const addressField = field.split('.')[1]
       setClientFormData((prev) => ({
@@ -468,6 +333,12 @@ export default function ClientManagement() {
       setShowClientPools(true)
       setPoolsLoading(true)
 
+      // Get current assignment for this client
+      const assignedTechnician = technicians.find((tech) =>
+        tech.assignedClients.includes(client._id.toString())
+      )
+      setCurrentAssignment(assignedTechnician || null)
+
       const token = localStorage.getItem('technicianToken')
       const response = await fetch(`/api/pools?clientId=${client._id}`, {
         headers: {
@@ -492,6 +363,105 @@ export default function ClientManagement() {
   const handleSavePool = async (updatedPool: Partial<Pool>) => {
     // Your existing pool save logic
     console.log('Saving pool:', updatedPool)
+  }
+
+  // Assignment functions
+  const assignClientToTechnician = async (
+    technicianId: string,
+    clientId: string
+  ) => {
+    setAssignmentLoading(true)
+    try {
+      const token = localStorage.getItem('technicianToken')
+      const response = await fetch(
+        `/api/technicians/${technicianId}/assign-client`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ clientId }),
+        }
+      )
+
+      if (response.ok) {
+        const data = await response.json()
+        if (data.success) {
+          // Update current assignment state
+          const assignedTechnician = technicians.find(
+            (t) => t._id === technicianId
+          )
+          setCurrentAssignment(assignedTechnician || null)
+
+          // Refresh technicians data
+          await fetchTechnicians()
+
+          // Reset form
+          setSelectedTechnician('')
+          setShowAssignmentSection(false)
+
+          // Show success message (you might want to use a toast instead)
+          alert('Client assigned successfully!')
+        } else {
+          alert('Error: ' + data.error)
+        }
+      } else {
+        alert('Failed to assign client')
+      }
+    } catch (error) {
+      console.error('Error assigning client:', error)
+      alert('Error assigning client')
+    } finally {
+      setAssignmentLoading(false)
+    }
+  }
+
+  const removeClientAssignment = async (
+    technicianId: string,
+    clientId: string
+  ) => {
+    if (!confirm('Are you sure you want to remove this client assignment?')) {
+      return
+    }
+
+    setAssignmentLoading(true)
+    try {
+      const token = localStorage.getItem('technicianToken')
+      const response = await fetch(
+        `/api/technicians/${technicianId}/remove-client`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ clientId }),
+        }
+      )
+
+      if (response.ok) {
+        const data = await response.json()
+        if (data.success) {
+          // Update current assignment state
+          setCurrentAssignment(null)
+
+          // Refresh technicians data
+          await fetchTechnicians()
+
+          alert('Assignment removed successfully!')
+        } else {
+          alert('Error: ' + data.error)
+        }
+      } else {
+        alert('Failed to remove assignment')
+      }
+    } catch (error) {
+      console.error('Error removing assignment:', error)
+      alert('Error removing assignment')
+    } finally {
+      setAssignmentLoading(false)
+    }
   }
 
   if (loading) {
@@ -520,80 +490,38 @@ export default function ClientManagement() {
             setShowAddClient(true)
           }}
           className='bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-700'>
-          <Plus className='w-4 h-4' />
+          <Plus className='h-4 w-4' />
           Add Client
         </button>
       </div>
 
-      {/* Stats Cards */}
-      <div className='grid grid-cols-1 md:grid-cols-4 gap-6 mb-6'>
-        <div className='bg-background p-6 rounded-lg shadow border'>
-          <div className='flex items-center justify-between'>
-            <div>
-              <div className='text-2xl font-bold text-foreground'>
-                {clients.length}
-              </div>
-              <div className='text-sm text-muted-foreground'>Total Clients</div>
-            </div>
-            <Users className='w-8 h-8 text-gray-400' />
-          </div>
+      {error && (
+        <div className='bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 p-4 rounded-lg mb-6'>
+          <strong>Error:</strong> {error}
         </div>
-        <div className='bg-background p-6 rounded-lg shadow border'>
-          <div className='flex items-center justify-between'>
-            <div>
-              <div className='text-2xl font-bold text-green-600'>
-                {clientTypeStats.maintenance}
-              </div>
-              <div className='text-sm text-muted-foreground'>Maintenance</div>
-            </div>
-            <Calendar className='w-8 h-8 text-green-400' />
-          </div>
-        </div>
-        <div className='bg-background p-6 rounded-lg shadow border'>
-          <div className='flex items-center justify-between'>
-            <div>
-              <div className='text-2xl font-bold text-orange-600'>
-                {clientTypeStats.service}
-              </div>
-              <div className='text-sm text-muted-foreground'>Service</div>
-            </div>
-            <Wrench className='w-8 h-8 text-orange-400' />
-          </div>
-        </div>
-        <div className='bg-background p-6 rounded-lg shadow border'>
-          <div className='flex items-center justify-between'>
-            <div>
-              <div className='text-2xl font-bold text-blue-600'>
-                {clientTypeStats.retail}
-              </div>
-              <div className='text-sm text-muted-foreground'>Retail</div>
-            </div>
-            <ShoppingCart className='w-8 h-8 text-blue-400' />
-          </div>
-        </div>
-      </div>
+      )}
 
-      {/* Enhanced Filters */}
-      <div className='bg-background p-4 rounded-lg shadow border mb-6'>
-        <div className='grid grid-cols-1 md:grid-cols-5 gap-4'>
-          <div className='md:col-span-2'>
-            <label className='block text-sm font-medium text-gray-700 mb-1'>
-              Search Clients
+      {/* Filters */}
+      <div className='bg-background rounded-lg shadow mb-6 p-6'>
+        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-4'>
+          <div>
+            <label className='block text-sm font-medium text-gray-700 mb-2'>
+              Search
             </label>
             <div className='relative'>
-              <Search className='absolute left-3 top-3 h-4 w-4 text-gray-400' />
+              <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400' />
               <input
                 type='text'
                 placeholder='Search clients...'
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className='pl-10 pr-4 py-2 w-full border border-input rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+                className='w-full pl-10 pr-4 py-2 border border-input rounded-lg focus:ring-2 focus:ring-blue-500'
               />
             </div>
           </div>
 
           <div>
-            <label className='block text-sm font-medium text-gray-700 mb-1'>
+            <label className='block text-sm font-medium text-gray-700 mb-2'>
               Client Type
             </label>
             <select
@@ -601,14 +529,14 @@ export default function ClientManagement() {
               onChange={(e) => setClientTypeFilter(e.target.value as any)}
               className='w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-blue-500'>
               <option value='all'>All Types</option>
-              <option value='maintenance'>Maintenance</option>
-              <option value='service'>Service</option>
               <option value='retail'>Retail</option>
+              <option value='service'>Service</option>
+              <option value='maintenance'>Maintenance</option>
             </select>
           </div>
 
           <div>
-            <label className='block text-sm font-medium text-gray-700 mb-1'>
+            <label className='block text-sm font-medium text-gray-700 mb-2'>
               Status
             </label>
             <select
@@ -622,16 +550,13 @@ export default function ClientManagement() {
           </div>
 
           <div>
-            <label className='block text-sm font-medium text-gray-700 mb-1'>
-              Frequency
+            <label className='block text-sm font-medium text-gray-700 mb-2'>
+              Service Frequency
             </label>
             <select
               value={frequencyFilter}
               onChange={(e) => setFrequencyFilter(e.target.value as any)}
-              className='w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-blue-500'
-              disabled={
-                clientTypeFilter !== 'all' && clientTypeFilter !== 'maintenance'
-              }>
+              className='w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-blue-500'>
               <option value='all'>All Frequencies</option>
               <option value='twice-weekly'>Twice Weekly</option>
               <option value='weekly'>Weekly</option>
@@ -639,22 +564,50 @@ export default function ClientManagement() {
               <option value='monthly'>Monthly</option>
             </select>
           </div>
+
+          <div>
+            <label className='block text-sm font-medium text-gray-700 mb-2'>
+              View Mode
+            </label>
+            <div className='flex space-x-1 bg-muted p-1 rounded-lg'>
+              <button
+                onClick={() => setViewMode('table')}
+                className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
+                  viewMode === 'table'
+                    ? 'bg-background shadow-sm'
+                    : 'hover:bg-background/50'
+                }`}>
+                Table
+              </button>
+              <button
+                onClick={() => setViewMode('grid')}
+                className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
+                  viewMode === 'grid'
+                    ? 'bg-background shadow-sm'
+                    : 'hover:bg-background/50'
+                }`}>
+                Grid
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className='text-sm text-muted-foreground'>
+          Showing {filteredClients.length} of {clients.length} clients
         </div>
       </div>
 
-      {/* Client Table */}
-      <div className='bg-background rounded-lg shadow border overflow-hidden'>
-        <div className='px-6 py-4 border-b border-border'>
-          <h2 className='text-lg font-semibold text-foreground'>
-            Clients ({filteredClients.length})
-          </h2>
-        </div>
-
+      {/* Client List */}
+      <div className='bg-background rounded-lg shadow'>
         {filteredClients.length === 0 ? (
-          <div className='p-6 text-center text-gray-500'>No clients found</div>
+          <div className='p-8 text-center text-muted-foreground'>
+            <Users className='h-12 w-12 mx-auto mb-4 opacity-50' />
+            <h3 className='text-lg font-medium mb-2'>No clients found</h3>
+            <p>Try adjusting your filters or add a new client.</p>
+          </div>
         ) : (
           <div className='overflow-x-auto'>
-            <table className='min-w-full divide-y divide-gray-200'>
+            <table className='min-w-full divide-y divide-border'>
               <thead className='bg-muted/50'>
                 <tr>
                   <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
@@ -667,56 +620,51 @@ export default function ClientManagement() {
                     Contact
                   </th>
                   <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-                    Details
-                  </th>
-                  <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
                     Status
                   </th>
-                  <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                  <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider'>
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className='bg-background divide-y divide-gray-200'>
+              <tbody className='bg-background divide-y divide-border'>
                 {filteredClients.map((client) => (
-                  <tr key={client._id.toString()} className='hover:bg-muted/50'>
+                  <tr key={client._id.toString()}>
                     <td className='px-6 py-4 whitespace-nowrap'>
                       <div className='flex items-center'>
-                        <div>
+                        {getClientTypeIcon(client.clientType)}
+                        <div className='ml-4'>
                           <div className='text-sm font-medium text-foreground'>
                             {client.name}
                           </div>
-                          <div className='text-sm text-gray-500'>
+                          <div className='text-sm text-muted-foreground'>
                             {client.address.city}, {client.address.state}
                           </div>
                         </div>
                       </div>
                     </td>
                     <td className='px-6 py-4 whitespace-nowrap'>
-                      <div className='flex items-center'>
-                        {getClientTypeIcon(client.clientType)}
-                        <span
-                          className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${getClientTypeBadge(
-                            client.clientType
-                          )}`}>
-                          {client.clientType}
-                        </span>
-                      </div>
+                      <span className='inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800'>
+                        {client.clientType}
+                      </span>
+                      {client.clientType === 'maintenance' && (
+                        <div className='text-xs text-muted-foreground mt-1'>
+                          {
+                            (client as MaintenanceClient).maintenance
+                              .serviceFrequency
+                          }
+                        </div>
+                      )}
                     </td>
-                    <td className='px-6 py-4 whitespace-nowrap'>
-                      <div className='text-sm text-foreground'>
-                        📧 {client.email}
+                    <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>
+                      <div>{client.email}</div>
+                      <div className='text-muted-foreground'>
+                        {client.phone}
                       </div>
-                      <div className='text-sm text-gray-500'>
-                        📞 {client.phone}
-                      </div>
-                    </td>
-                    <td className='px-6 py-4 whitespace-nowrap'>
-                      {getClientSpecificInfo(client)}
                     </td>
                     <td className='px-6 py-4 whitespace-nowrap'>
                       <span
-                        className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                           client.isActive
                             ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
                             : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
@@ -744,9 +692,189 @@ export default function ClientManagement() {
         )}
       </div>
 
+      {/* Pool Modals (Enhanced with Assignment) */}
+      {showClientPools &&
+        selectedClient &&
+        isMaintenanceClient(selectedClient) && (
+          <div className='fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-50'>
+            <div className='bg-background rounded-lg p-6 w-full max-w-4xl max-h-[80vh] overflow-y-auto'>
+              <div className='flex justify-between items-center mb-6'>
+                <h3 className='text-lg font-semibold'>
+                  Pools & Assignment for {selectedClient.name}
+                </h3>
+                <button
+                  onClick={() => {
+                    setShowClientPools(false)
+                    setShowAssignmentSection(false)
+                    setSelectedTechnician('')
+                  }}
+                  className='text-gray-500 hover:text-gray-700'>
+                  ✕
+                </button>
+              </div>
+
+              {/* Assignment Section */}
+              <div className='bg-muted/50 rounded-lg p-4 mb-6'>
+                <div className='flex items-center justify-between mb-4'>
+                  <h4 className='font-medium flex items-center gap-2'>
+                    <Target className='h-4 w-4' />
+                    Technician Assignment
+                  </h4>
+                  {!showAssignmentSection && (
+                    <button
+                      onClick={() => setShowAssignmentSection(true)}
+                      className='text-blue-600 hover:text-blue-800 text-sm'>
+                      {currentAssignment
+                        ? 'Change Assignment'
+                        : 'Assign Technician'}
+                    </button>
+                  )}
+                </div>
+
+                {currentAssignment ? (
+                  <div className='flex items-center justify-between bg-background rounded p-3'>
+                    <div className='flex items-center gap-3'>
+                      <UserCheck className='h-5 w-5 text-green-600' />
+                      <div>
+                        <div className='font-medium'>
+                          {currentAssignment.name}
+                        </div>
+                        <div className='text-sm text-muted-foreground'>
+                          {currentAssignment.role} •{' '}
+                          {currentAssignment.employeeId}
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() =>
+                        removeClientAssignment(
+                          currentAssignment._id,
+                          selectedClient._id.toString()
+                        )
+                      }
+                      disabled={assignmentLoading}
+                      className='text-red-600 hover:text-red-800 text-sm px-3 py-1 rounded border border-red-200 hover:bg-red-50 disabled:opacity-50'>
+                      {assignmentLoading ? 'Removing...' : 'Remove'}
+                    </button>
+                  </div>
+                ) : (
+                  <div className='flex items-center gap-3 bg-background rounded p-3'>
+                    <UserX className='h-5 w-5 text-gray-400' />
+                    <div className='text-muted-foreground'>
+                      No technician assigned to this client
+                    </div>
+                  </div>
+                )}
+
+                {showAssignmentSection && (
+                  <div className='mt-4 bg-background rounded p-4'>
+                    <div className='flex gap-3'>
+                      <select
+                        value={selectedTechnician}
+                        onChange={(e) => setSelectedTechnician(e.target.value)}
+                        className='flex-1 px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-blue-500'
+                        disabled={assignmentLoading}>
+                        <option value=''>Select a technician...</option>
+                        {technicians
+                          .filter((tech) => tech.isActive)
+                          .map((tech) => (
+                            <option key={tech._id} value={tech._id}>
+                              {tech.name} ({tech.role}) -{' '}
+                              {tech.assignedClients.length} clients
+                            </option>
+                          ))}
+                      </select>
+                      <button
+                        onClick={() => {
+                          if (selectedTechnician && selectedClient) {
+                            assignClientToTechnician(
+                              selectedTechnician,
+                              selectedClient._id.toString()
+                            )
+                          }
+                        }}
+                        disabled={!selectedTechnician || assignmentLoading}
+                        className='px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed'>
+                        {assignmentLoading ? 'Assigning...' : 'Assign'}
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowAssignmentSection(false)
+                          setSelectedTechnician('')
+                        }}
+                        disabled={assignmentLoading}
+                        className='px-4 py-2 border border-input rounded-lg hover:bg-muted/50 disabled:opacity-50'>
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Pools Section */}
+              <div className='bg-muted/50 rounded-lg p-4'>
+                <h4 className='font-medium mb-4'>Pool Information</h4>
+                {poolsLoading ? (
+                  <div className='text-center py-8'>
+                    <div className='text-muted-foreground'>
+                      Loading pools...
+                    </div>
+                  </div>
+                ) : clientPools.length === 0 ? (
+                  <div className='text-center py-8 text-muted-foreground'>
+                    <div className='text-lg mb-2'>No pools found</div>
+                    <div className='text-sm'>
+                      Add pools for this client to get started
+                    </div>
+                  </div>
+                ) : (
+                  <div className='space-y-3'>
+                    {clientPools.map((pool) => (
+                      <div
+                        key={pool._id.toString()}
+                        className='bg-background rounded p-3'>
+                        <div className='flex items-center justify-between'>
+                          <div>
+                            <div className='font-medium'>
+                              {pool.name || 'Unnamed Pool'}
+                            </div>
+                            <div className='text-sm text-muted-foreground'>
+                              {pool.shape} • {Math.round(pool.volume.gallons)}{' '}
+                              gallons
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => {
+                              setSelectedPool(pool)
+                              setShowPoolEditor(true)
+                            }}
+                            className='text-blue-600 hover:text-blue-800 text-sm px-3 py-1 rounded border border-blue-200 hover:bg-blue-50'>
+                            Edit Pool
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+      {/* Existing Pool Editor Modal */}
+      {showPoolEditor && (
+        <TabbedPoolEditor
+          pool={selectedPool}
+          isOpen={showPoolEditor}
+          onClose={() => setShowPoolEditor(false)}
+          onSave={handleSavePool}
+          saving={poolSaving}
+        />
+      )}
+
       {/* Client Creation Modal */}
       {showAddClient && !showCreateForm && (
-        <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50'>
+        <div className='fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-50'>
           <div className='bg-background rounded-lg p-6 w-full max-w-md'>
             <h3 className='text-lg font-semibold mb-4'>Add New Client</h3>
 
@@ -799,503 +927,6 @@ export default function ClientManagement() {
             </div>
           </div>
         </div>
-      )}
-
-      {/* Client Creation Form */}
-      {showAddClient && showCreateForm && (
-        <div className='fixed inset-0 bg-black/50 backdrop-blur-xl flex items-center justify-center z-50'>
-          <div className='bg-background rounded-lg max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto'>
-            <div className='p-6'>
-              <div className='flex justify-between items-center mb-6'>
-                <h2 className='text-2xl font-bold'>
-                  Add New {selectedClientType} Client
-                </h2>
-                <button
-                  onClick={() => {
-                    setShowAddClient(false)
-                    setShowCreateForm(false)
-                    resetClientForm()
-                  }}
-                  className='text-gray-500 hover:text-gray-700 text-2xl'>
-                  ✕
-                </button>
-              </div>
-
-              <form onSubmit={handleSubmitClient} className='space-y-6'>
-                {/* Basic Information */}
-                <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-                  <div>
-                    <label className='block text-sm font-medium text-gray-700 mb-1'>
-                      Client Name *
-                    </label>
-                    <input
-                      type='text'
-                      value={clientFormData.name}
-                      onChange={(e) =>
-                        handleClientFormChange('name', e.target.value)
-                      }
-                      className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                        clientFormErrors.name
-                          ? 'border-red-500'
-                          : 'border-input'
-                      }`}
-                      placeholder='Enter client name'
-                    />
-                    {clientFormErrors.name && (
-                      <p className='text-red-500 text-xs mt-1'>
-                        {clientFormErrors.name}
-                      </p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className='block text-sm font-medium text-gray-700 mb-1'>
-                      Email Address *
-                    </label>
-                    <input
-                      type='email'
-                      value={clientFormData.email}
-                      onChange={(e) =>
-                        handleClientFormChange('email', e.target.value)
-                      }
-                      className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                        clientFormErrors.email
-                          ? 'border-red-500'
-                          : 'border-input'
-                      }`}
-                      placeholder='client@email.com'
-                    />
-                    {clientFormErrors.email && (
-                      <p className='text-red-500 text-xs mt-1'>
-                        {clientFormErrors.email}
-                      </p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className='block text-sm font-medium text-gray-700 mb-1'>
-                      Phone Number *
-                    </label>
-                    <input
-                      type='tel'
-                      value={clientFormData.phone}
-                      onChange={(e) =>
-                        handleClientFormChange('phone', e.target.value)
-                      }
-                      className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                        clientFormErrors.phone
-                          ? 'border-red-500'
-                          : 'border-input'
-                      }`}
-                      placeholder='(555) 123-4567'
-                    />
-                    {clientFormErrors.phone && (
-                      <p className='text-red-500 text-xs mt-1'>
-                        {clientFormErrors.phone}
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Address */}
-                <div className='space-y-4'>
-                  <h3 className='text-lg font-semibold text-foreground'>
-                    Address
-                  </h3>
-                  <div className='grid grid-cols-1 gap-4'>
-                    <div>
-                      <label className='block text-sm font-medium text-gray-700 mb-1'>
-                        Street Address *
-                      </label>
-                      <input
-                        type='text'
-                        value={clientFormData.address.street}
-                        onChange={(e) =>
-                          handleClientFormChange(
-                            'address.street',
-                            e.target.value
-                          )
-                        }
-                        className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                          clientFormErrors.street
-                            ? 'border-red-500'
-                            : 'border-input'
-                        }`}
-                        placeholder='123 Main Street'
-                      />
-                      {clientFormErrors.street && (
-                        <p className='text-red-500 text-xs mt-1'>
-                          {clientFormErrors.street}
-                        </p>
-                      )}
-                    </div>
-
-                    <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
-                      <div>
-                        <label className='block text-sm font-medium text-gray-700 mb-1'>
-                          City *
-                        </label>
-                        <input
-                          type='text'
-                          value={clientFormData.address.city}
-                          onChange={(e) =>
-                            handleClientFormChange(
-                              'address.city',
-                              e.target.value
-                            )
-                          }
-                          className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                            clientFormErrors.city
-                              ? 'border-red-500'
-                              : 'border-input'
-                          }`}
-                          placeholder='Miami'
-                        />
-                        {clientFormErrors.city && (
-                          <p className='text-red-500 text-xs mt-1'>
-                            {clientFormErrors.city}
-                          </p>
-                        )}
-                      </div>
-
-                      <div>
-                        <label className='block text-sm font-medium text-gray-700 mb-1'>
-                          State *
-                        </label>
-                        <input
-                          type='text'
-                          value={clientFormData.address.state}
-                          onChange={(e) =>
-                            handleClientFormChange(
-                              'address.state',
-                              e.target.value
-                            )
-                          }
-                          className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                            clientFormErrors.state
-                              ? 'border-red-500'
-                              : 'border-input'
-                          }`}
-                          placeholder='FL'
-                        />
-                        {clientFormErrors.state && (
-                          <p className='text-red-500 text-xs mt-1'>
-                            {clientFormErrors.state}
-                          </p>
-                        )}
-                      </div>
-
-                      <div>
-                        <label className='block text-sm font-medium text-gray-700 mb-1'>
-                          ZIP Code *
-                        </label>
-                        <input
-                          type='text'
-                          value={clientFormData.address.zipCode}
-                          onChange={(e) =>
-                            handleClientFormChange(
-                              'address.zipCode',
-                              e.target.value
-                            )
-                          }
-                          className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                            clientFormErrors.zipCode
-                              ? 'border-red-500'
-                              : 'border-input'
-                          }`}
-                          placeholder='33101'
-                        />
-                        {clientFormErrors.zipCode && (
-                          <p className='text-red-500 text-xs mt-1'>
-                            {clientFormErrors.zipCode}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Type-specific fields would go here */}
-                {selectedClientType === 'maintenance' && (
-                  <div className='space-y-4'>
-                    <h3 className='text-lg font-semibold text-foreground'>
-                      Maintenance Details
-                    </h3>
-                    <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-                      <div>
-                        <label className='block text-sm font-medium text-gray-700 mb-1'>
-                          Service Frequency
-                        </label>
-                        <select
-                          value={clientFormData.maintenance.serviceFrequency}
-                          onChange={(e) =>
-                            setClientFormData((prev) => ({
-                              ...prev,
-                              maintenance: {
-                                ...prev.maintenance,
-                                serviceFrequency: e.target.value as any,
-                              },
-                            }))
-                          }
-                          className='w-full px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500'>
-                          <option value='weekly'>Weekly</option>
-                          <option value='bi-weekly'>Bi-weekly</option>
-                          <option value='twice-weekly'>Twice Weekly</option>
-                          <option value='monthly'>Monthly</option>
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className='block text-sm font-medium text-gray-700 mb-1'>
-                          Preferred Service Day
-                        </label>
-                        <select
-                          value={clientFormData.maintenance.serviceDay}
-                          onChange={(e) =>
-                            setClientFormData((prev) => ({
-                              ...prev,
-                              maintenance: {
-                                ...prev.maintenance,
-                                serviceDay: e.target.value,
-                              },
-                            }))
-                          }
-                          className='w-full px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500'>
-                          <option value=''>Select day</option>
-                          <option value='monday'>Monday</option>
-                          <option value='tuesday'>Tuesday</option>
-                          <option value='wednesday'>Wednesday</option>
-                          <option value='thursday'>Thursday</option>
-                          <option value='friday'>Friday</option>
-                          <option value='saturday'>Saturday</option>
-                          <option value='sunday'>Sunday</option>
-                        </select>
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className='block text-sm font-medium text-gray-700 mb-1'>
-                        Chemical Supply
-                      </label>
-                      <select
-                        value={
-                          clientFormData.maintenance.chemicalProgram
-                            .chemicalSupply
-                        }
-                        onChange={(e) =>
-                          setClientFormData((prev) => ({
-                            ...prev,
-                            maintenance: {
-                              ...prev.maintenance,
-                              chemicalProgram: {
-                                ...prev.maintenance.chemicalProgram,
-                                chemicalSupply: e.target.value as any,
-                              },
-                            },
-                          }))
-                        }
-                        className='w-full px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500'>
-                        <option value='technician-provided'>
-                          Technician Provided
-                        </option>
-                        <option value='client-provided'>Client Provided</option>
-                        <option value='mixed'>Mixed</option>
-                      </select>
-                    </div>
-                  </div>
-                )}
-
-                {/* Form Actions */}
-                <div className='flex justify-end space-x-4 pt-6 border-t'>
-                  <button
-                    type='button'
-                    onClick={() => {
-                      setShowAddClient(false)
-                      setShowCreateForm(false)
-                      resetClientForm()
-                    }}
-                    className='px-6 py-2 text-muted-foreground border border-input rounded-md hover:bg-muted/50'>
-                    Cancel
-                  </button>
-                  <button
-                    type='submit'
-                    disabled={clientSaving}
-                    className='px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50'>
-                    {clientSaving ? 'Creating...' : 'Create Client'}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Pool Modals (only show for maintenance clients) */}
-      {showClientPools &&
-        selectedClient &&
-        isMaintenanceClient(selectedClient) && (
-          <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50'>
-            <div className='bg-background rounded-lg p-6 w-full max-w-4xl max-h-[80vh] overflow-y-auto'>
-              <div className='flex justify-between items-center mb-4'>
-                <h3 className='text-lg font-semibold'>
-                  Pools for {selectedClient.name}
-                </h3>
-                <button
-                  onClick={() => setShowClientPools(false)}
-                  className='text-gray-500 hover:text-gray-700'>
-                  ✕
-                </button>
-              </div>
-
-              {/* Loading state */}
-              {poolsLoading && (
-                <div className='flex justify-center items-center py-8'>
-                  <div className='text-lg'>Loading pools...</div>
-                </div>
-              )}
-
-              {/* No pools found */}
-              {!poolsLoading && clientPools.length === 0 && (
-                <div className='text-center text-gray-500 py-8'>
-                  <div className='text-4xl mb-4'>🏊‍♀️</div>
-                  <p className='text-lg mb-2'>No pools found for this client</p>
-                  <p className='text-sm'>Add a pool to get started</p>
-                  <button
-                    onClick={() => {
-                      setSelectedPool(null)
-                      setShowPoolEditor(true)
-                    }}
-                    className='mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700'>
-                    Add First Pool
-                  </button>
-                </div>
-              )}
-
-              {/* Pools list */}
-              {!poolsLoading && clientPools.length > 0 && (
-                <div className='space-y-4'>
-                  <div className='flex justify-between items-center'>
-                    <p className='text-sm text-gray-600'>
-                      {clientPools.length} pool
-                      {clientPools.length !== 1 ? 's' : ''} found
-                    </p>
-                    <button
-                      onClick={() => {
-                        setSelectedPool(null)
-                        setShowPoolEditor(true)
-                      }}
-                      className='bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700'>
-                      Add Pool
-                    </button>
-                  </div>
-
-                  <div className='grid gap-4 md:grid-cols-2'>
-                    {clientPools.map((pool) => (
-                      <div
-                        key={pool._id.toString()}
-                        className='border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow'>
-                        <div className='flex justify-between items-start mb-2'>
-                          <h4 className='font-semibold text-lg'>{pool.name}</h4>
-                          <span
-                            className={`px-2 py-1 text-xs rounded-full ${
-                              pool.isActive
-                                ? 'bg-green-100 text-green-800'
-                                : 'bg-red-100 text-red-800'
-                            }`}>
-                            {pool.isActive ? 'Active' : 'Inactive'}
-                          </span>
-                        </div>
-
-                        <div className='text-sm text-gray-600 space-y-1'>
-                          <p>
-                            <strong>Type:</strong> {pool.type}
-                          </p>
-                          <p>
-                            <strong>Shape:</strong> {pool.shape}
-                          </p>
-                          {pool.volume && (
-                            <p>
-                              <strong>Volume:</strong>{' '}
-                              {pool.volume.gallons.toLocaleString()} gallons
-                            </p>
-                          )}
-                          {pool.dimensions && (
-                            <div>
-                              <strong>Dimensions:</strong>
-                              {pool.shape === 'rectangular' &&
-                                pool.dimensions.length &&
-                                pool.dimensions.width && (
-                                  <span>
-                                    {' '}
-                                    {pool.dimensions.length}' ×{' '}
-                                    {pool.dimensions.width}' ×{' '}
-                                    {pool.dimensions.avgDepth}'
-                                  </span>
-                                )}
-                              {pool.shape === 'circular' &&
-                                pool.dimensions.diameter && (
-                                  <span>
-                                    {' '}
-                                    {pool.dimensions.diameter}' diameter ×{' '}
-                                    {pool.dimensions.avgDepth}' deep
-                                  </span>
-                                )}
-                              {(pool.shape === 'oval' ||
-                                pool.shape === 'kidney') &&
-                                pool.dimensions.length &&
-                                pool.dimensions.width && (
-                                  <span>
-                                    {' '}
-                                    {pool.dimensions.length}' ×{' '}
-                                    {pool.dimensions.width}' ×{' '}
-                                    {pool.dimensions.avgDepth}'
-                                  </span>
-                                )}
-                            </div>
-                          )}
-                          {pool.notes && (
-                            <p>
-                              <strong>Notes:</strong> {pool.notes}
-                            </p>
-                          )}
-                        </div>
-
-                        <div className='flex justify-end space-x-2 mt-4'>
-                          <button
-                            onClick={() => {
-                              setSelectedPool(pool)
-                              setShowPoolEditor(true)
-                            }}
-                            className='bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700'>
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => {
-                              // Navigate to visit logging for this pool
-                              window.location.href = `/visit/log?clientId=${selectedClient._id}&poolId=${pool._id}`
-                            }}
-                            className='bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700'>
-                            Log Visit
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-      {/* Pool Editor Modal */}
-      {showPoolEditor && selectedPool && (
-        <TabbedPoolEditor
-          pool={selectedPool}
-          isOpen={showPoolEditor}
-          onClose={() => setShowPoolEditor(false)}
-          onSave={handleSavePool}
-          saving={poolSaving}
-        />
       )}
     </div>
   )

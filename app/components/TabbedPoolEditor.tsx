@@ -238,11 +238,6 @@ export default function TabbedPoolEditor({
         }),
       },
 
-      readings: {
-        isActive: true,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
       notes: formData.notes.trim(),
     }
 
@@ -259,7 +254,7 @@ export default function TabbedPoolEditor({
   ]
 
   return (
-    <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50'>
+    <div className='fixed inset-0 bg-black/10 background-blur-lg flex items-center justify-center z-50'>
       <div className='bg-background rounded-lg w-full max-w-4xl h-full max-h-[90vh] flex flex-col'>
         {/* Header */}
         <div className='flex items-center justify-between p-6 border-b'>
@@ -585,7 +580,9 @@ export default function TabbedPoolEditor({
             <div className='space-y-6'>
               {/* pH */}
               <div className='space-y-4'>
-                <h3 className='text-lg font-medium text-foreground'>pH Levels</h3>
+                <h3 className='text-lg font-medium text-foreground'>
+                  pH Levels
+                </h3>
                 <div className='grid grid-cols-3 gap-4'>
                   <div>
                     <label className='block text-sm font-medium text-gray-700 mb-2'>
@@ -840,7 +837,9 @@ export default function TabbedPoolEditor({
           {/* Notes Tab */}
           {activeTab === 'notes' && (
             <div className='space-y-4'>
-              <h3 className='text-lg font-medium text-foreground'>Pool Notes</h3>
+              <h3 className='text-lg font-medium text-foreground'>
+                Pool Notes
+              </h3>
               <div>
                 <label className='block text-sm font-medium text-gray-700 mb-2'>
                   Additional Information

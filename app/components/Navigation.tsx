@@ -277,7 +277,7 @@ export default function Navigation({ children }: NavigationProps) {
                 <div className='flex items-center gap-3 p-2 rounded-md bg-muted/50 group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:gap-1 group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:p-1'>
                   <Avatar className='h-8 w-8 border group-data-[collapsible=icon]:h-6 group-data-[collapsible=icon]:w-6'>
                     <AvatarImage
-                      src={`https://avatar.vercel.sh/${technician.email}`}
+                      src={`https://avatar.iran.liara.run/public/boy`}
                       alt={technician.name}
                     />
                     <AvatarFallback className='text-xs bg-primary/10 group-data-[collapsible=icon]:text-[10px]'>
@@ -299,7 +299,7 @@ export default function Navigation({ children }: NavigationProps) {
                 </div>
 
                 {/* Role Badge - Using proper Badge component */}
-                <div className='flex items-center justify-between gap-2 px-2 group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:gap-1 group-data-[collapsible=icon]:items-center'>
+                <div className='flex items-center gap-4 px-2 group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:gap-1 group-data-[collapsible=icon]:items-center'>
                   {/* Role Badge - responsive sizing */}
                   <RoleBadge
                     role={technician.role}
@@ -308,9 +308,9 @@ export default function Navigation({ children }: NavigationProps) {
 
                   <div className='flex items-center gap-1 group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:gap-1'>
                     {/* Theme Toggle */}
-                    <div className='group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:justify-center'>
+                    {/* <div className='group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:justify-center'>
                       <ModeToggle />
-                    </div>
+                    </div> */}
 
                     {/* Logout Button */}
                     <button
@@ -328,7 +328,7 @@ export default function Navigation({ children }: NavigationProps) {
             )}
 
             {/* Theme toggle for non-authenticated users */}
-            {!isAuthenticated && (
+            {/* {!isAuthenticated && (
               <div className='px-2 py-4 group-data-[collapsible=icon]:px-1 group-data-[collapsible=icon]:py-2'>
                 <div className='flex justify-center'>
                   <div className='group-data-[collapsible=icon]:scale-90'>
@@ -336,7 +336,7 @@ export default function Navigation({ children }: NavigationProps) {
                   </div>
                 </div>
               </div>
-            )}
+            )} */}
           </SidebarFooter>
         </Sidebar>
 
@@ -347,9 +347,9 @@ export default function Navigation({ children }: NavigationProps) {
               <div className='flex-1' />
               {/* Additional header content can be added here */}
               {/* For collapsed sidebar state, show theme toggle in header */}
-              <div className='group-data-[collapsible=icon]:block hidden'>
+              {/* <div className='mr-3'>
                 <ModeToggle />
-              </div>
+              </div> */}
             </header>
             <main className='flex-1 overflow-auto bg-background'>
               <div className='max-w-screen-2xl mx-auto p-4 min-h-full flex flex-col'>
