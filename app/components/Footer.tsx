@@ -12,7 +12,7 @@ export default function Footer() {
   }, [])
 
   return (
-    <footer className='shrink-0 sticky bottom-1 border-t bg-sidebar/5 backdrop-blur-sm'>
+    <footer className='shrink-0 sticky bottom-0 border-t bg-sidebar/5 backdrop-blur-sm'>
       <div className='px-4 py-3'>
         {/* Desktop Layout */}
         <div className='hidden md:flex items-center justify-between text-xs'>

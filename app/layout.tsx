@@ -5,7 +5,7 @@ import './globals.css'
 import Navigation from '@/components/Navigation'
 import { ScrollProgress } from 'components/magicui/scroll-progress'
 import { Scroll } from 'lucide-react'
-import { ModeToggle } from '@/components/ModeToggle'
+import { AnimatedThemeToggler } from 'components/magicui/animated-theme-toggler'
 
 export const metadata: Metadata = {
   title: 'Pool Service Pro',
@@ -89,10 +89,10 @@ export default function RootLayout({
       </head>
       <body className='antialiased overflow-x-hidden'>
         <ThemeProvider attribute='class' defaultTheme='system' enableSystem>
-          {/* <ScrollProgress className='top-0' /> */}
+          <ScrollProgress className='top-0' />
           {/* Navigation Component handles the complete layout structure including footer */}
-          <div className='fixed top-4 right-4 z-50'>
-            <ModeToggle />
+          <div className='fixed top-4 right-4 h-4 w-4 cursor-pointer mt-2 mr-3 z-50'>
+            <AnimatedThemeToggler className='' />
           </div>
           <Navigation>{children}</Navigation>
         </ThemeProvider>

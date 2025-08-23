@@ -16,8 +16,6 @@ import {
 import Footer from '@/components/Footer'
 import { AuroraText } from 'components/magicui/aurora-text'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { ModeToggle } from '@/components/ModeToggle'
-import { Badge } from '@/components/ui/badge'
 import { RoleBadge } from '@/lib/badge-utils'
 
 import {
@@ -341,7 +339,7 @@ export default function Navigation({ children }: NavigationProps) {
         </Sidebar>
 
         <SidebarInset>
-          <div className='flex flex-col h-screen'>
+          <div className='flex flex-col min-h-screen overflow-hidden'>
             <header className='flex h-16 shrink-0 items-center gap-2 border-b px-4 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60'>
               <SidebarTrigger />
               <div className='flex-1' />
@@ -351,7 +349,7 @@ export default function Navigation({ children }: NavigationProps) {
                 <ModeToggle />
               </div> */}
             </header>
-            <main className='flex-1 overflow-auto bg-background'>
+            <main className='flex-1 bg-background'>
               <div className='max-w-screen-2xl mx-auto p-4 min-h-full flex flex-col'>
                 <div className='flex-1'>{children}</div>
                 <Footer />
