@@ -15,6 +15,7 @@ import {
   Target,
 } from 'lucide-react'
 
+import { useClientManagementState } from '../hooks/useClientManagementState'
 // Import types from the enhanced pool-service.ts schema
 import {
   Client,
@@ -40,23 +41,26 @@ interface Technician {
 }
 
 export default function ClientManagement() {
+  const {
+    viewMode,
+    searchTerm,
+    clientTypeFilter,
+    statusFilter,
+    frequencyFilter,
+    setViewMode,
+    setSearchTerm,
+    setClientTypeFilter,
+    setStatusFilter,
+    setFrequencyFilter,
+    clearFilters,
+    resetFilters,
+    isLoaded: preferencesLoaded,
+  } = useClientManagementState()
+
   const [clients, setClients] = useState<Client[]>([])
   const [filteredClients, setFilteredClients] = useState<Client[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-
-  // Enhanced filtering state
-  const [searchTerm, setSearchTerm] = useState('')
-  const [clientTypeFilter, setClientTypeFilter] = useState<
-    'all' | 'retail' | 'service' | 'maintenance'
-  >('all')
-  const [statusFilter, setStatusFilter] = useState<
-    'all' | 'active' | 'inactive'
-  >('all')
-  const [frequencyFilter, setFrequencyFilter] = useState<
-    'all' | 'twice-weekly' | 'weekly' | 'bi-weekly' | 'monthly'
-  >('all')
-  const [viewMode, setViewMode] = useState<'table' | 'grid'>('table')
 
   // Form state
   const [showAddClient, setShowAddClient] = useState(false)
@@ -593,11 +597,24 @@ export default function ClientManagement() {
           </div>
         </div>
 
-        <div className='text-sm text-muted-foreground'>
-          Showing {filteredClients.length} of {clients.length} clients
+        <div className='flex justify-between items-center'>
+          <div className='text-sm text-muted-foreground flex justify-between items-center'>
+            Showing {filteredClients.length} of {clients.length} clients
+          </div>
+          <div className='flex gap-2 items-center mr-24'>
+            <button
+              onClick={clearFilters}
+              className='px-3 py-2 text-xs bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 rounded-lg transition-colors'>
+              Clear Filters
+            </button>
+            <button
+              onClick={resetFilters}
+              className='px-3 py-2 text-xs bg-red-100 text-red-600 hover:bg-red-200 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30 rounded-lg transition-colors'>
+              Reset All
+            </button>
+          </div>
         </div>
       </div>
-
       {/* Client List */}
       <div className='bg-background rounded-lg shadow'>
         {filteredClients.length === 0 ? (
@@ -606,7 +623,8 @@ export default function ClientManagement() {
             <h3 className='text-lg font-medium mb-2'>No clients found</h3>
             <p>Try adjusting your filters or add a new client.</p>
           </div>
-        ) : (
+        ) : viewMode === 'table' ? (
+          // TABLE VIEW
           <div className='overflow-x-auto'>
             <table className='min-w-full divide-y divide-border'>
               <thead className='bg-muted/50'>
@@ -645,27 +663,28 @@ export default function ClientManagement() {
                       </div>
                     </td>
                     <td className='px-6 py-4 whitespace-nowrap'>
-                      <span className='inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800'>
+                      <span
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${
+                          client.clientType === 'retail'
+                            ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
+                            : client.clientType === 'service'
+                            ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+                            : 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300'
+                        }`}>
                         {client.clientType}
                       </span>
-                      {client.clientType === 'maintenance' && (
-                        <div className='text-xs text-muted-foreground mt-1'>
-                          {
-                            (client as MaintenanceClient).maintenance
-                              .serviceFrequency
-                          }
-                        </div>
-                      )}
                     </td>
-                    <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>
-                      <div>{client.email}</div>
-                      <div className='text-muted-foreground'>
+                    <td className='px-6 py-4 whitespace-nowrap'>
+                      <div className='text-sm text-foreground'>
                         {client.phone}
+                      </div>
+                      <div className='text-sm text-muted-foreground'>
+                        {client.email}
                       </div>
                     </td>
                     <td className='px-6 py-4 whitespace-nowrap'>
                       <span
-                        className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                           client.isActive
                             ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
                             : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
@@ -689,6 +708,136 @@ export default function ClientManagement() {
                 ))}
               </tbody>
             </table>
+          </div>
+        ) : (
+          // GRID VIEW
+          <div className='p-6'>
+            <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'>
+              {filteredClients.map((client) => (
+                <div
+                  key={client._id.toString()}
+                  className='bg-background border border-border rounded-lg p-4 hover:shadow-lg transition-shadow duration-200'>
+                  {/* Client Header */}
+                  <div className='flex items-start justify-between mb-3'>
+                    <div className='flex items-center gap-3'>
+                      <div className='flex-shrink-0'>
+                        {getClientTypeIcon(client.clientType)}
+                      </div>
+                      <div className='min-w-0 flex-1'>
+                        <h3 className='font-semibold text-sm text-foreground truncate'>
+                          {client.name}
+                        </h3>
+                        <p className='text-xs text-muted-foreground truncate'>
+                          {client.address.city}, {client.address.state}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Status Badge */}
+                    <span
+                      className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium ${
+                        client.isActive
+                          ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+                          : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
+                      }`}>
+                      {client.isActive ? 'Active' : 'Inactive'}
+                    </span>
+                  </div>
+
+                  {/* Client Type Badge */}
+                  <div className='mb-3'>
+                    <span
+                      className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium capitalize ${
+                        client.clientType === 'retail'
+                          ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
+                          : client.clientType === 'service'
+                          ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+                          : 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300'
+                      }`}>
+                      {client.clientType}
+                    </span>
+                  </div>
+
+                  {/* Contact Info */}
+                  <div className='space-y-1 mb-4'>
+                    <div className='flex items-center gap-2 text-xs'>
+                      <span className='text-muted-foreground'>📞</span>
+                      <span className='text-foreground truncate'>
+                        {client.phone}
+                      </span>
+                    </div>
+                    <div className='flex items-center gap-2 text-xs'>
+                      <span className='text-muted-foreground'>📧</span>
+                      <span className='text-foreground truncate'>
+                        {client.email}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Service Frequency (for maintenance clients) */}
+                  {isMaintenanceClient(client) && (
+                    <div className='mb-4'>
+                      <div className='flex items-center gap-2 text-xs'>
+                        <Calendar className='h-3 w-3 text-muted-foreground' />
+                        <span className='text-muted-foreground'>Service:</span>
+                        <span className='text-foreground capitalize'>
+                          {client.maintenance.serviceFrequency.replace(
+                            '-',
+                            ' '
+                          )}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Action Buttons */}
+                  <div className='flex gap-2 pt-2 border-t border-border'>
+                    {isMaintenanceClient(client) && (
+                      <button
+                        onClick={() => fetchClientPools(client)}
+                        className='flex-1 text-xs px-3 py-2 bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:hover:bg-blue-900/30 rounded-md transition-colors'>
+                        View Pools
+                      </button>
+                    )}
+                    <button className='flex-1 text-xs px-3 py-2 bg-green-50 text-green-600 hover:bg-green-100 dark:bg-green-900/20 dark:text-green-400 dark:hover:bg-green-900/30 rounded-md transition-colors'>
+                      Edit
+                    </button>
+                  </div>
+
+                  {/* Additional Info for Different Client Types */}
+                  <div className='mt-3 pt-2 border-t border-border'>
+                    {isRetailClient(client) && (
+                      <div className='text-xs text-muted-foreground'>
+                        <span className='flex items-center gap-1'>
+                          <ShoppingCart className='h-3 w-3' />
+                          Retail Customer
+                        </span>
+                      </div>
+                    )}
+                    {isServiceClient(client) && (
+                      <div className='text-xs text-muted-foreground'>
+                        <span className='flex items-center gap-1'>
+                          <Wrench className='h-3 w-3' />
+                          Service Customer
+                        </span>
+                      </div>
+                    )}
+                    {isMaintenanceClient(client) && (
+                      <div className='text-xs text-muted-foreground'>
+                        <span className='flex items-center gap-1'>
+                          <Calendar className='h-3 w-3' />
+                          {client.maintenance.serviceFrequency.replace(
+                            '-',
+                            ' '
+                          )}{' '}
+                          Service
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>

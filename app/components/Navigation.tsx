@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
@@ -18,6 +18,7 @@ import { AuroraText } from 'components/magicui/aurora-text'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { RoleBadge } from '@/lib/badge-utils'
 import { ModeToggle } from '@/components/ModeToggle'
+//import { AnimatedThemeToggler } from 'components/magicui/animated-theme-toggler'
 
 import {
   Sidebar,
@@ -121,17 +122,17 @@ const getNavigationIcon = (name: string) => {
     Admin: Settings,
   }
 
-  return iconMap[name] || Calculator // Default fallback
+  return iconMap[name] || Calculator
 }
 
-interface NavigationProps {
+export default function Navigation({
+  children,
+}: {
   children: React.ReactNode
-}
-
-export default function Navigation({ children }: NavigationProps) {
+}) {
   const [technician, setTechnician] = useState<TechnicianData | null>(null)
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false)
-  const [isLoading, setIsLoading] = useState<boolean>(true)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
   const pathname = usePathname()
 
   // Check authentication status
@@ -170,73 +171,61 @@ export default function Navigation({ children }: NavigationProps) {
   }, [])
 
   // Filter navigation items based on authentication and role
-  const getVisibleNavItems = () => {
+  const visibleNavItems = useMemo(() => {
     return navigationItems.filter((item) => {
       // If item requires auth but user is not authenticated, hide it
-      if (item.requiresAuth && !isAuthenticated) {
-        return false
-      }
+      if (item.requiresAuth && !isAuthenticated) return false
 
-      // If item has role restrictions, check user role
+      // If item doesn't require auth but user is authenticated and it's login page, hide it
+      if (!item.requiresAuth && isAuthenticated && item.name === 'Login')
+        return false
+
+      // If item has role restrictions, check if user has required role
       if (item.roles && technician) {
         return item.roles.includes(technician.role)
       }
 
-      // Hide login if already authenticated
-      if (item.href === '/login' && isAuthenticated) {
-        return false
-      }
-
       return true
     })
-  }
+  }, [isAuthenticated, technician])
 
-  const handleLogout = () => {
-    localStorage.removeItem('technicianToken')
-    localStorage.removeItem('technicianData')
-    setTechnician(null)
-    setIsAuthenticated(false)
-    window.location.href = '/login'
-  }
-
-  const getRoleBadgeVariant = (
-    role: string
-  ): { variant: 'default' | 'secondary' | 'destructive' | 'outline' } => {
-    switch (role) {
-      case 'admin':
-        return { variant: 'destructive' }
-      case 'supervisor':
-        return { variant: 'default' }
-      case 'technician':
-        return { variant: 'secondary' }
-      default:
-        return { variant: 'outline' }
-    }
-  }
-
-  const visibleNavItems = getVisibleNavItems()
-
+  // Show loading state while checking authentication
   if (isLoading) {
     return (
-      <div className='min-h-screen flex items-center justify-center bg-background'>
-        <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4'></div>
-        <div className='flex justify-center items-center'>
-          <p className='text-gray-900 text-center'>Loading....</p>
+      <div className='flex justify-center items-center h-screen bg-muted/50'>
+        <div className='text-center'>
+          <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4'></div>
+          <p className='text-muted-foreground'>Loading...</p>
         </div>
       </div>
     )
   }
 
+  const handleLogout = () => {
+    try {
+      // Remove authentication data from localStorage
+      localStorage.removeItem('technicianToken')
+      localStorage.removeItem('technicianData')
+
+      // Update state
+      setTechnician(null)
+      setIsAuthenticated(false)
+
+      // Redirect to login page
+      window.location.href = '/login'
+    } catch (error) {
+      console.error('Logout error:', error)
+    }
+  }
+
   return (
     <SidebarProvider>
-      <div className='flex min-h-screen w-full bg-background'>
-        <Sidebar variant='inset' collapsible='icon'>
+      <div className='flex h-screen w-full'>
+        <Sidebar collapsible='icon'>
           <SidebarHeader>
-            <div className='flex items-center group-data-[collapsible=icon]:justify-center gap-2 px-4 py-2'>
-              <span className='text-2xl group-data-[collapsible=icon]:text-3xl'>
-                🏊‍♀️
-              </span>
-              <span className='text-xl font-bold bg-clip-text text-transparent group-data-[collapsible=icon]:hidden'>
+            <div className='flex items-center gap-2 px-2 pt-2.5'>
+              <span className='text-2xl'>🏊‍♀️</span>
+              <span className='font-semibold text-lg group-data-[collapsible=icon]:hidden'>
                 <AuroraText>Pool Service Pro</AuroraText>
               </span>
             </div>
@@ -277,12 +266,9 @@ export default function Navigation({ children }: NavigationProps) {
               <div className='px-2 py-2 space-y-3 group-data-[collapsible=icon]:px-1 group-data-[collapsible=icon]:py-1 group-data-[collapsible=icon]:space-y-1'>
                 {/* User Info Section */}
                 <div className='flex items-center gap-3 p-2 rounded-md bg-muted/50 group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:gap-1 group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:p-1'>
-                  <Avatar className='h-8 w-8 border group-data-[collapsible=icon]:h-6 group-data-[collapsible=icon]:w-6'>
-                    <AvatarImage
-                      src={`https://avatar.iran.liara.run/public/boy`}
-                      alt={technician.name}
-                    />
-                    <AvatarFallback className='text-xs bg-primary/10 group-data-[collapsible=icon]:text-[10px]'>
+                  <Avatar className='h-8 w-8 group-data-[collapsible=icon]:h-6 group-data-[collapsible=icon]:w-6 group-data-[collapsible=icon]:mb-10'>
+                    <AvatarImage src='' />
+                    <AvatarFallback className='text-xs bg-primary text-primary-foreground'>
                       {technician.name
                         .split(' ')
                         .map((n) => n[0])
@@ -290,40 +276,23 @@ export default function Navigation({ children }: NavigationProps) {
                         .toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
-                  <div className='flex-1 min-w-0 group-data-[collapsible=icon]:hidden'>
-                    <p className='text-sm font-medium truncate'>
+                  <div className='min-w-0 flex-1 group-data-[collapsible=icon]:hidden'>
+                    <div className='text-xs text-muted-foreground mb-1'>
+                      Clients: {technician.assignedClients.length}
+                    </div>
+                    <div className='font-medium text-sm truncate mb-2'>
                       {technician.name}
-                    </p>
-                    <p className='text-xs text-muted-foreground truncate'>
-                      {technician.employeeId}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Role Badge - Using proper Badge component */}
-                <div className='flex items-center gap-4 px-2 group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:gap-1 group-data-[collapsible=icon]:items-center'>
-                  {/* Role Badge - responsive sizing */}
-                  <RoleBadge
-                    role={technician.role}
-                    className='group-data-[collapsible=icon]:text-[9px] group-data-[collapsible=icon]:px-1 group-data-[collapsible=icon]:py-0.5 group-data-[collapsible=icon]:h-4'
-                  />
-
-                  <div className='flex items-center gap-1 group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:gap-1'>
-                    {/* Theme Toggle */}
-                    {/* <div className='group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:justify-center'>
-                      <ModeToggle />
-                    </div> */}
-
-                    {/* Logout Button */}
-                    <button
-                      onClick={handleLogout}
-                      className='flex items-center gap-1.5 px-2 py-1 rounded-md text-xs text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-900/20 transition-colors group-data-[collapsible=icon]:w-full group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-1 group-data-[collapsible=icon]:py-1'
-                      title='Logout'>
-                      <LogOut className='h-3 w-3' />
-                      <span className='group-data-[collapsible=icon]:hidden'>
-                        Logout
-                      </span>
-                    </button>
+                    </div>
+                    <div className='flex items-center justify-between gap-2'>
+                      <RoleBadge role={technician.role} />
+                      <button
+                        onClick={handleLogout}
+                        className='flex items-center gap-1 px-1.5 py-0.5 rounded text-xs text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-900/20 transition-colors'
+                        title='Logout'>
+                        <LogOut className='h-3 w-3' />
+                        <span>Logout</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -332,7 +301,7 @@ export default function Navigation({ children }: NavigationProps) {
         </Sidebar>
 
         <SidebarInset>
-          <div className='flex flex-col min-h-screen overflow-hidden'>
+          <div className='flex flex-col h-screen min-h-screen overflow-hidden'>
             <header className='flex h-16 shrink-0 items-center gap-2 border-b px-4 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60'>
               <SidebarTrigger />
               <div className='flex-1' />
@@ -342,12 +311,16 @@ export default function Navigation({ children }: NavigationProps) {
                 <ModeToggle />
               </div>
             </header>
-            <main className='flex-1 bg-background'>
-              <div className='max-w-screen-2xl mx-auto p-4 min-h-full flex flex-col'>
-                <div className='flex-1'>{children}</div>
-                <Footer />
+
+            {/* Main content area - now scrollable with custom scrollbar */}
+            <main className='flex-1 bg-background overflow-y-auto scroll-smooth scrollbar-thin scrollbar-track-transparent scrollbar-thumb-gray-200 dark:scrollbar-thumb-gray-700 hover:scrollbar-thumb-gray-300 dark:hover:scrollbar-thumb-gray-600'>
+              <div className='max-w-screen-2xl mx-auto p-4 pb-6'>
+                {children}
               </div>
             </main>
+
+            {/* Footer moved outside of main content - now sticky */}
+            <Footer />
           </div>
         </SidebarInset>
       </div>

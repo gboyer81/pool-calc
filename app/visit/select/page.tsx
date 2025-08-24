@@ -27,7 +27,7 @@ const visitOptions: VisitOption[] = [
     type: 'maintenance-routine',
     title: 'Routine Maintenance',
     description: 'Regular pool cleaning, chemical testing, and equipment check',
-    icon: '🧽',
+    icon: '💧',
     color: 'bg-blue-500',
     clientTypes: ['maintenance'],
     estimatedDuration: 45,
@@ -335,7 +335,7 @@ export default function VisitSelectPage() {
                   )
                 }
                 className='bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-lg font-medium transition-colors'>
-                🧽 Start Routine Maintenance
+                💧 Start Routine Maintenance
               </button>
             </div>
           </div>

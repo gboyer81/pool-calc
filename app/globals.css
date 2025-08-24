@@ -214,7 +214,11 @@
   }
 }
 
-.water-testing-grid label {
+/* ==========================================================================
+   Base Styles
+   ========================================================================== */
+
+#label {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -226,11 +230,40 @@ body {
   height: 100%;
 }
 
-/* Better mobile scrollbars */
+/* ==========================================================================
+   Tailwind-Compatible Scrollbar Utilities
+   ========================================================================== */
+
 .scrollbar-thin {
   scrollbar-width: thin;
 }
 
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollbar-track-transparent::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-thumb-gray-200::-webkit-scrollbar-thumb {
+  background-color: rgb(229 231 235);
+  border-radius: 3px;
+}
+
+.dark .scrollbar-thumb-gray-700::-webkit-scrollbar-thumb {
+  background-color: rgb(55 65 81);
+}
+
+.hover\:scrollbar-thumb-gray-300:hover::-webkit-scrollbar-thumb {
+  background-color: rgb(209 213 219);
+}
+
+.dark .hover\:scrollbar-thumb-gray-600:hover::-webkit-scrollbar-thumb {
+  background-color: rgb(75 85 99);
+}
+
+/* Legacy scrollbar styles for backwards compatibility */
 .scrollbar-thumb-gray-300::-webkit-scrollbar-thumb {
   background-color: #d1d5db;
   border-radius: 0.25rem;
@@ -248,33 +281,31 @@ body {
   background-color: #1f2937;
 }
 
+/* ==========================================================================
+   Layout & Overflow Management
+   ========================================================================== */
+
 /* Prevent horizontal overflow */
 .prevent-overflow {
   overflow-x: hidden;
   max-width: 100vw;
 }
 
-/* Mobile-optimized text */
-@media (max-width: 640px) {
-  .mobile-text-scale {
-    font-size: clamp(0.875rem, 2.5vw, 1rem);
-  }
-
-  .mobile-heading-scale {
-    font-size: clamp(1.5rem, 5vw, 2rem);
-  }
-}
-
+/* Sidebar transitions */
 [data-sidebar] {
   transition: all 0.2s ease-in-out;
 }
 
-/* Ensure footer stays at bottom on mobile */
+/* ==========================================================================
+   Sidebar Layout Styles (Legacy Support)
+   ========================================================================== */
+
 .sidebar-layout {
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
-/* Prevent layout shift during hydration */
 .sidebar-layout main {
   flex: 1;
   overflow-y: auto;
@@ -311,7 +342,37 @@ body {
   background-color: rgba(255, 255, 255, 0.2);
 }
 
-/* Better touch targets for mobile */
+/* Footer positioning */
+.sidebar-layout footer {
+  flex-shrink: 0;
+  margin-top: auto;
+}
+
+/* ==========================================================================
+   Mobile Optimizations
+   ========================================================================== */
+
+/* Mobile-optimized text scaling */
+@media (max-width: 640px) {
+  .mobile-text-scale {
+    font-size: clamp(0.875rem, 2.5vw, 1rem);
+  }
+
+  .mobile-heading-scale {
+    font-size: clamp(1.5rem, 5vw, 2rem);
+  }
+
+  /* Thinner scrollbars on mobile */
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 3px;
+  }
+
+  .sidebar-layout main::-webkit-scrollbar {
+    width: 3px;
+  }
+}
+
+/* Better touch targets for mobile devices */
 @media (max-width: 768px) {
   button,
   .btn,
@@ -319,12 +380,146 @@ body {
     min-height: 44px;
     min-width: 44px;
   }
+
+  /* Mobile sidebar positioning */
   [data-sidebar='sidebar'] {
     position: fixed;
     z-index: 50;
   }
 }
-::view-transition-old(root), ::view-transition-new(root) {
-    animation: none;
-    mix-blend-mode: normal;
+
+/* Tablet and up optimizations */
+@media (min-width: 768px) {
+  .sidebar-layout main > div {
+    min-height: calc(100vh - 16px - 60px);
+  }
+}
+
+/* ==========================================================================
+   Smooth Scrolling Enhancements
+   ========================================================================== */
+
+/* Enhanced smooth scrolling with iOS support */
+.scroll-smooth {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Main content smooth scrolling */
+.sidebar-layout main {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Content spacing to prevent overlap with footer */
+.sidebar-layout main > div {
+  padding-bottom: 1rem;
+}
+
+/* ==========================================================================
+   Dynamic Viewport Height (Mobile Safari Support)
+   ========================================================================== */
+
+/* Support for dynamic viewport height units */
+@supports (height: 100dvh) {
+  @media (max-width: 768px) {
+    .sidebar-layout {
+      height: 100dvh;
+      min-height: 100dvh;
+    }
+
+    html,
+    body {
+      height: 100dvh;
+    }
+  }
+}
+
+/* ==========================================================================
+   Hide Scrollbars on Mobile (Optional Clean Look)
+   ========================================================================== */
+
+/* Uncomment if you want completely hidden scrollbars on mobile */
+/*
+@media (max-width: 640px) {
+  .scrollbar-thin::-webkit-scrollbar,
+  .sidebar-layout main::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .scrollbar-thin,
+  .sidebar-layout main {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+*/
+
+/* ==========================================================================
+   Animation & Transition Optimizations
+   ========================================================================== */
+
+/* View transition styles */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+/* Reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  html,
+  body,
+  .scroll-smooth,
+  .sidebar-layout main,
+  [data-sidebar] {
+    scroll-behavior: auto;
+    transition: none;
+  }
+}
+
+/* ==========================================================================
+   Focus & Accessibility
+   ========================================================================== */
+
+/* Enhanced focus styles for better accessibility */
+button:focus-visible,
+a:focus-visible,
+[role='button']:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .scrollbar-thumb-gray-200::-webkit-scrollbar-thumb,
+  .sidebar-layout main::-webkit-scrollbar-thumb {
+    background-color: rgb(0 0 0);
+  }
+
+  .dark .scrollbar-thumb-gray-700::-webkit-scrollbar-thumb,
+  .dark .sidebar-layout main::-webkit-scrollbar-thumb {
+    background-color: rgb(255 255 255);
+  }
+}
+
+/* ==========================================================================
+   Print Styles
+   ========================================================================== */
+
+@media print {
+  /* Hide scrollbars and navigation elements when printing */
+  [data-sidebar],
+  footer,
+  .scrollbar-thin::-webkit-scrollbar,
+  .sidebar-layout main::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  /* Ensure main content takes full width when printing */
+  .sidebar-layout main {
+    overflow: visible;
+    height: auto;
+    max-width: 100%;
+  }
 }
