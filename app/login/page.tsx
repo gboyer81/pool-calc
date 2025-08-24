@@ -83,7 +83,7 @@ export default function TechnicianLogin() {
   }
 
   return (
-    <div className='min-h-screen flex justify-center '>
+    <div className='min-h-1/2 flex justify-center items-center'>
       <div className='max-w-2xl w-full mx-4'>
         {/* Header */}
         <div className='text-center mb-8'>
@@ -95,7 +95,7 @@ export default function TechnicianLogin() {
         </div>
 
         {/* Login Form */}
-        <NeonGradientCard className='max-h-[660px]'>
+        <NeonGradientCard className='max-h-[364px]'>
           <div className='bg-background rounded-lg shadow-xl p-8'>
             <div className='space-y-6'>
               {/* Error Message */}
@@ -162,51 +162,6 @@ export default function TechnicianLogin() {
                   'Sign In'
                 )}
               </button>
-
-              {/* Demo Credentials */}
-              <div className='bg-blue-50 border border-blue-200 rounded-lg p-4 mt-6'>
-                <div className='text-sm text-blue-800'>
-                  <div className='font-medium mb-2'>Demo Credentials:</div>
-                  <div className='space-y-1'>
-                    <div>
-                      <strong>Technician:</strong> tech@poolservice.com /
-                      password123
-                    </div>
-                    <div>
-                      <strong>Supervisor:</strong> supervisor@poolservice.com /
-                      password123
-                    </div>
-                    <div>
-                      <strong>Admin:</strong> admin@poolservice.com /
-                      password123
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Quick Login Buttons */}
-              <div className='space-y-2'>
-                <button
-                  onClick={() => {
-                    setCredentials({
-                      email: 'tech@poolservice.com',
-                      password: 'password123',
-                    })
-                  }}
-                  className='w-full py-2 px-4 bg-muted text-gray-700 rounded hover:bg-gray-200 transition-colors text-sm'>
-                  Demo Technician Login
-                </button>
-                <button
-                  onClick={() => {
-                    setCredentials({
-                      email: 'supervisor@poolservice.com',
-                      password: 'password123',
-                    })
-                  }}
-                  className='w-full py-2 px-4 bg-muted text-gray-700 rounded hover:bg-gray-200 transition-colors text-sm'>
-                  Demo Supervisor Login
-                </button>
-              </div>
             </div>
           </div>
         </NeonGradientCard>

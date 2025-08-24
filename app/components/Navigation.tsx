@@ -17,6 +17,7 @@ import Footer from '@/components/Footer'
 import { AuroraText } from 'components/magicui/aurora-text'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { RoleBadge } from '@/lib/badge-utils'
+import { ModeToggle } from '@/components/ModeToggle'
 
 import {
   Sidebar,
@@ -345,9 +346,9 @@ export default function Navigation({ children }: NavigationProps) {
               <div className='flex-1' />
               {/* Additional header content can be added here */}
               {/* For collapsed sidebar state, show theme toggle in header */}
-              {/* <div className='mr-3'>
+              <div className='mr-3'>
                 <ModeToggle />
-              </div> */}
+              </div>
             </header>
             <main className='flex-1 bg-background'>
               <div className='max-w-screen-2xl mx-auto p-4 min-h-full flex flex-col'>

@@ -9,7 +9,7 @@ export default function Home() {
         <AuroraText>Pool Service Pro</AuroraText>
       </h1>
       {/* <VersionCheck /> */}
-      <div className='max-w-4xl mx-auto px-4'>
+      <div className='max-w-4xl mx-auto lg:px-4'>
         <PoolCalculator />
       </div>
     </div>

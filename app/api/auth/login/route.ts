@@ -74,6 +74,7 @@ export async function POST(
       .findOne({ email: email.toLowerCase().trim() })
 
     console.log('👤 Technician found:', technician ? 'Yes' : 'No')
+    console.log(`Technician: ${technician}`)
 
     if (!technician) {
       return NextResponse.json(

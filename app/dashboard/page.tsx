@@ -207,14 +207,14 @@ export default function TechnicianDashboard() {
   }
 
   return (
-    <div className='max-w-screen-2xl mx-auto p-6'>
+    <div className='max-w-screen-2xl mx-auto lg:p-6'>
       {/* Header */}
       <div className='flex flex-col md:flex-row md:justify-between items-center mb-8'>
         <div>
-          <h1 className='text-3xl font-bold text-foreground dark:text-gray-50'>
-            {getGreeting()}, {technician?.name}! 👋
+          <h1 className='text-2xl md:text-3xl font-bold text-foreground dark:text-gray-50'>
+            {getGreeting()}, {technician?.name.split(' ')[0]}! 👋
           </h1>
-          <p className='text-muted-foreground dark:text-gray-200 mt-1'>
+          <p className='text-muted-foreground text-sm dark:text-gray-200 my-2'>
             {currentTime.toLocaleDateString('en-US', {
               weekday: 'long',
               year: 'numeric',
@@ -228,10 +228,10 @@ export default function TechnicianDashboard() {
             })}
           </p>
         </div>
-        <div className='flex gap-3'>
+        <div className='flex flex-col gap-y-2 lg:flex gap-3 w-full'>
           <button
             onClick={() => (window.location.href = '/clients')}
-            className='bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors'>
+            className='bg-blue-600 text-white px-4 md:py-2 rounded-lg hover:bg-blue-700 transition-colors'>
             👥 My Clients
           </button>
           <button
@@ -241,7 +241,7 @@ export default function TechnicianDashboard() {
           </button>
           <button
             onClick={handleLogout}
-            className='bg-muted/500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors'>
+            className='bg-muted dark:text-white text-foreground px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors'>
             🚪 Logout
           </button>
         </div>
@@ -381,7 +381,7 @@ export default function TechnicianDashboard() {
                             onClick={() =>
                               updateRouteStatus(visit.client._id, 'skipped')
                             }
-                            className='bg-muted/500 text-white px-3 py-1 rounded text-sm hover:bg-gray-600'>
+                            className='bg-muted text-white px-3 py-1 rounded text-sm hover:bg-gray-600'>
                             Skip
                           </button>
                         </>
@@ -437,7 +437,7 @@ export default function TechnicianDashboard() {
           </p>
           <button
             onClick={() => (window.location.href = '/')}
-            className='w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition-colors'>
+            className='w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors'>
             Open Calculator
           </button>
         </div>
@@ -447,7 +447,7 @@ export default function TechnicianDashboard() {
           <p className='text-muted-foreground text-sm mb-4'>
             Record an unscheduled service call
           </p>
-          <button className='w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 transition-colors'>
+          <button className='w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition-colors'>
             Emergency Log
           </button>
         </div>
@@ -457,7 +457,7 @@ export default function TechnicianDashboard() {
           <p className='text-muted-foreground text-sm mb-4'>
             View completed visits and chemical usage
           </p>
-          <button className='w-full bg-purple-600 text-white py-2 rounded hover:bg-purple-700 transition-colors'>
+          <button className='w-full bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 transition-colors'>
             View Report
           </button>
         </div>

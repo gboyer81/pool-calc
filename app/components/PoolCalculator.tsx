@@ -742,7 +742,7 @@ const PoolCalculator: React.FC = () => {
   }
 
   // Event handlers
-  const handleInputChange = (name: string, value: string) => {
+  const handleInputChange = (name: string, value: string | boolean) => {
     setFormData((prev) => ({ ...prev, [name]: value }))
 
     // Auto-adjust units when chlorine type changes
@@ -1411,8 +1411,8 @@ const PoolCalculator: React.FC = () => {
   }
 
   return (
-    <div className='p-8'>
-      <div className='flex flex-col justify-start px-8'>
+    <div className='mb-4 lg:p-8'>
+      <div className='flex flex-col justify-start xl:px-8'>
         {/* Calculator Type Selector */}
         <div className='mb-5'>
           <label className='block mb-2 font-semibold text-gray-800'>
@@ -1437,15 +1437,17 @@ const PoolCalculator: React.FC = () => {
 
         {/* Volume Indicator */}
         {savedPoolVolume && currentCalculator !== 'volume' && (
-          <div className='bg-teal-50 border border-teal-200 flex justify-around items-center rounded-lg p-1 mb-5 gap-5 text-sm'>
+          <div className='bg-teal-50 border border-teal-200 flex justify-around items-center text-xs rounded-lg p-1.5 mb-5 gap-3 md:text-sm'>
             <div>
-              <strong>💾 Using saved pool volume:</strong>{' '}
+              <strong>
+                <span className='mr-0.5'>💾</span> Saved pool volume:
+              </strong>{' '}
               {savedPoolVolume.toLocaleString()} gallons
             </div>
             <div>
               <button
                 onClick={() => setSavedPoolVolume(null)}
-                className='flex-1 px-8 py-1.5 border-none rounded-lg text-xs font-semibold cursor-pointer transition-all duration-300 bg-gray-200 transform hover:-translate-y-0.5 hover:shadow-lg text-foreground'>
+                className='flex-1 px-4 md:px-8 md:py-1.5 border-none rounded-lg text-xs font-semibold cursor-pointer transition-all duration-300 bg-gray-200 transform hover:-translate-y-0.5 hover:shadow-lg text-foreground'>
                 Clear
               </button>
             </div>
@@ -1608,8 +1610,8 @@ const PoolCalculator: React.FC = () => {
 
         {currentCalculator === 'salt' && (
           <div className='space-y-5'>
-            <div className='bg-muted/50 border-2 border-input rounded-lg p-4 mb-5'>
-              <div className='flex gap-3 mb-4'>
+            <div className='bg-muted/50 border-2 border-input rounded-lg p-4 lg:mb-5'>
+              <div className='flex flex-col gap-y-3 md:flex-row md:gap-3 md:mb-4'>
                 <button
                   onClick={() => handleModeSwitch('salt', 'target')}
                   className={`flex-1 px-4 py-2 border-2 rounded-md text-sm font-medium transition-all duration-200 ${
@@ -1629,7 +1631,7 @@ const PoolCalculator: React.FC = () => {
                   Calculate Effect of Amount
                 </button>
               </div>
-              <div className='text-sm text-muted-foreground mt-2 p-2 bg-muted/50 rounded mb-4'>
+              <div className='text-sm text-muted-foreground mt-2 p-2 bg-muted/50 rounded lg:mb-4'>
                 {calculationModes.salt === 'target'
                   ? 'Enter your target salt level to calculate how much salt you need to add.'
                   : 'Enter the amount of salt you plan to add to see the resulting salt level.'}
@@ -1742,7 +1744,7 @@ const PoolCalculator: React.FC = () => {
         {currentCalculator === 'chlorine' && (
           <div className='space-y-5'>
             <div className='bg-muted/50 border-2 border-input rounded-lg p-4 mb-5'>
-              <div className='flex gap-3 mb-4'>
+              <div className='flex flex-col gap-y-3  md:flex-row md:gap-3 md:mb-4'>
                 <button
                   onClick={() => handleModeSwitch('chlorine', 'target')}
                   className={`flex-1 px-4 py-2 border-2 rounded-md text-sm font-medium transition-all duration-200 ${
@@ -1762,7 +1764,7 @@ const PoolCalculator: React.FC = () => {
                   Calculate Effect of Amount
                 </button>
               </div>
-              <div className='text-sm text-muted-foreground mt-2 p-2 bg-muted/50 rounded mb-4'>
+              <div className='text-sm text-muted-foreground mt-2 p-2 bg-muted/50 rounded lg:mb-4'>
                 {calculationModes.chlorine === 'target'
                   ? 'Enter your target chlorine level to calculate how much chlorine you need to add.'
                   : 'Enter the amount of chlorine you plan to add to see the resulting chlorine level.'}
@@ -1894,7 +1896,7 @@ const PoolCalculator: React.FC = () => {
         {currentCalculator === 'ph' && (
           <div className='space-y-5'>
             <div className='bg-muted/50 border-2 border-input rounded-lg p-4 mb-5'>
-              <div className='flex gap-3 mb-4'>
+              <div className='flex flex-col gap-y-3  md:flex-row md:gap-3 md:mb-4'>
                 <button
                   onClick={() => handleModeSwitch('ph', 'target')}
                   className={`flex-1 px-4 py-2 border-2 rounded-md text-sm font-medium transition-all duration-200 ${
@@ -1914,7 +1916,7 @@ const PoolCalculator: React.FC = () => {
                   Calculate Effect of Amount
                 </button>
               </div>
-              <div className='text-sm text-muted-foreground mt-2 p-2 bg-muted/50 rounded mb-4'>
+              <div className='text-sm text-muted-foreground mt-2 p-2 bg-muted/50 rounded lg:mb-4'>
                 {calculationModes.ph === 'target'
                   ? 'Enter your target pH level to calculate how much chemical you need to add.'
                   : 'Enter the amount of chemical you plan to add to see the resulting pH level.'}
@@ -2046,7 +2048,7 @@ const PoolCalculator: React.FC = () => {
         {currentCalculator === 'lsi' && (
           <div className='space-y-5'>
             <div className='bg-muted/50 border-2 border-input rounded-lg p-4 mb-5'>
-              <div className='flex gap-3 mb-4'>
+              <div className='flex flex-col gap-y-3  md:flex-row md:gap-3 md:mb-4'>
                 <button
                   onClick={() => handleModeSwitch('lsi', 'calculate')}
                   className={`flex-1 px-4 py-2 border-2 rounded-md text-sm font-medium transition-all duration-200 ${
@@ -2066,7 +2068,7 @@ const PoolCalculator: React.FC = () => {
                   Find Target pH
                 </button>
               </div>
-              <div className='text-sm text-muted-foreground mt-2 p-2 bg-muted/50 rounded mb-4'>
+              <div className='text-sm text-muted-foreground mt-2 p-2 bg-muted/50 rounded lg:mb-4'>
                 {calculationModes.lsi === 'calculate'
                   ? "Calculate your water's Langelier Saturation Index to determine if it's balanced, corrosive, or scale-forming."
                   : 'Enter your desired LSI to calculate what pH you need for balanced water.'}
@@ -2153,7 +2155,7 @@ const PoolCalculator: React.FC = () => {
                     }
                     className='w-full px-3 py-3 border-2 border-input rounded-lg text-base transition-colors duration-300 focus:outline-none focus:border-blue-500'
                     placeholder='e.g., 1500'
-                    disabled={formData.estimateTds}
+                    disabled
                   />
                   <div className='mt-2 p-2 bg-muted/50 rounded'>
                     <label className='flex items-center text-sm'>
@@ -2161,10 +2163,7 @@ const PoolCalculator: React.FC = () => {
                         type='checkbox'
                         checked={formData.estimateTds}
                         onChange={(e) => {
-                          handleInputChange(
-                            'estimateTds',
-                            e.target.checked.toString()
-                          )
+                          handleInputChange('estimateTds', e.target.checked)
                           if (
                             e.target.checked &&
                             formData.lsiCalcium &&
@@ -2317,7 +2316,7 @@ const PoolCalculator: React.FC = () => {
         {currentCalculator === 'alkalinity' && (
           <div className='space-y-5'>
             <div className='bg-muted/50 border-2 border-input rounded-lg p-4 mb-5'>
-              <div className='flex gap-3 mb-4'>
+              <div className='flex flex-col gap-y-3  md:flex-row md:gap-3 md:mb-4'>
                 <button
                   onClick={() => handleModeSwitch('alkalinity', 'target')}
                   className={`flex-1 px-4 py-2 border-2 rounded-md text-sm font-medium transition-all duration-200 ${
@@ -2337,7 +2336,7 @@ const PoolCalculator: React.FC = () => {
                   Calculate Effect of Amount
                 </button>
               </div>
-              <div className='text-sm text-muted-foreground mt-2 p-2 bg-muted/50 rounded mb-4'>
+              <div className='text-sm text-muted-foreground mt-2 p-2 bg-muted/50 rounded lg:mb-4'>
                 {calculationModes.alkalinity === 'target'
                   ? 'Enter your target alkalinity level to calculate how much sodium bicarbonate you need to add.'
                   : 'Enter the amount of sodium bicarbonate you plan to add to see the resulting alkalinity level.'}
@@ -2437,7 +2436,7 @@ const PoolCalculator: React.FC = () => {
         {currentCalculator === 'calcium' && (
           <div className='space-y-5'>
             <div className='bg-muted/50 border-2 border-input rounded-lg p-4 mb-5'>
-              <div className='flex gap-3 mb-4'>
+              <div className='flex flex-col gap-y-3  md:flex-row md:gap-3 md:mb-4'>
                 <button
                   onClick={() => handleModeSwitch('calcium', 'target')}
                   className={`flex-1 px-4 py-2 border-2 rounded-md text-sm font-medium transition-all duration-200 ${
@@ -2457,7 +2456,7 @@ const PoolCalculator: React.FC = () => {
                   Calculate Effect of Amount
                 </button>
               </div>
-              <div className='text-sm text-muted-foreground mt-2 p-2 bg-muted/50 rounded mb-4'>
+              <div className='text-sm text-muted-foreground mt-2 p-2 bg-muted/50 rounded lg:mb-4'>
                 {calculationModes.calcium === 'target'
                   ? 'Enter your target calcium hardness level to calculate how much calcium chloride you need to add.'
                   : 'Enter the amount of calcium chloride you plan to add to see the resulting calcium hardness level.'}
@@ -2557,7 +2556,7 @@ const PoolCalculator: React.FC = () => {
         {currentCalculator === 'cya' && (
           <div className='space-y-5'>
             <div className='bg-muted/50 border-2 border-input rounded-lg p-4 mb-5'>
-              <div className='flex gap-3 mb-4'>
+              <div className='flex flex-col gap:2 md:flex-row md:gap-3 md:mb-4'>
                 <button
                   onClick={() => handleModeSwitch('cya', 'target')}
                   className={`flex-1 px-4 py-2 border-2 rounded-md text-sm font-medium transition-all duration-200 ${
@@ -2577,7 +2576,7 @@ const PoolCalculator: React.FC = () => {
                   Calculate Effect of Amount
                 </button>
               </div>
-              <div className='text-sm text-muted-foreground mt-2 p-2 bg-muted/50 rounded mb-4'>
+              <div className='text-sm text-muted-foreground mt-2 p-2 bg-muted/50 rounded lg:mb-4'>
                 {calculationModes.cya === 'target'
                   ? 'Enter your target cyanuric acid level to calculate how much stabilizer you need to add.'
                   : 'Enter the amount of cyanuric acid you plan to add to see the resulting stabilizer level.'}
@@ -2674,7 +2673,7 @@ const PoolCalculator: React.FC = () => {
         )}
 
         {/* Action Buttons */}
-        <div className='flex gap-4 my-8'>
+        <div className='flex flex-col my-2 gap-3 md:flex-row md:gap-4 lg:my-8'>
           <button
             onClick={handleSubmit}
             className='flex-1 px-5 py-3 text-base font-semibold rounded-lg text-white transition-all duration-300 cursor-pointer transform hover:-translate-y-0.5 hover:shadow-lg bg-linear-to-br from-[var(--secondarybg)] to-[var(--primarybg)] '
@@ -2734,11 +2733,11 @@ const PoolCalculator: React.FC = () => {
               <strong>Error:</strong> {results.message}
             </div>
           ) : results.type === 'volume' ? (
-            <div className='bg-muted bg-opacity-80 p-6 rounded-lg mt-6 border-l-4 border-blue-600'>
-              <h3 className='mt-0 text-gray-800 text-xl font-semibold mb-4'>
+            <div className='p-4 mt-4 bg-muted/80 lg:p-6 rounded-lg lg:mt-6 border-l-4 border-blue-600'>
+              <h3 className='mt-0 text-gray-800 text-xl font-semibold lg:mb-4'>
                 Pool Volume Calculation
               </h3>
-              <p className='text-gray-700 mb-4'>
+              <p className='text-gray-700 text-sm mb-4'>
                 Your {results.poolShape} pool volume:
               </p>
               <div className='grid grid-cols-2 gap-4 mt-4'>
@@ -2747,16 +2746,20 @@ const PoolCalculator: React.FC = () => {
                   <div className='text-2xl font-bold text-blue-800'>
                     {results.data.gallons.toLocaleString()}
                   </div>
-                  <div className='text-muted-foreground text-sm mt-1'>Gallons</div>
+                  <div className='text-muted-foreground text-sm mt-1'>
+                    Gallons
+                  </div>
                 </div>
                 <div className='bg-background/75 p-4 rounded-lg text-center shadow-md'>
                   <div className='text-2xl font-bold text-blue-800'>
                     {results.data.cubicFeet}
                   </div>
-                  <div className='text-muted-foreground text-sm mt-1'>Cubic Feet</div>
+                  <div className='text-muted-foreground text-sm mt-1'>
+                    Cubic Feet
+                  </div>
                 </div>
               </div>
-              <div className='bg-blue-100 text-blue-700 p-4 rounded-lg mt-5 border-l-4 border-blue-500'>
+              <div className='bg-blue-100 text-blue-700 text-sm p-4 rounded-lg mt-5 border-l-4 border-blue-500'>
                 <strong>Surface Area:</strong> {results.data.surfaceArea} sq ft
                 <br />
                 <strong>Note:</strong> This is an approximation. Actual volume
@@ -2776,12 +2779,12 @@ const PoolCalculator: React.FC = () => {
                 </p>
               </div>
             ) : (
-              <div className='bg-muted bg-opacity-80 p-6 rounded-lg mt-6 border-l-4 border-blue-600'>
-                <h3 className='mt-0 text-gray-800 text-xl font-semibold mb-4'>
+              <div className='p-4 mt-2 bg-muted/80 lg:p-6 rounded-lg lg:mt-6 border-l-4 border-blue-600'>
+                <h3 className='mt-0 text-gray-800 text-xl font-semibold lg:mb-4'>
                   Salt Required ({results.precise ? 'Precise' : 'Standard'}{' '}
                   Calculation)
                 </h3>
-                <p className='text-gray-700 mb-4'>
+                <p className='text-gray-700 text-sm mb-4'>
                   To bring your {results.params.gallons.toLocaleString()} gallon
                   pool from {results.params.currentPpm} ppm to{' '}
                   {results.params.targetPpm} ppm:
@@ -2791,23 +2794,27 @@ const PoolCalculator: React.FC = () => {
                     <div className='text-2xl font-bold text-blue-800'>
                       {results.data.pounds}
                     </div>
-                    <div className='text-muted-foreground text-sm mt-1'>Pounds</div>
+                    <div className='text-muted-foreground text-sm mt-1'>
+                      Pounds
+                    </div>
                   </div>
                   <div className='bg-background/75 p-4 rounded-lg text-center shadow-md'>
                     <div className='text-2xl font-bold text-blue-800'>
                       {results.data.bags}
                     </div>
-                    <div className='text-muted-foreground text-sm mt-1'>40 lb Bags</div>
+                    <div className='text-muted-foreground text-sm mt-1'>
+                      40 lb Bags
+                    </div>
                   </div>
                 </div>
               </div>
             )
           ) : results.type === 'salt' && results.mode === 'effect' ? (
-            <div className='bg-muted bg-opacity-80 p-6 rounded-lg mt-6 border-l-4 border-green-600'>
-              <h3 className='mt-0 text-gray-800 text-xl font-semibold mb-4'>
+            <div className='p-4 mt-2 bg-muted/80 lg:p-6 rounded-lg lg:mt-6 border-l-4 border-green-600'>
+              <h3 className='mt-0 text-gray-800 text-xl font-semibold lg:mb-4'>
                 Salt Level After Addition
               </h3>
-              <p className='text-gray-700 mb-4'>
+              <p className='text-gray-700 text-sm mb-4'>
                 Adding {results.params.saltAmount} {results.params.saltUnit} of
                 salt to your {results.params.gallons.toLocaleString()} gallon
                 pool:
@@ -2825,7 +2832,9 @@ const PoolCalculator: React.FC = () => {
                   <div className='text-2xl font-bold text-green-800'>
                     {results.data.newPpm} ppm
                   </div>
-                  <div className='text-muted-foreground text-sm mt-1'>New Level</div>
+                  <div className='text-muted-foreground text-sm mt-1'>
+                    New Level
+                  </div>
                 </div>
               </div>
               <div className='bg-green-100 text-green-700 p-4 rounded-lg mt-5 border-l-4 border-green-500'>
@@ -2845,11 +2854,11 @@ const PoolCalculator: React.FC = () => {
                 </p>
               </div>
             ) : (
-              <div className='bg-muted bg-opacity-80 p-6 rounded-lg mt-6 border-l-4 border-blue-600'>
-                <h3 className='mt-0 text-gray-800 text-xl font-semibold mb-4'>
+              <div className='p-4 mt-2 bg-muted/80 lg:p-6 rounded-lg lg:mt-6 border-l-4 border-blue-600'>
+                <h3 className='mt-0 text-gray-800 text-xl font-semibold lg:mb-4'>
                   Chlorine Required
                 </h3>
-                <p className='text-gray-700 mb-4'>
+                <p className='text-gray-700 text-sm mb-4'>
                   To bring your {results.params.gallons.toLocaleString()} gallon
                   pool from {results.params.currentFc} ppm to{' '}
                   {results.params.targetFc} ppm free chlorine:
@@ -2868,18 +2877,18 @@ const PoolCalculator: React.FC = () => {
                     </div>
                   </div>
                 </div>
-                <div className='bg-blue-100 text-blue-700 p-4 rounded-lg mt-5 border-l-4 border-blue-500'>
+                <div className='bg-blue-100 text-blue-700 p-4 rounded-lg mt-5 text-sm border-l-4 border-blue-500'>
                   <strong>Note:</strong> Add chemicals slowly and allow proper
                   circulation. Test water after 4-6 hours and adjust as needed.
                 </div>
               </div>
             )
           ) : results.type === 'chlorine' && results.mode === 'effect' ? (
-            <div className='bg-muted bg-opacity-80 p-6 rounded-lg mt-6 border-l-4 border-green-600'>
-              <h3 className='mt-0 text-gray-800 text-xl font-semibold mb-4'>
+            <div className='p-4 mt-2 bg-muted/80 lg:p-6 rounded-lg lg:mt-6 border-l-4 border-green-600'>
+              <h3 className='mt-0 text-gray-800 text-xl font-semibold lg:mb-4'>
                 Chlorine Level After Addition
               </h3>
-              <p className='text-gray-700 mb-4'>
+              <p className='text-gray-700 text-sm mb-4'>
                 Adding {results.params.chlorineAmount}{' '}
                 {results.params.chlorineAmountUnit} of{' '}
                 {results.params.chlorineType} chlorine to your{' '}
@@ -2924,11 +2933,11 @@ const PoolCalculator: React.FC = () => {
                 <p>Your pH is already close to the target level.</p>
               </div>
             ) : (
-              <div className='bg-muted bg-opacity-80 p-6 rounded-lg mt-6 border-l-4 border-blue-600'>
-                <h3 className='mt-0 text-gray-800 text-xl font-semibold mb-4'>
+              <div className='p-4 mt-2 bg-muted/80 lg:p-6 rounded-lg lg:mt-6 border-l-4 border-blue-600'>
+                <h3 className='mt-0 text-gray-800 text-xl font-semibold lg:mb-4'>
                   pH Adjustment Required
                 </h3>
-                <p className='text-gray-700 mb-4'>
+                <p className='text-gray-700 text-sm mb-4'>
                   To bring your {results.params.gallons.toLocaleString()} gallon
                   pool from pH {results.params.currentPh} to pH{' '}
                   {results.params.targetPh}:
@@ -2943,18 +2952,18 @@ const PoolCalculator: React.FC = () => {
                     </div>
                   </div>
                 </div>
-                <div className='bg-blue-100 text-blue-700 p-4 rounded-lg mt-5 border-l-4 border-blue-500'>
+                <div className='bg-blue-100 text-blue-700 p-4 rounded-lg mt-5 text-sm border-l-4 border-blue-500'>
                   <strong>Note:</strong> Add chemicals slowly to deep end with
                   pump running. Wait 4-6 hours before retesting pH.
                 </div>
               </div>
             )
           ) : results.type === 'ph' && results.mode === 'effect' ? (
-            <div className='bg-muted bg-opacity-80 p-6 rounded-lg mt-6 border-l-4 border-green-600'>
-              <h3 className='mt-0 text-gray-800 text-xl font-semibold mb-4'>
+            <div className='p-4 mt-2 bg-muted/80 lg:p-6 rounded-lg lg:mt-6 border-l-4 border-green-600'>
+              <h3 className='mt-0 text-gray-800 text-xl font-semibold lg:mb-4'>
                 pH Level After Addition
               </h3>
-              <p className='text-gray-700 mb-4'>
+              <p className='text-gray-700 text-sm mb-4'>
                 Adding {results.params.amount}{' '}
                 {results.params.amountUnit === 'fluid_ounces'
                   ? 'fluid ounces'
@@ -2970,13 +2979,17 @@ const PoolCalculator: React.FC = () => {
                   <div className='text-2xl font-bold text-green-800'>
                     {results.params.currentPh}
                   </div>
-                  <div className='text-muted-foreground text-sm mt-1'>Current pH</div>
+                  <div className='text-muted-foreground text-sm mt-1'>
+                    Current pH
+                  </div>
                 </div>
                 <div className='bg-background/75 p-4 rounded-lg text-center shadow-md'>
                   <div className='text-2xl font-bold text-green-800'>
                     {results.data.newPh}
                   </div>
-                  <div className='text-muted-foreground text-sm mt-1'>New pH</div>
+                  <div className='text-muted-foreground text-sm mt-1'>
+                    New pH
+                  </div>
                 </div>
               </div>
               <div className='bg-green-100 text-green-700 p-4 rounded-lg mt-5 border-l-4 border-green-500'>
@@ -2996,18 +3009,18 @@ const PoolCalculator: React.FC = () => {
             </div>
           ) : results.type === 'alkalinity' && results.mode === 'target' ? (
             results.data.amount === 0 ? (
-              <div className='bg-blue-100 text-blue-700 p-4 rounded-lg mt-5 border-l-4 border-blue-500'>
+              <div className='bg-blue-100 text-blue-700 p-4 rounded-lg mt-5 text-sm border-l-4 border-blue-500'>
                 <h3 className='mt-0 text-gray-800 text-xl font-semibold mb-2'>
                   No Alkalinity Adjustment Needed
                 </h3>
                 <p>Your alkalinity is already at or above the target level.</p>
               </div>
             ) : (
-              <div className='bg-muted bg-opacity-80 p-6 rounded-lg mt-6 border-l-4 border-blue-600'>
-                <h3 className='mt-0 text-gray-800 text-xl font-semibold mb-4'>
+              <div className='p-4 mt-2 bg-muted/80 lg:p-6 rounded-lg lg:mt-6 border-l-4 border-blue-600'>
+                <h3 className='mt-0 text-gray-800 text-xl font-semibold lg:mb-4'>
                   Sodium Bicarbonate Required
                 </h3>
-                <p className='text-gray-700 mb-4'>
+                <p className='text-gray-700 text-sm mb-4'>
                   To bring your {results.params.gallons.toLocaleString()} gallon
                   pool from {results.params.currentAlk} ppm to{' '}
                   {results.params.targetAlk} ppm total alkalinity:
@@ -3022,18 +3035,18 @@ const PoolCalculator: React.FC = () => {
                     </div>
                   </div>
                 </div>
-                <div className='bg-blue-100 text-blue-700 p-4 rounded-lg mt-5 border-l-4 border-blue-500'>
+                <div className='bg-blue-100 text-blue-700 p-4 rounded-lg mt-5 text-sm border-l-4 border-blue-500'>
                   <strong>Note:</strong> Add slowly to deep end with pump
                   running. Wait 6-8 hours before retesting alkalinity.
                 </div>
               </div>
             )
           ) : results.type === 'alkalinity' && results.mode === 'effect' ? (
-            <div className='bg-muted bg-opacity-80 p-6 rounded-lg mt-6 border-l-4 border-green-600'>
-              <h3 className='mt-0 text-gray-800 text-xl font-semibold mb-4'>
+            <div className='p-4 mt-2 bg-muted/80 lg:p-6 rounded-lg lg:mt-6 border-l-4 border-green-600'>
+              <h3 className='mt-0 text-gray-800 text-xl font-semibold lg:mb-4'>
                 Alkalinity Level After Addition
               </h3>
-              <p className='text-gray-700 mb-4'>
+              <p className='text-gray-700 text-sm mb-4'>
                 Adding {results.params.alkAmount} pounds of sodium bicarbonate
                 to your {results.params.gallons.toLocaleString()} gallon pool:
               </p>
@@ -3073,11 +3086,11 @@ const PoolCalculator: React.FC = () => {
                 </p>
               </div>
             ) : (
-              <div className='bg-muted bg-opacity-80 p-6 rounded-lg mt-6 border-l-4 border-blue-600'>
-                <h3 className='mt-0 text-gray-800 text-xl font-semibold mb-4'>
+              <div className='p-4 mt-2 bg-muted/80 lg:p-6 rounded-lg lg:mt-6 border-l-4 border-blue-600'>
+                <h3 className='mt-0 text-gray-800 text-xl font-semibold lg:mb-4'>
                   Calcium Chloride Required
                 </h3>
-                <p className='text-gray-700 mb-4'>
+                <p className='text-gray-700 text-sm mb-4'>
                   To bring your {results.params.gallons.toLocaleString()} gallon
                   pool from {results.params.currentCa} ppm to{' '}
                   {results.params.targetCa} ppm calcium hardness:
@@ -3092,18 +3105,18 @@ const PoolCalculator: React.FC = () => {
                     </div>
                   </div>
                 </div>
-                <div className='bg-blue-100 text-blue-700 p-4 rounded-lg mt-5 border-l-4 border-blue-500'>
+                <div className='bg-blue-100 text-blue-700 p-4 rounded-lg mt-5 text-sm border-l-4 border-blue-500'>
                   <strong>Note:</strong> Dissolve in bucket of water before
                   adding. Add slowly to deep end with pump running.
                 </div>
               </div>
             )
           ) : results.type === 'calcium' && results.mode === 'effect' ? (
-            <div className='bg-muted bg-opacity-80 p-6 rounded-lg mt-6 border-l-4 border-green-600'>
-              <h3 className='mt-0 text-gray-800 text-xl font-semibold mb-4'>
+            <div className='p-4 mt-2 bg-muted/80 lg:p-6 rounded-lg lg:mt-6 border-l-4 border-green-600'>
+              <h3 className='mt-0 text-gray-800 text-xl font-semibold lg:mb-4'>
                 Calcium Hardness After Addition
               </h3>
-              <p className='text-gray-700 mb-4'>
+              <p className='text-gray-700 text-sm mb-4'>
                 Adding {results.params.calciumAmount} pounds of calcium chloride
                 to your {results.params.gallons.toLocaleString()} gallon pool:
               </p>
@@ -3120,7 +3133,9 @@ const PoolCalculator: React.FC = () => {
                   <div className='text-2xl font-bold text-green-800'>
                     {results.data.newCa} ppm
                   </div>
-                  <div className='text-muted-foreground text-sm mt-1'>New Calcium</div>
+                  <div className='text-muted-foreground text-sm mt-1'>
+                    New Calcium
+                  </div>
                 </div>
               </div>
               <div className='bg-green-100 text-green-700 p-4 rounded-lg mt-5 border-l-4 border-green-500'>
@@ -3142,11 +3157,11 @@ const PoolCalculator: React.FC = () => {
                 </p>
               </div>
             ) : (
-              <div className='bg-muted bg-opacity-80 p-6 rounded-lg mt-6 border-l-4 border-blue-600'>
-                <h3 className='mt-0 text-gray-800 text-xl font-semibold mb-4'>
+              <div className='p-4 mt-2 bg-muted/80 lg:p-6 rounded-lg lg:mt-6 border-l-4 border-blue-600'>
+                <h3 className='mt-0 text-gray-800 text-xl font-semibold lg:mb-4'>
                   Cyanuric Acid Required
                 </h3>
-                <p className='text-gray-700 mb-4'>
+                <p className='text-gray-700 text-sm mb-4'>
                   To bring your {results.params.gallons.toLocaleString()} gallon
                   pool from {results.params.currentCya} ppm to{' '}
                   {results.params.targetCya} ppm cyanuric acid:
@@ -3161,18 +3176,18 @@ const PoolCalculator: React.FC = () => {
                     </div>
                   </div>
                 </div>
-                <div className='bg-blue-100 text-blue-700 p-4 rounded-lg mt-5 border-l-4 border-blue-500'>
+                <div className='bg-blue-100 text-blue-700 p-4 rounded-lg mt-5 text-sm border-l-4 border-blue-500'>
                   <strong>Note:</strong> Dissolve in sock or skimmer basket. CYA
                   dissolves very slowly - may take 2-3 days.
                 </div>
               </div>
             )
           ) : results.type === 'cya' && results.mode === 'effect' ? (
-            <div className='bg-muted bg-opacity-80 p-6 rounded-lg mt-6 border-l-4 border-green-600'>
-              <h3 className='mt-0 text-gray-800 text-xl font-semibold mb-4'>
+            <div className='p-4 mt-2 bg-muted/80 lg:p-6 rounded-lg lg:mt-6 border-l-4 border-green-600'>
+              <h3 className='mt-0 text-gray-800 text-xl font-semibold lg:mb-4'>
                 Cyanuric Acid Level After Addition
               </h3>
-              <p className='text-gray-700 mb-4'>
+              <p className='text-gray-700 text-sm mb-4'>
                 Adding {results.params.cyaAmount} pounds of cyanuric acid to
                 your {results.params.gallons.toLocaleString()} gallon pool:
               </p>
@@ -3181,16 +3196,20 @@ const PoolCalculator: React.FC = () => {
                   <div className='text-2xl font-bold text-green-800'>
                     {results.params.currentCya} ppm
                   </div>
-                  <div className='text-muted-foreground text-sm mt-1'>Current CYA</div>
+                  <div className='text-muted-foreground text-sm mt-1'>
+                    Current CYA
+                  </div>
                 </div>
                 <div className='bg-background/75 p-4 rounded-lg text-center shadow-md'>
                   <div className='text-2xl font-bold text-green-800'>
                     {results.data.newCya} ppm
                   </div>
-                  <div className='text-muted-foreground text-sm mt-1'>New CYA</div>
+                  <div className='text-muted-foreground text-sm mt-1'>
+                    New CYA
+                  </div>
                 </div>
               </div>
-              <div className='bg-green-100 text-green-700 p-4 rounded-lg mt-5 border-l-4 border-green-500'>
+              <div className='bg-green-100 text-green-700 p-4 rounded-lg mt-5 text-sm border-l-4 border-green-500'>
                 <strong>Change:</strong> +
                 {results.data.newCya - results.params.currentCya} ppm
                 <br />
@@ -3201,8 +3220,8 @@ const PoolCalculator: React.FC = () => {
               </div>
             </div>
           ) : results.type === 'lsi' && results.mode === 'calculate' ? (
-            <div className='bg-muted bg-opacity-80 p-6 rounded-lg mt-6 border-l-4 border-blue-600'>
-              <h3 className='mt-0 text-gray-800 text-xl font-semibold mb-4'>
+            <div className='p-4 mt-2 bg-muted/80 lg:p-6 rounded-lg lg:mt-6 border-l-4 border-blue-600'>
+              <h3 className='mt-0 text-gray-800 text-xl font-semibold lg:mb-4'>
                 Langelier Saturation Index Results
               </h3>
               <div className='text-center mb-6'>
@@ -3231,13 +3250,17 @@ const PoolCalculator: React.FC = () => {
                   <div className='text-lg font-bold text-blue-800'>
                     pH: {results.params.ph}
                   </div>
-                  <div className='text-muted-foreground text-xs'>Current Level</div>
+                  <div className='text-muted-foreground text-xs'>
+                    Current Level
+                  </div>
                 </div>
                 <div className='bg-background/75 p-3 rounded-lg shadow-sm'>
                   <div className='text-lg font-bold text-blue-800'>
                     {results.params.tempF}°F
                   </div>
-                  <div className='text-muted-foreground text-xs'>Temperature</div>
+                  <div className='text-muted-foreground text-xs'>
+                    Temperature
+                  </div>
                 </div>
                 <div className='bg-background/75 p-3 rounded-lg shadow-sm'>
                   <div className='text-lg font-bold text-blue-800'>
@@ -3249,7 +3272,9 @@ const PoolCalculator: React.FC = () => {
                   <div className='text-lg font-bold text-blue-800'>
                     {results.params.alkalinity} ppm
                   </div>
-                  <div className='text-muted-foreground text-xs'>Alkalinity</div>
+                  <div className='text-muted-foreground text-xs'>
+                    Alkalinity
+                  </div>
                 </div>
                 <div className='bg-background/75 p-3 rounded-lg shadow-sm'>
                   <div className='text-lg font-bold text-blue-800'>
@@ -3286,11 +3311,11 @@ const PoolCalculator: React.FC = () => {
               </div>
             </div>
           ) : results.type === 'lsi' && results.mode === 'target' ? (
-            <div className='bg-muted bg-opacity-80 p-6 rounded-lg mt-6 border-l-4 border-blue-600'>
-              <h3 className='mt-0 text-gray-800 text-xl font-semibold mb-4'>
+            <div className='p-4 mt-2 bg-muted/80 lg:p-6 rounded-lg lg:mt-6 border-l-4 border-blue-600'>
+              <h3 className='mt-0 text-gray-800 text-xl font-semibold lg:mb-4'>
                 Target pH Calculation
               </h3>
-              <p className='text-gray-700 mb-4'>
+              <p className='text-gray-700 text-sm mb-4'>
                 To achieve an LSI of {results.params.targetLsi} with your
                 current water conditions:
               </p>
@@ -3299,13 +3324,17 @@ const PoolCalculator: React.FC = () => {
                   <div className='text-2xl font-bold text-blue-800'>
                     {results.data.targetPh}
                   </div>
-                  <div className='text-muted-foreground text-sm mt-1'>Target pH</div>
+                  <div className='text-muted-foreground text-sm mt-1'>
+                    Target pH
+                  </div>
                 </div>
                 <div className='bg-background/75 p-4 rounded-lg text-center shadow-md'>
                   <div className='text-2xl font-bold text-blue-800'>
                     {results.params.targetLsi}
                   </div>
-                  <div className='text-muted-foreground text-sm mt-1'>Target LSI</div>
+                  <div className='text-muted-foreground text-sm mt-1'>
+                    Target LSI
+                  </div>
                 </div>
               </div>
               <div className='bg-blue-100 text-blue-700 p-4 rounded-lg mt-5 border-l-4 border-blue-500'>
