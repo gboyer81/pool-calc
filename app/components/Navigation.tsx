@@ -85,7 +85,7 @@ const navigationItems: NavigationItem[] = [
   },
   {
     name: 'Visit Log',
-    href: '/visit/log',
+    href: '/visit/select',
     icon: '📋',
     description: 'Log service visits',
     requiresAuth: true,
@@ -328,17 +328,6 @@ export default function Navigation({ children }: NavigationProps) {
                 </div>
               </div>
             )}
-
-            {/* Theme toggle for non-authenticated users */}
-            {/* {!isAuthenticated && (
-              <div className='px-2 py-4 group-data-[collapsible=icon]:px-1 group-data-[collapsible=icon]:py-2'>
-                <div className='flex justify-center'>
-                  <div className='group-data-[collapsible=icon]:scale-90'>
-                    <ModeToggle />
-                  </div>
-                </div>
-              </div>
-            )} */}
           </SidebarFooter>
         </Sidebar>
 
