@@ -466,8 +466,9 @@ export default function ClientManagement() {
 
   if (loading) {
     return (
-      <div className='flex justify-center items-center h-64'>
-        <div className='text-lg'>Loading clients...</div>
+      <div className='flex justify-center items-center h-64 bg-background'>
+        <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4'></div>
+        <p className='text-muted-foreground'>Loading...</p>
       </div>
     )
   }
@@ -502,10 +503,10 @@ export default function ClientManagement() {
       )}
 
       {/* Filters */}
-      <div className='bg-background rounded-lg shadow mb-6 p-6'>
+      <div className='bg-background dark:bg-muted rounded-lg shadow mb-6 p-6'>
         <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-4'>
           <div>
-            <label className='block text-sm font-medium text-gray-700 mb-2'>
+            <label className='block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2'>
               Search
             </label>
             <div className='relative'>
@@ -521,7 +522,7 @@ export default function ClientManagement() {
           </div>
 
           <div>
-            <label className='block text-sm font-medium text-gray-700 mb-2'>
+            <label className='block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2'>
               Client Type
             </label>
             <select
@@ -536,7 +537,7 @@ export default function ClientManagement() {
           </div>
 
           <div>
-            <label className='block text-sm font-medium text-gray-700 mb-2'>
+            <label className='block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2'>
               Status
             </label>
             <select
@@ -550,7 +551,7 @@ export default function ClientManagement() {
           </div>
 
           <div>
-            <label className='block text-sm font-medium text-gray-700 mb-2'>
+            <label className='block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2'>
               Service Frequency
             </label>
             <select
@@ -566,16 +567,16 @@ export default function ClientManagement() {
           </div>
 
           <div>
-            <label className='block text-sm font-medium text-gray-700 mb-2'>
+            <label className='block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2'>
               View Mode
             </label>
-            <div className='flex space-x-1 bg-muted p-1 rounded-lg'>
+            <div className='flex space-x-1 bg-background p-1 rounded-lg'>
               <button
                 onClick={() => setViewMode('table')}
                 className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
                   viewMode === 'table'
-                    ? 'bg-background shadow-sm'
-                    : 'hover:bg-background/50'
+                    ? 'bg-muted shadow-sm'
+                    : 'hover:bg-muted/50'
                 }`}>
                 Table
               </button>
@@ -583,8 +584,8 @@ export default function ClientManagement() {
                 onClick={() => setViewMode('grid')}
                 className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
                   viewMode === 'grid'
-                    ? 'bg-background shadow-sm'
-                    : 'hover:bg-background/50'
+                    ? 'bg-muted shadow-sm'
+                    : 'hover:bg-muted/50'
                 }`}>
                 Grid
               </button>
@@ -622,7 +623,7 @@ export default function ClientManagement() {
                   <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
                     Status
                   </th>
-                  <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                  <th className='px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider'>
                     Actions
                   </th>
                 </tr>
@@ -879,7 +880,7 @@ export default function ClientManagement() {
             <h3 className='text-lg font-semibold mb-4'>Add New Client</h3>
 
             <div className='mb-4'>
-              <label className='block text-sm font-medium text-gray-700 mb-2'>
+              <label className='block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2'>
                 Client Type
               </label>
               <select

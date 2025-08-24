@@ -185,8 +185,8 @@ export default function TechnicianDashboard() {
 
   if (loading) {
     return (
-      <div className='flex justify-center items-center h-screen'>
-        <div className='text-lg'>Loading dashboard...</div>
+      <div className='flex justify-center items-center h-64 bg-background'>
+        <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-primary'></div>
       </div>
     )
   }
@@ -209,8 +209,8 @@ export default function TechnicianDashboard() {
   return (
     <div className='max-w-screen-2xl mx-auto lg:p-6'>
       {/* Header */}
-      <div className='flex flex-col md:flex-row md:justify-between items-center mb-8'>
-        <div>
+      <div className='flex flex-col md:flex-row md:justify-between md:items-center mb-8'>
+        <div className='basis-3/6'>
           <h1 className='text-2xl md:text-3xl font-bold text-foreground dark:text-gray-50'>
             {getGreeting()}, {technician?.name.split(' ')[0]}! 👋
           </h1>
@@ -228,7 +228,7 @@ export default function TechnicianDashboard() {
             })}
           </p>
         </div>
-        <div className='flex flex-col gap-y-2 lg:flex gap-3 w-full'>
+        <div className='flex flex-col md:flex-row items-center justify-center md:justify-end gap-y-2 gap-3 w-full'>
           <button
             onClick={() => (window.location.href = '/clients')}
             className='bg-blue-600 text-white px-4 md:py-2 rounded-lg hover:bg-blue-700 transition-colors'>
@@ -249,7 +249,7 @@ export default function TechnicianDashboard() {
 
       {/* Stats Cards */}
       <div className='grid grid-cols-1 md:grid-cols-4 gap-6 mb-8'>
-        <div className='bg-background rounded-lg shadow p-6 '>
+        <div className='bg-background dark:bg-muted rounded-lg shadow p-6 '>
           <div className='flex items-center'>
             <div className='p-2 bg-blue-100 rounded-lg'>
               <span className='text-2xl'>👥</span>
@@ -263,7 +263,7 @@ export default function TechnicianDashboard() {
           </div>
         </div>
 
-        <div className='bg-background rounded-lg shadow p-6'>
+        <div className='bg-background dark:bg-muted rounded-lg shadow p-6'>
           <div className='flex items-center'>
             <div className='p-2 bg-green-100 rounded-lg'>
               <span className='text-2xl'>📅</span>
@@ -277,7 +277,7 @@ export default function TechnicianDashboard() {
           </div>
         </div>
 
-        <div className='bg-background rounded-lg shadow p-6'>
+        <div className='bg-background dark:bg-muted rounded-lg shadow p-6'>
           <div className='flex items-center'>
             <div className='p-2 bg-yellow-100 rounded-lg'>
               <span className='text-2xl'>⏱️</span>
@@ -291,7 +291,7 @@ export default function TechnicianDashboard() {
           </div>
         </div>
 
-        <div className='bg-background rounded-lg shadow p-6'>
+        <div className='bg-background dark:bg-muted rounded-lg shadow p-6'>
           <div className='flex items-center'>
             <div className='p-2 bg-purple-100 rounded-lg'>
               <span className='text-2xl'>🏊‍♀️</span>
@@ -307,12 +307,12 @@ export default function TechnicianDashboard() {
       </div>
 
       {/* Today's Route */}
-      <div className='bg-background rounded-lg shadow-md mb-8'>
+      <div className='bg-background dark:bg-muted rounded-lg shadow-md mb-8'>
         <div className='p-6 border-b border-border'>
           <h2 className='text-xl font-semibold flex items-center'>
             🗺️ Today's Route
             {todaysRoute.length === 0 && (
-              <span className='ml-3 text-sm text-gray-500 font-normal'>
+              <span className='ml-3 text-sm dark:text-gray-300 text-gray-500 font-normal'>
                 No visits scheduled for today
               </span>
             )}
@@ -320,7 +320,7 @@ export default function TechnicianDashboard() {
         </div>
 
         {todaysRoute.length === 0 ? (
-          <div className='p-8 text-center text-gray-500'>
+          <div className='p-8 text-center dark:text-gray-300 text-gray-500'>
             <div className='text-4xl mb-4'>🏖️</div>
             <p className='text-lg'>No visits scheduled for today!</p>
             <p className='text-sm mt-2'>
@@ -430,7 +430,7 @@ export default function TechnicianDashboard() {
 
       {/* Quick Actions */}
       <div className='grid grid-cols-1 md:grid-cols-3 gap-6'>
-        <div className='bg-background rounded-lg shadow p-6'>
+        <div className='bg-background dark:bg-muted rounded-lg shadow p-6'>
           <h3 className='text-lg font-semibold mb-4'>🧮 Quick Calculator</h3>
           <p className='text-muted-foreground text-sm mb-4'>
             Access chemical calculators for pool maintenance
@@ -442,7 +442,7 @@ export default function TechnicianDashboard() {
           </button>
         </div>
 
-        <div className='bg-background rounded-lg shadow p-6'>
+        <div className='bg-background dark:bg-muted rounded-lg shadow p-6'>
           <h3 className='text-lg font-semibold mb-4'>📋 Log Emergency Visit</h3>
           <p className='text-muted-foreground text-sm mb-4'>
             Record an unscheduled service call
@@ -452,7 +452,7 @@ export default function TechnicianDashboard() {
           </button>
         </div>
 
-        <div className='bg-background rounded-lg shadow p-6'>
+        <div className='bg-background dark:bg-muted rounded-lg shadow p-6'>
           <h3 className='text-lg font-semibold mb-4'>📊 Today's Summary</h3>
           <p className='text-muted-foreground text-sm mb-4'>
             View completed visits and chemical usage

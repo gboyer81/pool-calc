@@ -378,7 +378,7 @@ export default function AssignmentsPage() {
             </button>
             <button
               onClick={() => (window.location.href = '/admin')}
-              className='bg-muted/500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors'>
+              className='bg-muted/50 text-gray-700 dark:text-white px-4 py-2 rounded-lg hover:bg-gray-400 transition-colors'>
               ← Admin Panel
             </button>
           </div>
@@ -413,13 +413,17 @@ export default function AssignmentsPage() {
               <div className='text-2xl font-bold text-blue-600'>
                 {stats.totalTechnicians}
               </div>
-              <div className='text-sm text-muted-foreground'>Total Technicians</div>
+              <div className='text-sm text-muted-foreground'>
+                Total Technicians
+              </div>
             </div>
             <div className='bg-background p-6 rounded-lg shadow-sm border'>
               <div className='text-2xl font-bold text-green-600'>
                 {stats.activeTechnicians}
               </div>
-              <div className='text-sm text-muted-foreground'>Active Technicians</div>
+              <div className='text-sm text-muted-foreground'>
+                Active Technicians
+              </div>
             </div>
             <div className='bg-background p-6 rounded-lg shadow-sm border'>
               <div className='text-2xl font-bold text-purple-600'>
@@ -431,19 +435,25 @@ export default function AssignmentsPage() {
               <div className='text-2xl font-bold text-blue-600'>
                 {stats.assignedClients}
               </div>
-              <div className='text-sm text-muted-foreground'>Assigned Clients</div>
+              <div className='text-sm text-muted-foreground'>
+                Assigned Clients
+              </div>
             </div>
             <div className='bg-background p-6 rounded-lg shadow-sm border'>
               <div className='text-2xl font-bold text-orange-600'>
                 {stats.unassignedClients}
               </div>
-              <div className='text-sm text-muted-foreground'>Unassigned Clients</div>
+              <div className='text-sm text-muted-foreground'>
+                Unassigned Clients
+              </div>
             </div>
             <div className='bg-background p-6 rounded-lg shadow-sm border'>
               <div className='text-2xl font-bold text-indigo-600'>
                 {stats.avgClientsPerTechnician}
               </div>
-              <div className='text-sm text-muted-foreground'>Avg per Technician</div>
+              <div className='text-sm text-muted-foreground'>
+                Avg per Technician
+              </div>
             </div>
           </div>
         )}
