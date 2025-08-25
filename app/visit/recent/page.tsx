@@ -1,20 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import {
-  DollarSign,
-  Package,
-  AlertTriangle,
-  CheckCircle,
-  XCircle,
-  Truck,
-  Wrench,
-  ClipboardList,
-  ChevronRight,
-  Download,
-  RefreshCw,
-  Loader2,
-} from 'lucide-react'
+import { Download, RefreshCw, Loader2 } from 'lucide-react'
 
 // Import types from the centralized types file
 import type {
@@ -25,11 +12,18 @@ import type {
   PendingBilling,
 } from '@/types/pool-service'
 
+// Import new components
+import RecentlyCompletedJobs from '@/components/RecentlyCompletedJobs'
+import FollowupVisits from '@/components/FollowupVisits'
+import RecentInventoryUsage from '@/components/RecentInventoryUsage'
+import PendingBillingComponent from '@/components/PendingBilling'
+import SummaryStats from '@/components/SummaryStats'
+
 const VisitHistoryHomepage = () => {
   const [timeFilter, setTimeFilter] = useState('7days')
   const [refreshing, setRefreshing] = useState(false)
   const [loading, setLoading] = useState(true)
-  const [clients, setClients] = useState<Client[]>([])
+  const [, setClients] = useState<Client[]>([])
 
   // Data state
   const [recentJobs, setRecentJobs] = useState<ServiceVisit[]>([])
@@ -272,7 +266,7 @@ const VisitHistoryHomepage = () => {
   }
 
   const handleSendReminder = async (
-    clientId: string,
+    _clientId: string,
     invoiceNumber: string
   ) => {
     try {
@@ -311,48 +305,9 @@ const VisitHistoryHomepage = () => {
     }
   }
 
-  const getServiceTypeIcon = (serviceType: string) => {
-    if (serviceType.includes('maintenance')) {
-      return <ClipboardList className='w-4 h-4 text-blue-600' />
-    } else if (serviceType.includes('service')) {
-      return <Wrench className='w-4 h-4 text-orange-600' />
-    } else if (serviceType.includes('retail')) {
-      return <Truck className='w-4 h-4 text-green-600' />
-    }
-    return <ClipboardList className='w-4 h-4 text-gray-600' />
-  }
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return 'text-green-700 bg-green-100 border-green-200'
-      case 'pending':
-        return 'text-yellow-700 bg-yellow-100 border-yellow-200'
-      case 'overdue':
-        return 'text-red-700 bg-red-100 border-red-200'
-      case 'paid':
-        return 'text-green-700 bg-green-100 border-green-200'
-      default:
-        return 'text-gray-700 bg-gray-100 border-gray-200'
-    }
-  }
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'high':
-        return 'text-red-700 bg-red-100 border-red-200'
-      case 'medium':
-        return 'text-yellow-700 bg-yellow-100 border-yellow-200'
-      case 'low':
-        return 'text-green-700 bg-green-100 border-green-200'
-      default:
-        return 'text-gray-700 bg-gray-100 border-gray-200'
-    }
-  }
-
   if (loading) {
     return (
-      <div className='min-h-screen bg-gray-50 flex items-center justify-center'>
+      <div className='min-h-screen flex items-center justify-center'>
         <div className='flex flex-col items-center gap-4'>
           <Loader2 className='w-8 h-8 animate-spin text-blue-600' />
           <p className='text-gray-600'>Loading dashboard...</p>
@@ -362,393 +317,76 @@ const VisitHistoryHomepage = () => {
   }
 
   return (
-    <div className='min-h-screen bg-gray-50 p-6'>
-      <div className='max-w-7xl mx-auto'>
+    <div className='min-h-screen p-6'>
+      <div>
         {/* Header */}
-        <div className='bg-white rounded-lg shadow-sm border p-6 mb-6'>
-          <div className='flex justify-between items-center mb-4'>
-            <div>
-              <h1 className='text-3xl font-bold text-gray-900'>
+        <div className='bg-white rounded-lg shadow-sm border p-4 sm:p-6 mb-6'>
+          <div className='flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-4'>
+            <div className='flex-1 min-w-0'>
+              <h1 className='text-2xl sm:text-3xl font-bold text-gray-900'>
                 Visit History Dashboard
               </h1>
-              <p className='text-gray-600 mt-1'>
+              <p className='text-gray-600 mt-1 text-sm sm:text-base'>
                 Overview of recent jobs, inventory usage, and pending tasks
               </p>
             </div>
-            <div className='flex gap-3'>
+            <div className='flex flex-col sm:flex-row gap-3'>
               <select
                 value={timeFilter}
                 onChange={(e) => setTimeFilter(e.target.value)}
-                className='px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent'>
+                className='w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent'>
                 <option value='7days'>Last 7 Days</option>
                 <option value='30days'>Last 30 Days</option>
                 <option value='90days'>Last 90 Days</option>
               </select>
-              <button
-                onClick={handleRefresh}
-                disabled={refreshing}
-                className='px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2 disabled:opacity-50'>
-                <RefreshCw
-                  className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`}
-                />
-                Refresh
-              </button>
-              <button className='px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2'>
-                <Download className='w-4 h-4' />
-                Export
-              </button>
+              <div className='flex gap-3'>
+                <button
+                  onClick={handleRefresh}
+                  disabled={refreshing}
+                  className='flex-1 sm:flex-none px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2 disabled:opacity-50'>
+                  <RefreshCw
+                    className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`}
+                  />
+                  Refresh
+                </button>
+                <button className='flex-1 sm:flex-none px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center justify-center gap-2'>
+                  <Download className='w-4 h-4' />
+                  Export
+                </button>
+              </div>
             </div>
           </div>
 
           {/* Summary Stats */}
-          <div className='grid grid-cols-1 md:grid-cols-4 gap-4'>
-            <div className='bg-blue-50 p-4 rounded-lg border border-blue-200'>
-              <div className='flex items-center justify-between'>
-                <div>
-                  <p className='text-blue-700 text-sm font-medium'>
-                    Completed Jobs
-                  </p>
-                  <p className='text-2xl font-bold text-blue-900'>
-                    {stats.completedJobs}
-                  </p>
-                </div>
-                <CheckCircle className='w-8 h-8 text-blue-600' />
-              </div>
-            </div>
-            <div className='bg-green-50 p-4 rounded-lg border border-green-200'>
-              <div className='flex items-center justify-between'>
-                <div>
-                  <p className='text-green-700 text-sm font-medium'>
-                    Revenue ({timeFilter.replace('days', 'd')})
-                  </p>
-                  <p className='text-2xl font-bold text-green-900'>
-                    ${stats.revenue.toLocaleString()}
-                  </p>
-                </div>
-                <DollarSign className='w-8 h-8 text-green-600' />
-              </div>
-            </div>
-            <div className='bg-yellow-50 p-4 rounded-lg border border-yellow-200'>
-              <div className='flex items-center justify-between'>
-                <div>
-                  <p className='text-yellow-700 text-sm font-medium'>
-                    Follow-ups Due
-                  </p>
-                  <p className='text-2xl font-bold text-yellow-900'>
-                    {stats.followUpsDue}
-                  </p>
-                </div>
-                <AlertTriangle className='w-8 h-8 text-yellow-600' />
-              </div>
-            </div>
-            <div className='bg-red-50 p-4 rounded-lg border border-red-200'>
-              <div className='flex items-center justify-between'>
-                <div>
-                  <p className='text-red-700 text-sm font-medium'>
-                    Overdue Bills
-                  </p>
-                  <p className='text-2xl font-bold text-red-900'>
-                    ${stats.overdueAmount.toLocaleString()}
-                  </p>
-                </div>
-                <XCircle className='w-8 h-8 text-red-600' />
-              </div>
-            </div>
-          </div>
+          <SummaryStats
+            stats={stats}
+            timeFilter={timeFilter}
+            loading={loading}
+          />
         </div>
 
         {/* Main Content Grid */}
         <div className='grid grid-cols-1 lg:grid-cols-3 gap-6'>
-          {/* Recently Completed Jobs */}
-          <div className='lg:col-span-2 bg-white rounded-lg shadow-sm border'>
-            <div className='p-6 border-b'>
-              <div className='flex justify-between items-center'>
-                <h2 className='text-xl font-semibold text-gray-900'>
-                  Recently Completed Jobs
-                </h2>
-                <button className='text-blue-600 hover:text-blue-800 flex items-center gap-1'>
-                  View All <ChevronRight className='w-4 h-4' />
-                </button>
-              </div>
-            </div>
-            <div className='divide-y'>
-              {recentJobs.length > 0 ? (
-                recentJobs.map((job) => (
-                  <div
-                    key={job._id.toString()}
-                    className='p-6 hover:bg-gray-50 transition-colors'>
-                    <div className='flex justify-between items-start mb-3'>
-                      <div className='flex items-center gap-3'>
-                        {getServiceTypeIcon(job.serviceType)}
-                        <div>
-                          <h3 className='font-medium text-gray-900'>
-                            {job.client?.name || 'Unknown Client'}
-                          </h3>
-                          <p className='text-sm text-gray-500'>
-                            {job.client?.address?.street},{' '}
-                            {job.client?.address?.city}
-                          </p>
-                        </div>
-                      </div>
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(
-                          job.billing?.paymentStatus || 'pending'
-                        )}`}>
-                        {job.billing?.paymentStatus || 'pending'}
-                      </span>
-                    </div>
-                    <div className='grid grid-cols-2 md:grid-cols-4 gap-4 text-sm'>
-                      <div>
-                        <p className='text-gray-500'>Date</p>
-                        <p className='font-medium'>
-                          {new Date(
-                            job.actualDate || job.scheduledDate
-                          ).toLocaleDateString()}
-                        </p>
-                      </div>
-                      <div>
-                        <p className='text-gray-500'>Duration</p>
-                        <p className='font-medium'>{job.duration || 0} min</p>
-                      </div>
-                      <div>
-                        <p className='text-gray-500'>Amount</p>
-                        <p className='font-medium'>
-                          ${job.billing?.totalAmount || 0}
-                        </p>
-                      </div>
-                      <div>
-                        <p className='text-gray-500'>Technician</p>
-                        <p className='font-medium'>
-                          {job.technician?.name || 'Unknown'}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className='p-6 text-center text-gray-500'>
-                  No completed jobs found for the selected time period.
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Inventory Usage */}
-          <div className='bg-white rounded-lg shadow-sm border'>
-            <div className='p-6 border-b'>
-              <div className='flex justify-between items-center'>
-                <h2 className='text-xl font-semibold text-gray-900'>
-                  Recent Inventory Usage
-                </h2>
-                <Package className='w-5 h-5 text-gray-400' />
-              </div>
-            </div>
-            <div className='divide-y'>
-              {inventoryUsage.length > 0 ? (
-                inventoryUsage.map((item) => (
-                  <div key={item._id} className='p-4'>
-                    <div className='flex justify-between items-start mb-2'>
-                      <h3 className='font-medium text-gray-900'>{item.name}</h3>
-                      <span className='text-sm text-gray-500'>
-                        ${item.totalCost.toFixed(2)}
-                      </span>
-                    </div>
-                    <div className='text-sm text-gray-600 space-y-1'>
-                      <p>
-                        Used: {item.quantityUsed} {item.unit}
-                      </p>
-                      <p>
-                        Stock: {item.remainingStock} {item.unit}
-                      </p>
-                      {item.remainingStock <= item.minStock && (
-                        <p className='text-red-600 font-medium flex items-center gap-1'>
-                          <AlertTriangle className='w-3 h-3' /> Low Stock
-                        </p>
-                      )}
-                    </div>
-                    <div className='mt-2'>
-                      <div className='w-full bg-gray-200 rounded-full h-2'>
-                        <div
-                          className={`h-2 rounded-full ${
-                            item.remainingStock <= item.minStock
-                              ? 'bg-red-500'
-                              : 'bg-green-500'
-                          }`}
-                          style={{
-                            width: `${Math.min(
-                              (item.remainingStock / (item.minStock * 2)) * 100,
-                              100
-                            )}%`,
-                          }}></div>
-                      </div>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className='p-4 text-center text-gray-500'>
-                  No inventory usage data available.
-                </div>
-              )}
-            </div>
-          </div>
+          <RecentlyCompletedJobs jobs={recentJobs} loading={loading} />
+          <RecentInventoryUsage
+            inventoryUsage={inventoryUsage}
+            loading={loading}
+          />
         </div>
 
         {/* Bottom Row */}
         <div className='grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6'>
-          {/* Follow-up Visits Required */}
-          <div className='bg-white rounded-lg shadow-sm border'>
-            <div className='p-6 border-b'>
-              <div className='flex justify-between items-center'>
-                <h2 className='text-xl font-semibold text-gray-900'>
-                  Follow-up Visits Required
-                </h2>
-                <AlertTriangle className='w-5 h-5 text-yellow-500' />
-              </div>
-            </div>
-            <div className='divide-y'>
-              {followUps.length > 0 ? (
-                followUps.map((followUp) => (
-                  <div
-                    key={followUp._id}
-                    className='p-6 hover:bg-gray-50 transition-colors'>
-                    <div className='flex justify-between items-start mb-3'>
-                      <div>
-                        <h3 className='font-medium text-gray-900'>
-                          {followUp.clientName}
-                        </h3>
-                        <p className='text-sm text-gray-500'>
-                          {followUp.followUpType}
-                        </p>
-                      </div>
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs font-medium border ${getPriorityColor(
-                          followUp.priority
-                        )}`}>
-                        {followUp.priority}
-                      </span>
-                    </div>
-                    <div className='grid grid-cols-2 gap-4 text-sm mb-3'>
-                      <div>
-                        <p className='text-gray-500'>Due Date</p>
-                        <p className='font-medium'>
-                          {followUp.dueDate.toLocaleDateString()}
-                        </p>
-                      </div>
-                      <div>
-                        <p className='text-gray-500'>Original Visit</p>
-                        <p className='font-medium'>
-                          {followUp.originalVisitDate.toLocaleDateString()}
-                        </p>
-                      </div>
-                    </div>
-                    <p className='text-sm text-gray-600 mb-3'>
-                      {followUp.notes}
-                    </p>
-                    <div className='flex justify-between items-center'>
-                      <span className='text-xs text-gray-500'>
-                        Tech: {followUp.originalTechnician}
-                      </span>
-                      <button
-                        onClick={() => handleScheduleFollowUp(followUp._id)}
-                        className='text-blue-600 hover:text-blue-800 text-sm font-medium'>
-                        Schedule
-                      </button>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className='p-6 text-center text-gray-500'>
-                  No follow-up visits required.
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Pending Billing */}
-          <div className='bg-white rounded-lg shadow-sm border'>
-            <div className='p-6 border-b'>
-              <div className='flex justify-between items-center'>
-                <h2 className='text-xl font-semibold text-gray-900'>
-                  Incomplete Billing
-                </h2>
-                <DollarSign className='w-5 h-5 text-green-500' />
-              </div>
-            </div>
-            <div className='divide-y'>
-              {pendingBilling.length > 0 ? (
-                pendingBilling.map((bill) => (
-                  <div
-                    key={bill._id.toString()}
-                    className='p-6 hover:bg-gray-50 transition-colors'>
-                    <div className='flex justify-between items-start mb-3'>
-                      <div>
-                        <h3 className='font-medium text-gray-900'>
-                          {bill.clientName}
-                        </h3>
-                        <p className='text-sm text-gray-500'>
-                          {bill.invoiceNumber}
-                        </p>
-                      </div>
-                      <div className='text-right'>
-                        <p className='font-bold text-lg'>
-                          ${bill.amount.toLocaleString()}
-                        </p>
-                        <span
-                          className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(
-                            bill.status
-                          )}`}>
-                          {bill.status}
-                        </span>
-                      </div>
-                    </div>
-                    <div className='grid grid-cols-2 gap-4 text-sm mb-3'>
-                      <div>
-                        <p className='text-gray-500'>Visit Date</p>
-                        <p className='font-medium'>
-                          {bill.visitDate.toLocaleDateString()}
-                        </p>
-                      </div>
-                      <div>
-                        <p className='text-gray-500'>Service Type</p>
-                        <p className='font-medium capitalize'>
-                          {bill.serviceType.replace('-', ' ')}
-                        </p>
-                      </div>
-                    </div>
-                    {bill.status === 'invoiced' &&
-                      (bill as any).daysOverdue > 0 && (
-                        <div className='bg-red-50 border border-red-200 rounded p-2 mb-3'>
-                          <p className='text-red-700 text-sm font-medium'>
-                            {(bill as any).daysOverdue} days overdue
-                          </p>
-                        </div>
-                      )}
-                    <div className='flex justify-between items-center'>
-                      <button
-                        onClick={() =>
-                          handleSendReminder(
-                            bill.clientId.toString(),
-                            bill.invoiceNumber || 'N/A'
-                          )
-                        }
-                        className='text-blue-600 hover:text-blue-800 text-sm font-medium'>
-                        Send Reminder
-                      </button>
-                      <button
-                        onClick={() => handleMarkPaid(bill.visitIds.toString())}
-                        className='text-green-600 hover:text-green-800 text-sm font-medium'>
-                        Mark Paid
-                      </button>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className='p-6 text-center text-gray-500'>
-                  No pending billing items.
-                </div>
-              )}
-            </div>
-          </div>
+          <FollowupVisits
+            followUps={followUps}
+            loading={loading}
+            onScheduleFollowUp={handleScheduleFollowUp}
+          />
+          <PendingBillingComponent
+            pendingBilling={pendingBilling}
+            loading={loading}
+            onSendReminder={handleSendReminder}
+            onMarkPaid={handleMarkPaid}
+          />
         </div>
       </div>
     </div>

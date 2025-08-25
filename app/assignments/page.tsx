@@ -359,7 +359,7 @@ export default function AssignmentsPage() {
 
   return (
     <ProtectedRoute requiredRoles={['admin', 'supervisor']}>
-      <div className='max-w-screen-2xl mx-auto p-6'>
+      <div className='p-6'>
         {/* Header */}
         <div className='flex flex-col items-center md:flex-row md:justify-between md:items-center mb-6'>
           <div>

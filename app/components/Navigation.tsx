@@ -324,7 +324,7 @@ export default function Navigation({
 
             {/* Main content area - now scrollable with custom scrollbar */}
             <main className='flex-1 bg-background overflow-y-auto scroll-smooth scrollbar-thin scrollbar-track-transparent scrollbar-thumb-gray-200 dark:scrollbar-thumb-gray-700 hover:scrollbar-thumb-gray-300 dark:hover:scrollbar-thumb-gray-600'>
-              <div className='max-w-screen-2xl mx-auto p-4 pb-6'>
+              <div className='p-4 pb-6'>
                 {children}
               </div>
             </main>

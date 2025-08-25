@@ -115,25 +115,30 @@ export default function VisitSelectPage() {
   }, [selectedClientId])
 
   useEffect(() => {
-    // Filter clients based on search query
+    // Filter clients based on search query, or show all if no query
     if (searchQuery.trim()) {
-      const filtered = availableClients.filter((client) =>
-        client.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        client.address.street.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        client.address.city.toLowerCase().includes(searchQuery.toLowerCase())
+      const filtered = availableClients.filter(
+        (client) =>
+          client.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          client.address.street
+            .toLowerCase()
+            .includes(searchQuery.toLowerCase()) ||
+          client.address.city.toLowerCase().includes(searchQuery.toLowerCase())
       )
       setFilteredClients(filtered)
-      setShowResults(true)
     } else {
-      setFilteredClients([])
-      setShowResults(false)
+      // Show all clients when no search query (for browsing)
+      setFilteredClients(availableClients)
     }
   }, [searchQuery, availableClients])
 
   useEffect(() => {
     // Handle click outside to close search results
     const handleClickOutside = (event: MouseEvent) => {
-      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+      if (
+        searchRef.current &&
+        !searchRef.current.contains(event.target as Node)
+      ) {
         setShowResults(false)
       }
     }
@@ -228,24 +233,24 @@ export default function VisitSelectPage() {
 
   return (
     <ProtectedRoute requiredRoles={['technician', 'supervisor', 'admin']}>
-      <div className='p-6 max-w-6xl mx-auto'>
+      <div className='p-4 sm:p-6'>
         {/* Header */}
         <div className='mb-8'>
-          <div className='flex items-center justify-between mb-4'>
-            <div>
-              <h1 className='text-3xl font-bold text-gray-900'>
+          <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4'>
+            <div className='flex-1 min-w-0'>
+              <h1 className='text-2xl sm:text-3xl font-bold text-gray-900'>
                 Select Visit Type
               </h1>
               {client ? (
                 <div className='mt-2'>
-                  <p className='text-lg text-gray-600'>{client.name}</p>
+                  <p className='text-base sm:text-lg text-gray-600'>{client.name}</p>
                   <p className='text-sm text-gray-500'>
                     {client.address.street}, {client.address.city} •{' '}
                     {getClientTypeLabel(client.clientType)}
                   </p>
                 </div>
               ) : (
-                <p className='text-gray-600 mt-2'>
+                <p className='text-gray-600 mt-2 text-sm sm:text-base'>
                   Select a client and choose the type of visit you want to log
                 </p>
               )}
@@ -253,7 +258,7 @@ export default function VisitSelectPage() {
 
             <button
               onClick={() => router.push('/dashboard')}
-              className='bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600'>
+              className='bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 w-full sm:w-auto flex-shrink-0'>
               Cancel
             </button>
           </div>
@@ -263,19 +268,19 @@ export default function VisitSelectPage() {
         {(!selectedClientId || availableClients.length > 0) && (
           <div className='bg-white rounded-lg shadow p-6 mb-6'>
             <label className='block text-sm font-medium text-gray-700 mb-2'>
-              Search for Client
+              Select or Search for Client
             </label>
             <div className='relative' ref={searchRef}>
               <input
                 type='text'
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                onFocus={() => setShowResults(searchQuery.trim().length > 0)}
-                placeholder='Start typing client name, address, or city...'
+                onFocus={() => setShowResults(true)}
+                placeholder='Search client name, address, or city... (or click to browse all)'
                 className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
               />
-              
-              {/* Search Results Dropdown */}
+
+              {/* Client Results Dropdown - Shows filtered results or all clients */}
               {showResults && filteredClients.length > 0 && (
                 <div className='absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto'>
                   {filteredClients.map((availableClient) => (
@@ -286,13 +291,13 @@ export default function VisitSelectPage() {
                         setSearchQuery(availableClient.name)
                         setShowResults(false)
                       }}
-                      className='px-4 py-3 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0'
-                    >
+                      className='px-4 py-3 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0'>
                       <div className='font-medium text-gray-900'>
                         {availableClient.name}
                       </div>
                       <div className='text-sm text-gray-600'>
-                        {availableClient.address.street}, {availableClient.address.city}
+                        {availableClient.address.street},{' '}
+                        {availableClient.address.city}
                       </div>
                       <div className='text-xs text-gray-500'>
                         {getClientTypeLabel(availableClient.clientType)}
@@ -301,13 +306,47 @@ export default function VisitSelectPage() {
                   ))}
                 </div>
               )}
-              
-              {/* No results message */}
-              {showResults && searchQuery.trim() && filteredClients.length === 0 && (
-                <div className='absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg p-4 text-gray-500 text-center'>
-                  No clients found matching "{searchQuery}"
-                </div>
-              )}
+
+              {/* No results message - only show when actively searching */}
+              {showResults &&
+                searchQuery.trim() &&
+                filteredClients.length === 0 && (
+                  <div className='absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg p-4 text-gray-500 text-center'>
+                    No clients found matching "{searchQuery}"
+                  </div>
+                )}
+
+              {/* Show all clients message when dropdown is open but no search */}
+              {showResults &&
+                !searchQuery.trim() &&
+                filteredClients.length > 0 && (
+                  <div className='absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto'>
+                    <div className='px-4 py-2 bg-blue-50 border-b text-sm text-blue-700 font-medium'>
+                      All Clients ({filteredClients.length})
+                    </div>
+                    {filteredClients.map((availableClient) => (
+                      <div
+                        key={availableClient._id.toString()}
+                        onClick={() => {
+                          setSelectedClientId(availableClient._id.toString())
+                          setSearchQuery(availableClient.name)
+                          setShowResults(false)
+                        }}
+                        className='px-4 py-3 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0'>
+                        <div className='font-medium text-gray-900'>
+                          {availableClient.name}
+                        </div>
+                        <div className='text-sm text-gray-600'>
+                          {availableClient.address.street},{' '}
+                          {availableClient.address.city}
+                        </div>
+                        <div className='text-xs text-gray-500'>
+                          {getClientTypeLabel(availableClient.clientType)}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
             </div>
           </div>
         )}
