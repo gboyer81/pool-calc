@@ -91,7 +91,7 @@ interface VisitLog {
   }
 }
 
-export default function VisitLogPage() {
+export default function VisitHistoryPage() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const clientId = searchParams.get('clientId')
@@ -107,6 +107,7 @@ export default function VisitLogPage() {
   const [isTimerRunning, setIsTimerRunning] = useState(false)
   const [startTime, setStartTime] = useState<Date | null>(null)
   const [showCalculator, setShowCalculator] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
 
   const [visit, setVisit] = useState<VisitLog>({
     clientId: clientId || '',
@@ -243,6 +244,8 @@ export default function VisitLogPage() {
 
   const submitVisit = async () => {
     try {
+      setSubmitting(true) // ADD THIS LINE
+
       const token = localStorage.getItem('technicianToken')
       const response = await fetch('/api/visits', {
         method: 'POST',
@@ -271,9 +274,10 @@ export default function VisitLogPage() {
     } catch (error) {
       console.error('Error submitting visit:', error)
       alert('Error submitting visit')
+    } finally {
+      setSubmitting(false) // ADD THIS LINE
     }
   }
-
   if (loading) {
     return (
       <div className='flex justify-center items-center h-screen'>

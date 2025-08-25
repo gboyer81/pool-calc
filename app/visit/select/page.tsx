@@ -97,6 +97,7 @@ export default function VisitSelectPage() {
   const [client, setClient] = useState<Client | null>(null)
   const [loading, setLoading] = useState(true)
   const [selectedVisit, setSelectedVisit] = useState<VisitOption | null>(null)
+  const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
     if (clientId) {
@@ -143,7 +144,7 @@ export default function VisitSelectPage() {
       queryParams.set('priority', visitOption.priority)
     }
 
-    router.push(`/visit/log?${queryParams.toString()}`)
+    router.push(`/visit/history?${queryParams.toString()}`)
   }
 
   const getClientTypeLabel = (clientType: string): string => {

@@ -223,10 +223,10 @@ const PoolCalculator: React.FC = () => {
         description: 'Manage clients',
       },
       {
-        name: 'Visit Log',
-        href: '/visit/log',
+        name: 'Visit History',
+        href: '/visit/history',
         icon: '📋',
-        description: 'Log visits',
+        description: 'Visit log',
       },
     ]
 

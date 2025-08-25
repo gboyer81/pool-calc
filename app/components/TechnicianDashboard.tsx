@@ -405,7 +405,7 @@ export default function TechnicianDashboard() {
                       {visit.status === 'in-progress' && (
                         <button
                           onClick={() =>
-                            (window.location.href = `/visit/log?clientId=${visit.client._id}`)
+                            (window.location.href = `/visit/history?clientId=${visit.client._id}`)
                           }
                           className='bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700'>
                           Log Visit

@@ -12,6 +12,7 @@ import {
   ClipboardList,
   Target,
   Settings,
+  History,
 } from 'lucide-react'
 import Footer from '@/components/Footer'
 import { AuroraText } from 'components/magicui/aurora-text'
@@ -93,6 +94,14 @@ const navigationItems: NavigationItem[] = [
     roles: ['technician', 'supervisor', 'admin'],
   },
   {
+    name: 'Visit History',
+    href: '/visit/history',
+    icon: '',
+    description: 'Log service visits',
+    requiresAuth: true,
+    roles: ['technician', 'supervisor', 'admin'],
+  },
+  {
     name: 'Assignments',
     href: '/assignments',
     icon: '🎯',
@@ -118,6 +127,7 @@ const getNavigationIcon = (name: string) => {
     Dashboard: LayoutDashboard,
     Clients: Users,
     'Visit Log': ClipboardList,
+    'Visit History': History,
     Assignments: Target,
     Admin: Settings,
   }

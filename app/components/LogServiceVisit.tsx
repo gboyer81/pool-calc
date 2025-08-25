@@ -36,6 +36,16 @@ interface ServiceVisit {
   duration: number
 }
 
+interface LogServiceVisitProps {
+  visit: ServiceVisit
+  setVisit: React.Dispatch<React.SetStateAction<ServiceVisit>>
+  client: any
+  // Add these new props:
+  onSave: () => void
+  onCancel: () => void
+  isSubmitting?: boolean
+}
+
 const standardTasks = [
   'Skimmed surface',
   'Emptied skimmer baskets',
@@ -63,31 +73,38 @@ const commonChemicals = [
   { name: 'Clarifier', units: ['fluid ounces', 'gallons'] },
 ]
 
-export default function VisitLogging() {
-  const [visit, setVisit] = useState<ServiceVisit>({
-    clientName: 'Johnson Family',
-    poolName: 'Main Pool',
-    visitDate: new Date().toISOString().split('T')[0],
-    readings: {
-      ph: null,
-      totalChlorine: null,
-      freeChlorine: null,
-      totalAlkalinity: null,
-      calciumHardness: null,
-      cyanuricAcid: null,
-      salt: null,
-      temperature: null,
-    },
-    chemicalsAdded: [],
-    tasksCompleted: standardTasks.map((task) => ({ task, completed: false })),
-    poolCondition: {
-      waterClarity: 'clear',
-      debris: 'none',
-      equipmentStatus: 'normal',
-    },
-    notes: '',
-    duration: 0,
-  })
+export default function LogServiceVisit({
+  visit,
+  setVisit,
+  client,
+  onSave, // NEW
+  onCancel, // NEW
+  isSubmitting = false, // NEW
+}: LogServiceVisitProps) {
+  // const [visit, setVisit] = useState<ServiceVisit>({
+  //   clientName: 'Johnson Family',
+  //   poolName: 'Main Pool',
+  //   visitDate: new Date().toISOString().split('T')[0],
+  //   readings: {
+  //     ph: null,
+  //     totalChlorine: null,
+  //     freeChlorine: null,
+  //     totalAlkalinity: null,
+  //     calciumHardness: null,
+  //     cyanuricAcid: null,
+  //     salt: null,
+  //     temperature: null,
+  //   },
+  //   chemicalsAdded: [],
+  //   tasksCompleted: standardTasks.map((task) => ({ task, completed: false })),
+  //   poolCondition: {
+  //     waterClarity: 'clear',
+  //     debris: 'none',
+  //     equipmentStatus: 'normal',
+  //   },
+  //   notes: '',
+  //   duration: 0,
+  // })
 
   const [startTime, setStartTime] = useState<Date | null>(null)
   const [isTimerRunning, setIsTimerRunning] = useState(false)
@@ -560,13 +577,28 @@ export default function VisitLogging() {
 
         {/* Save Buttons */}
         <div className='flex gap-4 pt-6'>
-          <button className='flex-1 bg-green-600 text-white py-3 px-6 rounded-lg hover:bg-green-700 transition-colors text-lg font-medium'>
-            💾 Save Visit
+          <button
+            onClick={onSave}
+            disabled={isSubmitting}
+            className='flex-1 bg-green-600 text-white py-3 px-6 rounded-lg hover:bg-green-700 transition-colors text-lg font-medium disabled:opacity-50'>
+            {isSubmitting ? '💾 Saving...' : '💾 Save Visit'}
           </button>
-          <button className='flex-1 bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors text-lg font-medium'>
-            📱 Save & Text Client
+
+          <button
+            onClick={() => {
+              onSave() // Save first
+              // TODO: Add text functionality later if needed
+              alert('Text functionality coming soon!')
+            }}
+            disabled={isSubmitting}
+            className='flex-1 bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors text-lg font-medium disabled:opacity-50'>
+            {isSubmitting ? '📱 Saving...' : '📱 Save & Text Client'}
           </button>
-          <button className='bg-gray-300 text-gray-700 py-3 px-6 rounded-lg hover:bg-gray-400 transition-colors'>
+
+          <button
+            onClick={onCancel}
+            disabled={isSubmitting}
+            className='bg-gray-300 text-gray-700 py-3 px-6 rounded-lg hover:bg-gray-400 transition-colors disabled:opacity-50'>
             Cancel
           </button>
         </div>
