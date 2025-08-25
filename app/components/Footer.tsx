@@ -34,7 +34,7 @@ export default function Footer() {
               </span>
             </div>
             <div className='text-muted-foreground'>
-              <span>v1.1.0</span>
+              <span>v2.1.0</span>
             </div>
           </div>
         </div>

@@ -1,15 +1,10 @@
-// app/visit/select/page.tsx - Visit Type Selection Page
+// app/visit/select/page.tsx - Updated with client selection
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import ProtectedRoute from '@/components/ProtectedRoute'
-import {
-  Client,
-  MaintenanceClient,
-  ServiceClient,
-  RetailClient,
-} from '@/types/pool-service'
+import { Client } from '@/types/pool-service'
 
 interface VisitOption {
   type: string
@@ -41,16 +36,16 @@ const visitOptions: VisitOption[] = [
     clientTypes: ['maintenance'],
     estimatedDuration: 15,
   },
-  // {
-  //   type: 'service-emergency',
-  //   title: 'Emergency Service',
-  //   description: 'Urgent equipment failure or safety issue',
-  //   icon: '🚨',
-  //   color: 'bg-red-500',
-  //   clientTypes: ['service', 'maintenance'],
-  //   priority: 'emergency',
-  //   estimatedDuration: 120,
-  // },
+  {
+    type: 'service-emergency',
+    title: 'Emergency Service',
+    description: 'Urgent equipment failure or safety issue',
+    icon: '🚨',
+    color: 'bg-red-500',
+    clientTypes: ['service', 'maintenance'],
+    priority: 'emergency',
+    estimatedDuration: 120,
+  },
   {
     type: 'service-repair',
     title: 'Equipment Repair',
@@ -58,7 +53,7 @@ const visitOptions: VisitOption[] = [
     icon: '🔧',
     color: 'bg-orange-500',
     clientTypes: ['service', 'maintenance'],
-    estimatedDuration: 60,
+    estimatedDuration: 90,
   },
   {
     type: 'service-installation',
@@ -85,29 +80,91 @@ const visitOptions: VisitOption[] = [
     icon: '📤',
     color: 'bg-indigo-500',
     clientTypes: ['retail', 'service'],
-    estimatedDuration: 10,
+    estimatedDuration: 15,
   },
 ]
 
 export default function VisitSelectPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const clientId = searchParams.get('clientId')
+  const urlClientId = searchParams.get('clientId') // Client ID from URL (if provided)
 
   const [client, setClient] = useState<Client | null>(null)
+  const [availableClients, setAvailableClients] = useState<Client[]>([])
+  const [selectedClientId, setSelectedClientId] = useState<string>(
+    urlClientId || ''
+  ) // Current selection
+  const [searchQuery, setSearchQuery] = useState<string>('')
+  const [showResults, setShowResults] = useState<boolean>(false)
+  const [filteredClients, setFilteredClients] = useState<Client[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedVisit, setSelectedVisit] = useState<VisitOption | null>(null)
-  const [submitting, setSubmitting] = useState(false)
+  const searchRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    if (clientId) {
-      loadClient()
+    loadAvailableClients()
+  }, [])
+
+  useEffect(() => {
+    // Load specific client when selected
+    if (selectedClientId) {
+      loadClient(selectedClientId)
     } else {
+      setClient(null)
+    }
+  }, [selectedClientId])
+
+  useEffect(() => {
+    // Filter clients based on search query
+    if (searchQuery.trim()) {
+      const filtered = availableClients.filter((client) =>
+        client.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        client.address.street.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        client.address.city.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+      setFilteredClients(filtered)
+      setShowResults(true)
+    } else {
+      setFilteredClients([])
+      setShowResults(false)
+    }
+  }, [searchQuery, availableClients])
+
+  useEffect(() => {
+    // Handle click outside to close search results
+    const handleClickOutside = (event: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        setShowResults(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [])
+
+  const loadAvailableClients = async () => {
+    try {
+      const token = localStorage.getItem('technicianToken')
+      const response = await fetch('/api/clients', {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setAvailableClients(data.clients || [])
+      } else {
+        console.error('Failed to load clients')
+      }
+    } catch (error) {
+      console.error('Error loading clients:', error)
+    } finally {
       setLoading(false)
     }
-  }, [clientId])
+  }
 
-  const loadClient = async () => {
+  const loadClient = async (clientId: string) => {
     try {
       const token = localStorage.getItem('technicianToken')
       const response = await fetch(`/api/clients/${clientId}`, {
@@ -119,11 +176,11 @@ export default function VisitSelectPage() {
         setClient(data.client)
       } else {
         console.error('Failed to load client')
+        setClient(null)
       }
     } catch (error) {
       console.error('Error loading client:', error)
-    } finally {
-      setLoading(false)
+      setClient(null)
     }
   }
 
@@ -134,14 +191,15 @@ export default function VisitSelectPage() {
       option.clientTypes.includes(client.clientType)
     )
   }
-  /*
-    ====================================================
-          TODO: Fix startVisit() queryParams
-    ====================================================
-  */
+
   const startVisit = (visitOption: VisitOption) => {
+    if (!selectedClientId) {
+      alert('Please select a client first')
+      return
+    }
+
     const queryParams = new URLSearchParams()
-    queryParams.set('clientId', clientId || '')
+    queryParams.set('clientId', selectedClientId) // ← Now uses selected client ID
     queryParams.set('type', visitOption.type)
 
     if (visitOption.priority) {
@@ -167,29 +225,10 @@ export default function VisitSelectPage() {
       </div>
     )
   }
-  /*
-  ===================================================
-        TODO: This check is getting triggered 
-  ===================================================
-  */
-  if (clientId && !client) {
-    console.log(`Visit Select:175 ${clientId}
-                 Client: ${client}`)
-    return (
-      <div className='flex flex-col items-center justify-center h-screen'>
-        <div className='text-xl text-red-600 mb-4'>Client not found</div>
-        <button
-          onClick={() => router.push('/dashboard')}
-          className='bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700'>
-          Return to Dashboard
-        </button>
-      </div>
-    )
-  }
 
   return (
     <ProtectedRoute requiredRoles={['technician', 'supervisor', 'admin']}>
-      <div className='p-6 max-w-screen-2xl mx-auto'>
+      <div className='p-6 max-w-6xl mx-auto'>
         {/* Header */}
         <div className='mb-8'>
           <div className='flex items-center justify-between mb-4'>
@@ -207,7 +246,7 @@ export default function VisitSelectPage() {
                 </div>
               ) : (
                 <p className='text-gray-600 mt-2'>
-                  Choose the type of visit you want to log
+                  Select a client and choose the type of visit you want to log
                 </p>
               )}
             </div>
@@ -220,172 +259,175 @@ export default function VisitSelectPage() {
           </div>
         </div>
 
-        {/* Visit Options Grid */}
-        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10'>
-          {getAvailableVisits().map((option) => (
-            <div
-              key={option.type}
-              className={`relative bg-white rounded-xl shadow-lg border-2 border-transparent hover:border-blue-300 transition-all duration-200 cursor-pointer transform hover:scale-105 ${
-                selectedVisit?.type === option.type
-                  ? 'border-blue-500 ring-2 ring-blue-200'
-                  : ''
-              }`}
-              onClick={() => setSelectedVisit(option)}>
-              <div className='p-6'>
-                {/* Visit Type Header */}
-                <div className='flex items-center mb-4'>
-                  <div
-                    className={`w-12 h-12 ${option.color} rounded-lg flex items-center justify-center text-white text-2xl mr-4`}>
-                    {option.icon}
-                  </div>
-                  <div className='flex-1'>
-                    <h3 className='text-lg font-semibold text-gray-900'>
-                      {option.title}
-                    </h3>
-                    {option.priority && option.priority !== 'normal' && (
-                      <span
-                        className={`inline-block px-2 py-1 text-xs rounded-full mt-1 ${
-                          option.priority === 'emergency'
-                            ? 'bg-red-100 text-red-800'
-                            : option.priority === 'high'
-                            ? 'bg-orange-100 text-orange-800'
-                            : 'bg-blue-100 text-blue-800'
-                        }`}>
-                        {option.priority.toUpperCase()}
-                      </span>
-                    )}
-                  </div>
+        {/* Client Selection - Show if no client selected or if multiple clients available */}
+        {(!selectedClientId || availableClients.length > 0) && (
+          <div className='bg-white rounded-lg shadow p-6 mb-6'>
+            <label className='block text-sm font-medium text-gray-700 mb-2'>
+              Search for Client
+            </label>
+            <div className='relative' ref={searchRef}>
+              <input
+                type='text'
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onFocus={() => setShowResults(searchQuery.trim().length > 0)}
+                placeholder='Start typing client name, address, or city...'
+                className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+              />
+              
+              {/* Search Results Dropdown */}
+              {showResults && filteredClients.length > 0 && (
+                <div className='absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto'>
+                  {filteredClients.map((availableClient) => (
+                    <div
+                      key={availableClient._id.toString()}
+                      onClick={() => {
+                        setSelectedClientId(availableClient._id.toString())
+                        setSearchQuery(availableClient.name)
+                        setShowResults(false)
+                      }}
+                      className='px-4 py-3 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0'
+                    >
+                      <div className='font-medium text-gray-900'>
+                        {availableClient.name}
+                      </div>
+                      <div className='text-sm text-gray-600'>
+                        {availableClient.address.street}, {availableClient.address.city}
+                      </div>
+                      <div className='text-xs text-gray-500'>
+                        {getClientTypeLabel(availableClient.clientType)}
+                      </div>
+                    </div>
+                  ))}
                 </div>
-
-                {/* Description */}
-                <p className='text-gray-600 mb-4'>{option.description}</p>
-
-                {/* Duration & Details */}
-                <div className='flex items-center justify-between text-sm text-gray-500 mb-4'>
-                  {option.estimatedDuration && (
-                    <span>⏱️ ~{option.estimatedDuration} min</span>
-                  )}
-                  <span>
-                    {option.clientTypes
-                      .map(
-                        (type) => type.charAt(0).toUpperCase() + type.slice(1)
-                      )
-                      .join(', ')}
-                  </span>
+              )}
+              
+              {/* No results message */}
+              {showResults && searchQuery.trim() && filteredClients.length === 0 && (
+                <div className='absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg p-4 text-gray-500 text-center'>
+                  No clients found matching "{searchQuery}"
                 </div>
-
-                {/* Start Button */}
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    startVisit(option)
-                  }}
-                  className={`w-full ${option.color} hover:opacity-90 text-white py-3 px-4 rounded-lg font-medium transition-opacity`}>
-                  Start {option.title}
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Emergency Quick Actions */}
-        <div className='mt-8 bg-red-50 border border-red-200 rounded-lg p-6'>
-          <div className='flex items-center mb-4'>
-            <div className='w-10 h-10 bg-red-500 rounded-lg flex items-center justify-center text-white text-xl mr-3'>
-              🚨
-            </div>
-            <div>
-              <h3 className='text-lg font-semibold text-red-900'>
-                Emergency Service
-              </h3>
-              <p className='text-sm text-red-700'>
-                For urgent issues requiring immediate attention
-              </p>
-            </div>
-          </div>
-
-          <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
-            <button
-              onClick={() =>
-                startVisit(
-                  visitOptions.find((v) => v.type === 'service-emergency')!
-                )
-              }
-              className='bg-red-600 hover:bg-red-700 text-white py-3 px-4 rounded-lg font-medium transition-colors'>
-              🚨 Log Emergency Visit
-            </button>
-
-            <button
-              onClick={() => {
-                // You can add functionality to call dispatch or supervisor
-                alert('Emergency dispatch feature coming soon')
-              }}
-              className='bg-red-100 hover:bg-red-200 text-red-800 py-3 px-4 rounded-lg font-medium transition-colors border border-red-300'>
-              📞 Call Dispatch
-            </button>
-            <button
-              onClick={() => {
-                // You can add functionality to call dispatch or supervisor
-                alert('Emergency dispatch feature coming soon')
-              }}
-              className='bg-red-100 hover:bg-red-200 text-red-800 py-3 px-4 rounded-lg font-medium transition-colors border border-red-300'>
-              📞 Call Dispatch
-            </button>
-          </div>
-        </div>
-
-        {/* Quick Start for Maintenance Clients */}
-        {client && client.clientType === 'maintenance' && (
-          <div className='mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6'>
-            <div className='flex items-center justify-between mb-4'>
-              <div>
-                <h3 className='text-lg font-semibold text-blue-900'>
-                  Quick Start
-                </h3>
-                <p className='text-sm text-blue-700'>
-                  Start your regular maintenance visit
-                </p>
-              </div>
-
-              <button
-                onClick={() =>
-                  startVisit(
-                    visitOptions.find((v) => v.type === 'maintenance-routine')!
-                  )
-                }
-                className='bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-lg font-medium transition-colors'>
-                💧 Start Routine Maintenance
-              </button>
+              )}
             </div>
           </div>
         )}
 
-        {/* Help Text */}
-        <div className='mt-8 bg-gray-50 rounded-lg p-6'>
-          <h4 className='font-semibold text-gray-900 mb-2'>Need Help?</h4>
-          <div className='text-sm text-gray-600 space-y-2'>
-            <p>
-              • <strong>Routine Maintenance:</strong> Regular scheduled pool
-              cleaning and maintenance
-            </p>
-            <p>
-              • <strong>Chemical Only:</strong> Quick visits focused on water
-              testing and chemical balancing
-            </p>
-            <p>
-              • <strong>Equipment Repair:</strong> Fixing broken or
-              malfunctioning pool equipment
-            </p>
-            <p>
-              • <strong>Emergency Service:</strong> Immediate response to urgent
-              issues
-            </p>
-            <p>
-              • <strong>Delivery/Pickup:</strong> Chemical or equipment delivery
-              and pickup services
+        {/* Show visit options only when client is selected */}
+        {selectedClientId && client ? (
+          <>
+            {/* Visit Options Grid */}
+            <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
+              {getAvailableVisits().map((option) => (
+                <div
+                  key={option.type}
+                  className={`relative bg-white rounded-xl shadow-lg border-2 border-transparent hover:border-blue-300 transition-all duration-200 cursor-pointer transform hover:scale-105 ${
+                    selectedVisit?.type === option.type
+                      ? 'border-blue-500 bg-blue-50'
+                      : ''
+                  }`}
+                  onClick={() => setSelectedVisit(option)}>
+                  <div className='p-6'>
+                    {/* Header */}
+                    <div className='flex items-center justify-between mb-3'>
+                      <div
+                        className={`w-12 h-12 ${option.color} rounded-lg flex items-center justify-center text-2xl`}>
+                        {option.icon}
+                      </div>
+                      {option.priority && (
+                        <span
+                          className={`px-2 py-1 text-xs rounded-full font-medium ${
+                            option.priority === 'emergency'
+                              ? 'bg-red-100 text-red-800'
+                              : option.priority === 'high'
+                              ? 'bg-orange-100 text-orange-800'
+                              : 'bg-blue-100 text-blue-800'
+                          }`}>
+                          {option.priority.toUpperCase()}
+                        </span>
+                      )}
+                    </div>
+
+                    <h3 className='text-xl font-bold text-gray-900 mb-2'>
+                      {option.title}
+                    </h3>
+
+                    {/* Description */}
+                    <p className='text-gray-600 mb-4'>{option.description}</p>
+
+                    {/* Duration & Details */}
+                    <div className='flex items-center justify-between text-sm text-gray-500 mb-4'>
+                      {option.estimatedDuration && (
+                        <span>⏱️ ~{option.estimatedDuration} min</span>
+                      )}
+                      <span>
+                        {option.clientTypes
+                          .map(
+                            (type) =>
+                              type.charAt(0).toUpperCase() + type.slice(1)
+                          )
+                          .join(', ')}
+                      </span>
+                    </div>
+
+                    {/* Start Button */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        startVisit(option)
+                      }}
+                      className={`w-full ${option.color} hover:opacity-90 text-white py-3 px-4 rounded-lg font-medium transition-opacity`}>
+                      Start {option.title}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Emergency Quick Actions */}
+            <div className='mt-8 bg-red-50 border border-red-200 rounded-lg p-6'>
+              <div className='flex items-center mb-4'>
+                <div className='w-10 h-10 bg-red-500 rounded-lg flex items-center justify-center text-white text-xl mr-3'>
+                  🚨
+                </div>
+                <div>
+                  <h3 className='text-lg font-semibold text-red-900'>
+                    Emergency Service
+                  </h3>
+                  <p className='text-sm text-red-700'>
+                    For urgent issues requiring immediate attention
+                  </p>
+                </div>
+              </div>
+
+              <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                <button
+                  onClick={() =>
+                    startVisit(
+                      visitOptions.find((v) => v.type === 'service-emergency')!
+                    )
+                  }
+                  className='bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 font-medium'>
+                  🚨 Emergency Service Call
+                </button>
+                <button
+                  onClick={() =>
+                    startVisit(
+                      visitOptions.find((v) => v.type === 'service-repair')!
+                    )
+                  }
+                  className='bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 font-medium'>
+                  🔧 Urgent Repair
+                </button>
+              </div>
+            </div>
+          </>
+        ) : (
+          <div className='bg-gray-50 rounded-lg p-8 text-center'>
+            <p className='text-gray-600'>
+              Please select a client to see available visit types.
             </p>
           </div>
-        </div>
+        )}
       </div>
     </ProtectedRoute>
   )
