@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import EmergencyVisitModal from '@/components/EmergencyVisitModal'
 
 interface TechnicianData {
@@ -39,6 +40,7 @@ interface TodaysRoute {
 }
 
 export default function TechnicianDashboard() {
+  const router = useRouter()
   const [technician, setTechnician] = useState<TechnicianData | null>(null)
   const [clients, setClients] = useState<Client[]>([])
   const [todaysRoute, setTodaysRoute] = useState<TodaysRoute[]>([])
@@ -60,7 +62,6 @@ export default function TechnicianDashboard() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        // Get technician data from localStorage
         const technicianData = localStorage.getItem('technicianData')
         const token = localStorage.getItem('technicianToken')
 
@@ -72,7 +73,7 @@ export default function TechnicianDashboard() {
         const parsedTechnician = JSON.parse(technicianData)
         setTechnician(parsedTechnician)
 
-        // Fetch assigned clients
+        // Fix the API call to include the technicianId
         const clientsResponse = await fetch('/api/clients', {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -80,32 +81,30 @@ export default function TechnicianDashboard() {
           },
         })
 
+        // If you have a today's route endpoint, fix it like this:
+        const routeResponse = await fetch(
+          `/api/routes/today?technicianId=${parsedTechnician._id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+          }
+        )
+
         if (clientsResponse.ok) {
           const clientsData = await clientsResponse.json()
           if (clientsData.success) {
             setClients(clientsData.clients || [])
             generateTodaysRoute(clientsData.clients || [])
-          } else {
-            setError(clientsData.error || 'Failed to fetch clients')
           }
-        } else if (clientsResponse.status === 401) {
-          // Token expired
-          localStorage.removeItem('technicianToken')
-          localStorage.removeItem('technicianData')
-          window.location.href = '/login'
-        } else {
-          setError('Failed to fetch clients')
         }
-      } catch (err) {
-        setError('Failed to load dashboard data')
-        console.error('Dashboard error:', err)
-      } finally {
-        setLoading(false)
+      } catch (error) {
+        console.error('Error loading dashboard data:', error)
       }
     }
-
     loadData()
-  }, [])
+  }, [router])
 
   const generateTodaysRoute = (clientList: Client[]) => {
     const today = new Date()
@@ -404,14 +403,27 @@ export default function TechnicianDashboard() {
 
                       {visit.status === 'in-progress' && (
                         <button
-                          onClick={() =>
-                            (window.location.href = `/visit/history?clientId=${visit.client._id}`)
-                          }
+                          onClick={() => {
+                            const clientId = visit.client._id?.toString()
+                            console.log(
+                              '🎯 Navigating to visit history for client:',
+                              clientId
+                            )
+
+                            if (!clientId) {
+                              alert('Invalid client ID')
+                              return
+                            }
+
+                            // Use router.push instead of window.location.href
+                            router.push(
+                              `/visit/history?clientId=${clientId}&type=maintenance-routine`
+                            )
+                          }}
                           className='bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700'>
                           Log Visit
                         </button>
                       )}
-
                       {visit.status === 'completed' && (
                         <span className='text-green-600 font-medium text-sm'>
                           ✓ Done

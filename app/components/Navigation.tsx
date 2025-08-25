@@ -94,10 +94,10 @@ const navigationItems: NavigationItem[] = [
     roles: ['technician', 'supervisor', 'admin'],
   },
   {
-    name: 'Visit History',
-    href: '/visit/history',
-    icon: '',
-    description: 'Log service visits',
+    name: 'Recent Visits',
+    href: '/visit/recent', // A new page showing recent visits
+    icon: '📋',
+    description: 'View recent service visits',
     requiresAuth: true,
     roles: ['technician', 'supervisor', 'admin'],
   },

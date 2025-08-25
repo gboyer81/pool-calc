@@ -2,6 +2,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import EmergencyVisitModal from '@/components/EmergencyVisitModal'
 
@@ -27,6 +28,7 @@ interface ClientVisit {
 }
 
 export default function DashboardPage() {
+  const router = useRouter()
   const [technician, setTechnician] = useState<TechnicianData | null>(null)
   const [todaysRoute, setTodaysRoute] = useState<ClientVisit[]>([])
   const [loading, setLoading] = useState(true)
@@ -35,6 +37,46 @@ export default function DashboardPage() {
   // Emergency Modal State - THIS IS WHAT TRIGGERS THE MODAL
   const [showEmergencyModal, setShowEmergencyModal] = useState(false)
   const [emergencyClientId, setEmergencyClientId] = useState<string>()
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const technicianData = localStorage.getItem('technicianData')
+        const token = localStorage.getItem('technicianToken')
+
+        if (!technicianData || !token) {
+          router.push('/login')
+          return
+        }
+
+        const parsedTechnician = JSON.parse(technicianData)
+        setTechnician(parsedTechnician)
+
+        // Fix the API call by including technicianId
+        const routeResponse = await fetch(
+          `/api/routes/today?technicianId=${parsedTechnician._id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+          }
+        )
+
+        if (routeResponse.ok) {
+          const routeData = await routeResponse.json()
+          // Handle the route data
+          console.log('✅ Route data loaded:', routeData)
+        } else {
+          console.error('❌ Failed to load route data:', routeResponse.status)
+        }
+      } catch (error) {
+        console.error('❌ Error loading dashboard data:', error)
+      }
+    }
+
+    loadData()
+  }, [router])
 
   useEffect(() => {
     loadDashboardData()
@@ -273,9 +315,32 @@ export default function DashboardPage() {
 
                       {visit.status === 'in-progress' && (
                         <button
-                          onClick={() =>
-                            (window.location.href = `/visit/history?clientId=${visit.client._id}`)
-                          }
+                          onClick={() => {
+                            const clientId = visit.client._id?.toString()
+
+                            // Debug logging
+                            console.log(
+                              '🎯 Dashboard: Starting visit for client:',
+                              clientId
+                            )
+
+                            // Validate clientId
+                            if (
+                              !clientId ||
+                              !/^[0-9a-fA-F]{24}$/.test(clientId)
+                            ) {
+                              console.error('❌ Invalid clientId:', clientId)
+                              alert(
+                                'Invalid client ID. Please refresh and try again.'
+                              )
+                              return
+                            }
+
+                            // Use router.push instead of window.location.href
+                            router.push(
+                              `/visit/history?clientId=${clientId}&type=maintenance-routine`
+                            )
+                          }}
                           className='bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700'>
                           Log Visit
                         </button>

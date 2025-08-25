@@ -41,16 +41,16 @@ const visitOptions: VisitOption[] = [
     clientTypes: ['maintenance'],
     estimatedDuration: 15,
   },
-  {
-    type: 'service-emergency',
-    title: 'Emergency Service',
-    description: 'Urgent equipment failure or safety issue',
-    icon: '🚨',
-    color: 'bg-red-500',
-    clientTypes: ['service', 'maintenance'],
-    priority: 'emergency',
-    estimatedDuration: 120,
-  },
+  // {
+  //   type: 'service-emergency',
+  //   title: 'Emergency Service',
+  //   description: 'Urgent equipment failure or safety issue',
+  //   icon: '🚨',
+  //   color: 'bg-red-500',
+  //   clientTypes: ['service', 'maintenance'],
+  //   priority: 'emergency',
+  //   estimatedDuration: 120,
+  // },
   {
     type: 'service-repair',
     title: 'Equipment Repair',
@@ -58,7 +58,7 @@ const visitOptions: VisitOption[] = [
     icon: '🔧',
     color: 'bg-orange-500',
     clientTypes: ['service', 'maintenance'],
-    estimatedDuration: 90,
+    estimatedDuration: 60,
   },
   {
     type: 'service-installation',
@@ -85,7 +85,7 @@ const visitOptions: VisitOption[] = [
     icon: '📤',
     color: 'bg-indigo-500',
     clientTypes: ['retail', 'service'],
-    estimatedDuration: 15,
+    estimatedDuration: 10,
   },
 ]
 
@@ -134,7 +134,11 @@ export default function VisitSelectPage() {
       option.clientTypes.includes(client.clientType)
     )
   }
-
+  /*
+    ====================================================
+          TODO: Fix startVisit() queryParams
+    ====================================================
+  */
   const startVisit = (visitOption: VisitOption) => {
     const queryParams = new URLSearchParams()
     queryParams.set('clientId', clientId || '')
@@ -163,8 +167,14 @@ export default function VisitSelectPage() {
       </div>
     )
   }
-
+  /*
+  ===================================================
+        TODO: This check is getting triggered 
+  ===================================================
+  */
   if (clientId && !client) {
+    console.log(`Visit Select:175 ${clientId}
+                 Client: ${client}`)
     return (
       <div className='flex flex-col items-center justify-center h-screen'>
         <div className='text-xl text-red-600 mb-4'>Client not found</div>
@@ -179,7 +189,7 @@ export default function VisitSelectPage() {
 
   return (
     <ProtectedRoute requiredRoles={['technician', 'supervisor', 'admin']}>
-      <div className='p-6 max-w-6xl mx-auto'>
+      <div className='p-6 max-w-screen-2xl mx-auto'>
         {/* Header */}
         <div className='mb-8'>
           <div className='flex items-center justify-between mb-4'>
@@ -211,7 +221,7 @@ export default function VisitSelectPage() {
         </div>
 
         {/* Visit Options Grid */}
-        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
+        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10'>
           {getAvailableVisits().map((option) => (
             <div
               key={option.type}
@@ -294,7 +304,7 @@ export default function VisitSelectPage() {
             </div>
           </div>
 
-          <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+          <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
             <button
               onClick={() =>
                 startVisit(
@@ -305,6 +315,14 @@ export default function VisitSelectPage() {
               🚨 Log Emergency Visit
             </button>
 
+            <button
+              onClick={() => {
+                // You can add functionality to call dispatch or supervisor
+                alert('Emergency dispatch feature coming soon')
+              }}
+              className='bg-red-100 hover:bg-red-200 text-red-800 py-3 px-4 rounded-lg font-medium transition-colors border border-red-300'>
+              📞 Call Dispatch
+            </button>
             <button
               onClick={() => {
                 // You can add functionality to call dispatch or supervisor

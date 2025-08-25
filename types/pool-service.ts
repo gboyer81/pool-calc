@@ -1,4 +1,4 @@
-// types/pool-service.ts
+// types/pool-service.ts - Updated with all interfaces
 import { ObjectId } from 'mongodb'
 
 // ============================================================================
@@ -219,34 +219,14 @@ export interface Pool {
   targetLevels: {
     ph: { min: number; max: number; target: number }
     freeChlorine: { min: number; max: number; target: number }
-    totalChlorine?: { min: number; max: number; target: number } // Optional
+    totalChlorine?: { min: number; max: number; target: number }
     totalAlkalinity: { min: number; max: number; target: number }
     calciumHardness: { min: number; max: number; target: number }
     cyanuricAcid: { min: number; max: number; target: number }
     salt?: { min: number; max: number; target: number }
   }
   notes?: string
-  isActive: boolean // ✅ Top-level property, not inside readings
-  createdAt: Date
-  updatedAt: Date
-}
-
-// If you need readings for water test results, create a separate interface:
-export interface PoolReadings {
-  _id: ObjectId
-  poolId: ObjectId
-  visitId?: ObjectId
-  freeChlorine?: number
-  totalChlorine?: number
-  combinedChlorine?: number // Calculated: totalChlorine - freeChlorine
-  ph?: number
-  totalAlkalinity?: number
-  calciumHardness?: number
-  cyanuricAcid?: number
-  salt?: number
-  phosphates?: number
-  temperature?: number
-  testedAt: Date
+  isActive: boolean
   createdAt: Date
   updatedAt: Date
 }
@@ -258,13 +238,11 @@ export interface PoolReadings {
 export interface ServiceVisit {
   _id: ObjectId
   clientId: ObjectId
-  poolId?: ObjectId // Optional for retail clients
+  poolId?: ObjectId
   technicianId: ObjectId
   scheduledDate: Date
   actualDate?: Date
   status: 'scheduled' | 'in-progress' | 'completed' | 'skipped' | 'rescheduled'
-
-  // Service type based on client type
   serviceType:
     | 'maintenance-routine'
     | 'maintenance-chemical'
@@ -278,75 +256,9 @@ export interface ServiceVisit {
     | 'equipment-service' // Legacy support
     | 'emergency' // Legacy support
 
-  // Maintenance-specific fields (when clientType is 'maintenance')
-  maintenanceDetails?: {
-    readings?: {
-      ph?: number
-      totalChlorine?: number
-      freeChlorine?: number
-      totalAlkalinity?: number
-      calciumHardness?: number
-      cyanuricAcid?: number
-      salt?: number
-      phosphates?: number
-      temperature?: number
-      testedAt: Date
-    }
-    chemicalsAdded?: Array<{
-      chemical: string
-      amount: number
-      unit: string
-      reason: string
-      cost?: number
-    }>
-    tasksCompleted?: Array<{
-      task: string
-      completed: boolean
-      notes?: string
-    }>
-    poolCondition?: {
-      waterClarity: 'clear' | 'cloudy' | 'green' | 'black'
-      debris: 'none' | 'light' | 'moderate' | 'heavy'
-      equipmentStatus: 'normal' | 'issues' | 'service-needed'
-    }
-  }
+  priority?: 'low' | 'normal' | 'high' | 'emergency'
 
-  // Service-specific fields (when clientType is 'service')
-  serviceDetails?: {
-    workPerformed: string
-    laborHours: number
-    laborRate: number
-    partsUsed?: Array<{
-      partNumber?: string
-      description: string
-      quantity: number
-      unitCost: number
-    }>
-    equipmentServiced?: Array<{
-      equipmentType: string
-      model?: string
-      serialNumber?: string
-      actionTaken: string
-    }>
-    followUpRequired?: boolean
-    warrantyWork?: boolean
-  }
-
-  // Retail-specific fields (when clientType is 'retail')
-  retailDetails?: {
-    orderNumber?: string
-    itemsDelivered?: Array<{
-      sku?: string
-      description: string
-      quantity: number
-      unitPrice: number
-    }>
-    deliveryMethod: 'pickup' | 'delivery' | 'installation'
-    signatureRequired?: boolean
-    customerSignature?: string
-  }
-
-  // Legacy fields for backward compatibility
+  // Water Testing Results (for maintenance visits)
   readings?: {
     ph?: number
     totalChlorine?: number
@@ -360,42 +272,98 @@ export interface ServiceVisit {
     testedAt: Date
   }
 
+  // Chemical Adjustments (for maintenance visits)
   chemicalsAdded?: Array<{
     chemical: string
     amount: number
     unit: string
     reason: string
+    calculatedRecommendation?: string
+    cost?: number
   }>
 
+  // Service Tasks
   tasksCompleted?: Array<{
     task: string
     completed: boolean
     notes?: string
+    timeSpent?: number
   }>
 
+  // Pool Condition (for maintenance visits)
   poolCondition?: {
     waterClarity: 'clear' | 'cloudy' | 'green' | 'black'
     debris: 'none' | 'light' | 'moderate' | 'heavy'
     equipmentStatus: 'normal' | 'issues' | 'service-needed'
   }
 
-  // Common fields
+  // Service-specific details
+  serviceDetails?: {
+    issueDescription?: string
+    diagnosisNotes?: string
+    partsUsed?: Array<{
+      partName: string
+      partNumber?: string
+      quantity: number
+      cost?: number
+      warrantyPart?: boolean
+    }>
+    laborHours?: number
+    laborRate?: number
+    totalLaborCost?: number
+    warrantyWork?: boolean
+    followUpRequired?: boolean
+    followUpDate?: Date
+    equipmentTested?: boolean
+    customerSignoff?: boolean
+  }
+
+  // Retail-specific details
+  retailDetails?: {
+    itemsDelivered?: Array<{
+      productName: string
+      sku?: string
+      quantity: number
+      unitPrice?: number
+      totalPrice?: number
+    }>
+    totalDeliveryValue?: number
+    paymentCollected?: number
+    paymentMethod?: 'cash' | 'check' | 'card' | 'account'
+    deliveryInstructions?: string
+    signatureRequired?: boolean
+    signatureObtained?: boolean
+    customerPresent?: boolean
+    customerName?: string
+    deliveryPhoto?: string
+  }
+
+  // Photos
   photos?: Array<{
     url: string
     caption?: string
-    type:
-      | 'before'
-      | 'after'
-      | 'issue'
-      | 'equipment'
-      | 'delivery'
-      | 'installation'
+    type: 'before' | 'after' | 'issue' | 'equipment' | 'delivery' | 'damage'
     uploadedAt: Date
   }>
 
+  // Timing and completion
   duration?: number // minutes
+  startTime?: Date
+  endTime?: Date
+
+  // Notes and recommendations
   notes?: string
   nextVisitRecommendations?: string
+  clientInstructions?: string
+
+  // Follow-up and quality
+  qualityRating?: number // 1-5 scale
+  clientSatisfaction?:
+    | 'very-satisfied'
+    | 'satisfied'
+    | 'neutral'
+    | 'dissatisfied'
+    | 'very-dissatisfied'
 
   // Billing information
   billing?: {
@@ -405,6 +373,22 @@ export interface ServiceVisit {
     totalAmount: number
     invoiceNumber?: string
     paymentStatus: 'pending' | 'paid' | 'overdue'
+    paidDate?: Date
+  }
+
+  // Populated fields (for API responses)
+  client?: {
+    _id: string
+    name: string
+    address: {
+      street: string
+      city: string
+      state: string
+    }
+  }
+  technician?: {
+    _id: string
+    name: string
   }
 
   createdAt: Date
@@ -453,7 +437,50 @@ export interface ServiceRoute {
 }
 
 // ============================================================================
-// CHEMICAL INVENTORY
+// INVENTORY MANAGEMENT
+// ============================================================================
+
+export interface InventoryItem {
+  _id: ObjectId
+  name: string
+  type: 'chemical' | 'part' | 'equipment' | 'accessory'
+  category?: string
+  currentStock: number
+  unit: string
+  minStock: number
+  maxStock?: number
+  costPerUnit: number
+  supplier?: string
+  lastRestocked: Date
+  expirationDate?: Date
+  notes?: string
+  isActive: boolean
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface InventoryUsage {
+  _id: string
+  name: string
+  type: string
+  quantityUsed: number
+  unit: string
+  costPerUnit: number
+  totalCost: number
+  remainingStock: number
+  minStock: number
+  lastUsed: Date
+  usageHistory?: Array<{
+    visitId: string
+    clientName: string
+    quantity: number
+    cost: number
+    date: Date
+  }>
+}
+
+// ============================================================================
+// CHEMICAL INVENTORY (Legacy - use InventoryItem instead)
 // ============================================================================
 
 export interface ChemicalInventory {
@@ -569,6 +596,93 @@ export interface Invoice {
   updatedAt: Date
 }
 
+export interface PendingBilling {
+  _id: ObjectId
+  clientId: ObjectId
+  clientName: string
+  visitIds: ObjectId[] // Service visits that need billing
+  orderIds?: ObjectId[] // Orders that need billing
+  visitDate: Date
+  unbilledItems: Array<{
+    type: 'visit' | 'order' | 'service' | 'product'
+    referenceId: ObjectId // visitId or orderId
+    date: Date
+    description: string
+    amount: number
+    taxable: boolean
+    status: 'pending' | 'reviewed' | 'approved' | 'rejected'
+  }>
+  subtotal: number
+  taxAmount: number
+  totalAmount: number
+  serviceType: string
+  amount: number
+  status: 'draft' | 'pending-review' | 'ready-to-invoice' | 'invoiced'
+  createdDate: Date
+  reviewDate?: Date
+  approvalDate?: Date
+  invoiceDate?: Date
+  invoiceNumber?: string // Set when converted to invoice
+  daysOverdue: number
+  lineItems?: Array<{
+    type: string
+    description: string
+    quantity: number
+    unitPrice: number
+    totalPrice: number
+  }>
+  // Client billing preferences
+  billingFrequency?: 'weekly' | 'bi-weekly' | 'monthly' | 'quarterly'
+  nextBillingDate?: Date
+
+  // Notes and special instructions
+  notes?: string
+  specialInstructions?: string
+
+  createdAt: Date
+  updatedAt: Date
+}
+
+// ============================================================================
+// FOLLOW-UP MANAGEMENT
+// ============================================================================
+
+export interface FollowUp {
+  _id: ObjectId
+  clientId: ObjectId
+  originalVisitId: ObjectId
+  followUpType:
+    | 'equipment-check'
+    | 'chemical-retest'
+    | 'warranty-callback'
+    | 'general-followup'
+  priority: 'low' | 'medium' | 'high'
+  dueDate: Date
+  scheduledDate?: Date
+  completedDate?: Date
+  status: 'pending' | 'scheduled' | 'completed' | 'cancelled'
+  notes: string
+  originalTechnician?: string
+  assignedTechnician?: ObjectId
+  createdAt: Date
+  updatedAt: Date
+}
+
+// Client-side follow-up interface (for API responses)
+export interface FollowUpResponse {
+  _id: string
+  clientName: string
+  clientId: string
+  originalVisitId: string
+  originalVisitDate: Date
+  followUpType: string
+  priority: 'low' | 'medium' | 'high'
+  dueDate: Date
+  notes: string
+  originalTechnician: string
+  status: 'pending' | 'scheduled' | 'completed'
+}
+
 // ============================================================================
 // ORDERS (for Retail Clients)
 // ============================================================================
@@ -638,6 +752,7 @@ export interface PoolsResponse extends ApiResponse {
 
 export interface VisitsResponse extends ApiResponse {
   visits?: ServiceVisit[]
+  totalCount?: number
 }
 
 export interface RouteResponse extends ApiResponse {
@@ -660,6 +775,19 @@ export interface InvoicesResponse extends ApiResponse {
   invoices?: Invoice[]
 }
 
+export interface InventoryResponse extends ApiResponse {
+  items?: InventoryItem[]
+  usage?: InventoryUsage[]
+}
+
+export interface FollowUpsResponse extends ApiResponse {
+  followUps?: FollowUpResponse[]
+}
+
+export interface BillingResponse extends ApiResponse {
+  bills?: PendingBilling[]
+}
+
 // ============================================================================
 // UTILITY TYPES & ENUMS
 // ============================================================================
@@ -679,6 +807,12 @@ export type VisitStatus =
   | 'skipped'
   | 'rescheduled'
 export type PaymentStatus = 'pending' | 'paid' | 'overdue'
+
+export interface PendingBillingResponse extends ApiResponse {
+  pendingBilling?: PendingBilling[]
+  totalPending?: number
+  totalAmount?: number
+}
 
 // ============================================================================
 // HELPER FUNCTIONS
@@ -716,14 +850,3 @@ export class ClientUtils {
     return visitNumber % client.maintenance.serviceIntervals[taskType] === 0
   }
 }
-
-// Utility functions
-// export const poolToString = (pool: any): Pool => ({
-//   ...pool,
-//   _id: typeof pool._id === 'string' ? pool._id : pool._id.toString(),
-// })
-
-// export const poolToObjectId = (pool: any) => ({
-//   ...pool,
-//   _id: typeof pool._id === 'string' ? new ObjectId(pool._id) : pool._id,
-// })
