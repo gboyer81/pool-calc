@@ -268,7 +268,7 @@ export default function AdminPanel() {
               👥 Manage Assignments
             </button>
             <button
-              onClick={() => (window.location.href = '/dashboard')}
+              onClick={() => (window.location.href = '/')}
               className='bg-secondary text-secondary-foreground px-4 py-2 rounded-lg hover:bg-secondary/80 transition-colors'>
               ← Dashboard
             </button>

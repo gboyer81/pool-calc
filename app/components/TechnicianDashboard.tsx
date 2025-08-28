@@ -66,7 +66,7 @@ export default function TechnicianDashboard() {
         const token = localStorage.getItem('technicianToken')
 
         if (!technicianData || !token) {
-          window.location.href = '/login'
+          router.push('/login')
           return
         }
 
@@ -98,9 +98,18 @@ export default function TechnicianDashboard() {
             setClients(clientsData.clients || [])
             generateTodaysRoute(clientsData.clients || [])
           }
+        } else if (clientsResponse.status === 401) {
+          // Token expired or invalid, clear auth and redirect
+          localStorage.removeItem('technicianToken')
+          localStorage.removeItem('technicianData')
+          router.push('/login')
+          return
         }
       } catch (error) {
         console.error('Error loading dashboard data:', error)
+        setError('Failed to load dashboard data. Please try again.')
+      } finally {
+        setLoading(false)
       }
     }
     loadData()
@@ -194,7 +203,7 @@ export default function TechnicianDashboard() {
   const handleLogout = () => {
     localStorage.removeItem('technicianToken')
     localStorage.removeItem('technicianData')
-    window.location.href = '/login'
+    router.push('/login')
   }
 
   if (loading) {
@@ -207,7 +216,7 @@ export default function TechnicianDashboard() {
 
   if (error) {
     return (
-      <div className='max-w-4xl mx-auto p-6'>
+      <div className='p-6'>
         <div className='bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 p-4 rounded-lg'>
           <strong>Error:</strong> {error}
           <button
@@ -221,7 +230,7 @@ export default function TechnicianDashboard() {
   }
 
   return (
-    <div className='max-w-screen-2xl mx-auto lg:p-6'>
+    <div className='lg:p-6'>
       {/* Header */}
       <div className='flex flex-col md:flex-row md:justify-between md:items-center mb-8'>
         <div className='basis-3/6'>
@@ -249,7 +258,7 @@ export default function TechnicianDashboard() {
             👥 My Clients
           </button>
           <button
-            onClick={() => (window.location.href = '/')}
+            onClick={() => (window.location.href = '/calculator')}
             className='bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors'>
             🧮 Calculator
           </button>
@@ -463,7 +472,7 @@ export default function TechnicianDashboard() {
             Access chemical calculators for pool maintenance
           </p>
           <button
-            onClick={() => (window.location.href = '/')}
+            onClick={() => (window.location.href = '/calculator')}
             className='w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors'>
             Open Calculator
           </button>

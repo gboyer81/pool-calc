@@ -1,7 +1,7 @@
 // app/visit/select/page.tsx - Updated with client selection
 'use client'
 
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import { Client } from '@/types/pool-service'
@@ -84,7 +84,7 @@ const visitOptions: VisitOption[] = [
   },
 ]
 
-export default function VisitSelectPage() {
+function VisitSelectContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const urlClientId = searchParams.get('clientId') // Client ID from URL (if provided)
@@ -104,6 +104,49 @@ export default function VisitSelectPage() {
   useEffect(() => {
     loadAvailableClients()
   }, [])
+
+  // Define startVisit function before useEffect that uses it
+  const startVisit = (visitOption: VisitOption) => {
+    if (!selectedClientId) {
+      alert('Please select a client first')
+      return
+    }
+
+    const queryParams = new URLSearchParams()
+    queryParams.set('clientId', selectedClientId) // ← Now uses selected client ID
+    queryParams.set('type', visitOption.type)
+
+    if (visitOption.priority) {
+      queryParams.set('priority', visitOption.priority)
+    }
+
+    router.push(`/visit/history?${queryParams.toString()}`)
+  }
+
+  useEffect(() => {
+    // Listen for service type selection from sidebar
+    const handleSidebarServiceTypeSelected = (event: CustomEvent) => {
+      const { serviceType } = event.detail
+      const visitOption = visitOptions.find(option => option.type === serviceType)
+      if (visitOption) {
+        startVisit(visitOption)
+      }
+    }
+
+    // Listen for client selection from sidebar
+    const handleSidebarClientSelected = (event: CustomEvent) => {
+      const { client } = event.detail
+      setSelectedClientId(client._id.toString())
+      setSearchQuery(client.name)
+    }
+
+    window.addEventListener('sidebarServiceTypeSelected', handleSidebarServiceTypeSelected as EventListener)
+    window.addEventListener('sidebarClientSelected', handleSidebarClientSelected as EventListener)
+    return () => {
+      window.removeEventListener('sidebarServiceTypeSelected', handleSidebarServiceTypeSelected as EventListener)
+      window.removeEventListener('sidebarClientSelected', handleSidebarClientSelected as EventListener)
+    }
+  }, [selectedClientId, startVisit]) // Re-run when selectedClientId changes
 
   useEffect(() => {
     // Load specific client when selected
@@ -197,23 +240,6 @@ export default function VisitSelectPage() {
     )
   }
 
-  const startVisit = (visitOption: VisitOption) => {
-    if (!selectedClientId) {
-      alert('Please select a client first')
-      return
-    }
-
-    const queryParams = new URLSearchParams()
-    queryParams.set('clientId', selectedClientId) // ← Now uses selected client ID
-    queryParams.set('type', visitOption.type)
-
-    if (visitOption.priority) {
-      queryParams.set('priority', visitOption.priority)
-    }
-
-    router.push(`/visit/history?${queryParams.toString()}`)
-  }
-
   const getClientTypeLabel = (clientType: string): string => {
     const labels = {
       maintenance: 'Maintenance Client',
@@ -257,7 +283,7 @@ export default function VisitSelectPage() {
             </div>
 
             <button
-              onClick={() => router.push('/dashboard')}
+              onClick={() => router.push('/')}
               className='bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 w-full sm:w-auto flex-shrink-0'>
               Cancel
             </button>
@@ -469,5 +495,13 @@ export default function VisitSelectPage() {
         )}
       </div>
     </ProtectedRoute>
+  )
+}
+
+export default function VisitSelectPage() {
+  return (
+    <Suspense fallback={<div className="flex justify-center items-center h-screen"><div className="text-lg">Loading...</div></div>}>
+      <VisitSelectContent />
+    </Suspense>
   )
 }

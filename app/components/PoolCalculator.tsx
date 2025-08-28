@@ -212,7 +212,7 @@ const PoolCalculator: React.FC = () => {
     const baseItems = [
       {
         name: 'Dashboard',
-        href: '/dashboard',
+        href: '/',
         icon: '📊',
         description: 'Your dashboard',
       },

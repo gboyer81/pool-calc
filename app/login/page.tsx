@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { NeonGradientCard } from 'components/magicui/neon-gradient-card'
 
 interface LoginCredentials {
@@ -9,6 +10,7 @@ interface LoginCredentials {
 }
 
 export default function TechnicianLogin() {
+  const router = useRouter()
   const [credentials, setCredentials] = useState<LoginCredentials>({
     email: '',
     password: '',
@@ -23,7 +25,7 @@ export default function TechnicianLogin() {
     if (typeof window !== 'undefined') {
       const token = localStorage.getItem('technicianToken')
       if (token) {
-        window.location.href = '/dashboard'
+        router.push('/')
       }
     }
   }, [])
@@ -48,7 +50,23 @@ export default function TechnicianLogin() {
         body: JSON.stringify(credentials),
       })
 
+      // Check if response is ok and content-type is JSON
+      if (!response.ok) {
+        console.error('Response not ok:', response.status, response.statusText)
+      }
+      
+      const contentType = response.headers.get('content-type')
+      console.log('Response content-type:', contentType)
+      
+      if (!contentType || !contentType.includes('application/json')) {
+        const htmlText = await response.text()
+        console.error('Expected JSON but received HTML:', htmlText.substring(0, 200))
+        setError('Server error - please try again later')
+        return
+      }
+
       const data = await response.json()
+      console.log('Login response data:', data)
 
       if (data.success) {
         // Store token and user data
@@ -56,13 +74,17 @@ export default function TechnicianLogin() {
         localStorage.setItem('technicianData', JSON.stringify(data.technician))
 
         // Redirect to dashboard
-        window.location.href = '/dashboard'
+        router.push('/')
       } else {
         setError(data.error || 'Login failed')
       }
     } catch (err) {
-      setError('Network error - please check your connection')
-      console.error('Login error:', err)
+      console.error('Login error details:', err)
+      if (err instanceof SyntaxError) {
+        setError('Server response error - please try again')
+      } else {
+        setError('Network error - please check your connection')
+      }
     } finally {
       setLoading(false)
     }
@@ -170,7 +192,7 @@ export default function TechnicianLogin() {
           <p>Need help? Contact your supervisor</p>
           <p className='mt-2'>
             <button
-              onClick={() => (window.location.href = '/')}
+              onClick={() => router.push('/calculator')}
               className='text-blue-600 hover:text-blue-800 underline'>
               Back to Calculator
             </button>

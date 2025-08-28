@@ -7,6 +7,8 @@ import {
   CheckCircle,
   XCircle,
 } from 'lucide-react'
+import { DateRange } from 'react-day-picker'
+import { format, differenceInDays } from 'date-fns'
 
 interface SummaryStatsProps {
   stats: {
@@ -15,15 +17,32 @@ interface SummaryStatsProps {
     followUpsDue: number
     overdueAmount: number
   }
-  timeFilter: string
+  dateRange?: DateRange
   loading?: boolean
 }
 
 const SummaryStats: React.FC<SummaryStatsProps> = ({
   stats,
-  timeFilter,
+  dateRange,
   loading = false,
 }) => {
+  const getDateRangeLabel = () => {
+    if (!dateRange?.from || !dateRange?.to) {
+      return 'Selected Period'
+    }
+    
+    const daysDiff = differenceInDays(dateRange.to, dateRange.from)
+    if (daysDiff <= 1) {
+      return format(dateRange.from, 'MMM dd')
+    } else if (daysDiff <= 7) {
+      return `${daysDiff + 1}d`
+    } else if (daysDiff <= 31) {
+      return `${daysDiff + 1}d`
+    } else {
+      return `${format(dateRange.from, 'MMM dd')} - ${format(dateRange.to, 'MMM dd')}`
+    }
+  }
+
   if (loading) {
     return (
       <div className='grid grid-cols-1 md:grid-cols-4 gap-4'>
@@ -58,7 +77,7 @@ const SummaryStats: React.FC<SummaryStatsProps> = ({
         <div className='flex items-center justify-between'>
           <div>
             <p className='text-green-700 text-sm font-medium'>
-              Revenue ({timeFilter.replace('days', 'd')})
+              Revenue ({getDateRangeLabel()})
             </p>
             <p className='text-2xl font-bold text-green-900'>
               ${stats.revenue.toLocaleString()}

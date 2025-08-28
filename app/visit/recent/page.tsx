@@ -1,7 +1,9 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { Download, RefreshCw, Loader2 } from 'lucide-react'
+import { Download, RefreshCw, Loader2, Calendar as CalendarIcon } from 'lucide-react'
+import { DateRange } from 'react-day-picker'
+import { format } from 'date-fns'
 
 // Import types from the centralized types file
 import type {
@@ -18,9 +20,14 @@ import FollowupVisits from '@/components/FollowupVisits'
 import RecentInventoryUsage from '@/components/RecentInventoryUsage'
 import PendingBillingComponent from '@/components/PendingBilling'
 import SummaryStats from '@/components/SummaryStats'
+import { Calendar } from '@/components/ui/calendar'
 
 const VisitHistoryHomepage = () => {
-  const [timeFilter, setTimeFilter] = useState('7days')
+  const [dateRange, setDateRange] = useState<DateRange | undefined>({
+    from: new Date(new Date().getTime() - 7 * 24 * 60 * 60 * 1000),
+    to: new Date(),
+  })
+  const [showCalendar, setShowCalendar] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
   const [loading, setLoading] = useState(true)
   const [, setClients] = useState<Client[]>([])
@@ -39,17 +46,29 @@ const VisitHistoryHomepage = () => {
     overdueAmount: 0,
   })
 
+  // Close calendar when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element
+      if (showCalendar && !target.closest('.calendar-container')) {
+        setShowCalendar(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [showCalendar])
+
   useEffect(() => {
     loadDashboardData()
-  }, [timeFilter])
+  }, [dateRange])
 
   const getDateRange = () => {
-    const now = new Date()
-    const days = timeFilter === '7days' ? 7 : timeFilter === '30days' ? 30 : 90
-    const startDate = new Date(now.getTime() - days * 24 * 60 * 60 * 1000)
+    const startDate = dateRange?.from || new Date(new Date().getTime() - 7 * 24 * 60 * 60 * 1000)
+    const endDate = dateRange?.to || new Date()
     return {
       startDate: startDate.toISOString(),
-      endDate: now.toISOString(),
+      endDate: endDate.toISOString(),
     }
   }
 
@@ -331,14 +350,68 @@ const VisitHistoryHomepage = () => {
               </p>
             </div>
             <div className='flex flex-col sm:flex-row gap-3'>
-              <select
-                value={timeFilter}
-                onChange={(e) => setTimeFilter(e.target.value)}
-                className='w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent'>
-                <option value='7days'>Last 7 Days</option>
-                <option value='30days'>Last 30 Days</option>
-                <option value='90days'>Last 90 Days</option>
-              </select>
+              <div className='relative calendar-container'>
+                <button
+                  onClick={() => setShowCalendar(!showCalendar)}
+                  className='w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent flex items-center gap-2 hover:bg-gray-50'>
+                  <CalendarIcon className='w-4 h-4' />
+                  {dateRange?.from ? (
+                    dateRange.to ? (
+                      <>
+                        {format(dateRange.from, 'LLL dd')} -{' '}
+                        {format(dateRange.to, 'LLL dd, y')}
+                      </>
+                    ) : (
+                      format(dateRange.from, 'LLL dd, y')
+                    )
+                  ) : (
+                    'Pick date range'
+                  )}
+                </button>
+                {showCalendar && (
+                  <div className='absolute top-full left-0 mt-2 z-50 bg-white border border-gray-200 rounded-lg shadow-lg p-3'>
+                    <Calendar
+                      mode='range'
+                      defaultMonth={dateRange?.from}
+                      selected={dateRange}
+                      onSelect={setDateRange}
+                      numberOfMonths={2}
+                      disabled={(date) =>
+                        date > new Date() || date < new Date('2020-01-01')
+                      }
+                    />
+                    <div className='flex gap-2 mt-3 pt-3 border-t'>
+                      <button
+                        onClick={() => {
+                          setDateRange({
+                            from: new Date(new Date().getTime() - 7 * 24 * 60 * 60 * 1000),
+                            to: new Date(),
+                          })
+                          setShowCalendar(false)
+                        }}
+                        className='px-3 py-1 text-xs border border-gray-300 rounded hover:bg-gray-50'>
+                        Last 7 days
+                      </button>
+                      <button
+                        onClick={() => {
+                          setDateRange({
+                            from: new Date(new Date().getTime() - 30 * 24 * 60 * 60 * 1000),
+                            to: new Date(),
+                          })
+                          setShowCalendar(false)
+                        }}
+                        className='px-3 py-1 text-xs border border-gray-300 rounded hover:bg-gray-50'>
+                        Last 30 days
+                      </button>
+                      <button
+                        onClick={() => setShowCalendar(false)}
+                        className='px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 ml-auto'>
+                        Done
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
               <div className='flex gap-3'>
                 <button
                   onClick={handleRefresh}
@@ -360,7 +433,7 @@ const VisitHistoryHomepage = () => {
           {/* Summary Stats */}
           <SummaryStats
             stats={stats}
-            timeFilter={timeFilter}
+            dateRange={dateRange}
             loading={loading}
           />
         </div>

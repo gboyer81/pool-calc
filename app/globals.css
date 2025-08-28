@@ -446,7 +446,7 @@ body {
   .sidebar-layout main::-webkit-scrollbar {
     display: none;
   }
-  
+
   .scrollbar-thin,
   .sidebar-layout main {
     -ms-overflow-style: none;

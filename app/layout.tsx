@@ -1,6 +1,7 @@
 // app/layout.tsx
 import type { Metadata } from 'next'
 import { ThemeProvider } from './components/ThemeProvider'
+import { PrimeReactProvider } from 'primereact/api'
 import './globals.css'
 import Navigation from '@/components/Navigation'
 
@@ -21,7 +22,6 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
-  console.log(`NODE_ENV: ${process.env.NODE_ENV}`)
   return (
     <html lang='en' suppressHydrationWarning>
       <head>
@@ -88,8 +88,10 @@ export default function RootLayout({
       </head>
       <body className='antialiased'>
         <ThemeProvider attribute='class' defaultTheme='system' enableSystem>
-          {/* Navigation Component handles the complete layout structure including footer */}
-          <Navigation>{children}</Navigation>
+          <PrimeReactProvider>
+            {/* Navigation Component handles the complete layout structure including footer */}
+            <Navigation>{children}</Navigation>
+          </PrimeReactProvider>
         </ThemeProvider>
       </body>
     </html>
