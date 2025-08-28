@@ -7,6 +7,7 @@ import {
   Calendar,
   Users,
 } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
 import {
   Client,
   isRetailClient,
@@ -57,28 +58,29 @@ const ClientCard: React.FC<ClientCardProps> = ({
         </div>
 
         {/* Status Badge */}
-        <span
-          className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium ${
-            client.isActive
-              ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
-              : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
-          }`}>
+        <Badge variant={client.isActive ? "default" : "destructive"}>
           {client.isActive ? 'Active' : 'Inactive'}
-        </span>
+        </Badge>
       </div>
 
       {/* Client Type Badge */}
       <div className='mb-3'>
-        <span
-          className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium capitalize ${
+        <Badge 
+          variant="outline" 
+          className={
             client.clientType === 'retail'
-              ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
+              ? 'border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-300'
               : client.clientType === 'service'
-              ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
-              : 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300'
-          }`}>
-          {client.clientType}
-        </span>
+              ? 'border-green-200 bg-green-50 text-green-700 hover:bg-green-100 dark:border-green-800 dark:bg-green-950 dark:text-green-300'
+              : 'border-purple-200 bg-purple-50 text-purple-700 hover:bg-purple-100 dark:border-purple-800 dark:bg-purple-950 dark:text-purple-300'
+          }>
+          <div className='flex items-center gap-1'>
+            {client.clientType === 'retail' && <ShoppingCart className="h-3 w-3" />}
+            {client.clientType === 'service' && <Wrench className="h-3 w-3" />}
+            {client.clientType === 'maintenance' && <Calendar className="h-3 w-3" />}
+            <span className="capitalize">{client.clientType}</span>
+          </div>
+        </Badge>
       </div>
 
       {/* Contact Info */}

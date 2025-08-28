@@ -3,6 +3,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { Client, Pool } from '@/types/pool-service'
+import { showToast } from '@/lib/toast'
 
 interface EmergencyVisitModalProps {
   isOpen: boolean
@@ -248,19 +249,19 @@ ${visit.notes}`,
       if (response.ok) {
         const data = await response.json()
         if (data.success) {
-          alert('Emergency visit logged successfully!')
+          showToast.success('Emergency visit logged', 'The emergency visit has been logged successfully.')
           onSubmit?.(data.visitId)
           onClose()
           resetForm()
         } else {
-          alert('Error: ' + data.error)
+          showToast.error('Logging failed', data.error)
         }
       } else {
-        alert('Failed to log emergency visit')
+        showToast.error('Logging failed', 'Failed to log emergency visit.')
       }
     } catch (error) {
       console.error('Error submitting emergency visit:', error)
-      alert('Error submitting emergency visit')
+      showToast.error('Logging failed', 'An error occurred while logging the emergency visit.')
     } finally {
       setSubmitting(false)
     }

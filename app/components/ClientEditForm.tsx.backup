@@ -1,0 +1,862 @@
+'use client'
+
+import React, { useState, useEffect } from 'react'
+import { Plus, Edit, Trash2, Users, Target } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Textarea } from '@/components/ui/textarea'
+import { Badge } from '@/components/ui/badge'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '@/components/ui/tabs'
+import {
+  Client,
+  RetailClient,
+  ServiceClient,
+  MaintenanceClient,
+  Pool,
+  isRetailClient,
+  isServiceClient,
+  isMaintenanceClient,
+} from '@/types/pool-service'
+import PoolEditor from './PoolEditor'
+
+interface ClientEditFormProps {
+  isOpen: boolean
+  client: Client | null
+  onClose: () => void
+  onSave: (updatedClient: Client) => Promise<void>
+  saving?: boolean
+}
+
+interface Technician {
+  _id: string
+  name: string
+  email: string
+  phone: string
+  employeeId: string
+  role: 'technician' | 'supervisor' | 'admin'
+  assignedClients: string[]
+  isActive: boolean
+  serviceAreas: string[]
+}
+
+const ClientEditForm: React.FC<ClientEditFormProps> = ({
+  isOpen,
+  client,
+  onClose,
+  onSave,
+  saving = false,
+}) => {
+  const [formData, setFormData] = useState<Partial<Client>>({})
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({})
+  const [pools, setPools] = useState<Pool[]>([])
+  const [poolsLoading, setPoolsLoading] = useState(false)
+  const [selectedPool, setSelectedPool] = useState<Pool | null>(null)
+  const [showPoolEditor, setShowPoolEditor] = useState(false)
+  const [showAddPool, setShowAddPool] = useState(false)
+  const [technicians, setTechnicians] = useState<Technician[]>([])
+  const [currentAssignment, setCurrentAssignment] = useState<Technician | null>(null)
+
+  // Initialize form data when client changes
+  useEffect(() => {
+    if (client) {
+      setFormData({
+        ...client,
+        // Ensure nested objects are properly copied
+        address: { ...client.address },
+        ...(isRetailClient(client) && {
+          retail: {
+            ...client.retail,
+            deliveryPreferences: { ...client.retail.deliveryPreferences },
+          },
+        }),
+        ...(isServiceClient(client) && {
+          service: {
+            ...client.service,
+            laborRates: { ...client.service.laborRates },
+            emergencyService: { ...client.service.emergencyService },
+            preferredServiceWindow: client.service.preferredServiceWindow
+              ? { ...client.service.preferredServiceWindow }
+              : undefined,
+          },
+        }),
+        ...(isMaintenanceClient(client) && {
+          maintenance: {
+            ...client.maintenance,
+            chemicalProgram: { ...client.maintenance.chemicalProgram },
+            serviceIntervals: { ...client.maintenance.serviceIntervals },
+            accessInstructions: { ...client.maintenance.accessInstructions },
+            maintenancePreferences: { ...client.maintenance.maintenancePreferences },
+            seasonalService: { ...client.maintenance.seasonalService },
+          },
+        }),
+      })
+      setFormErrors({})
+      
+      // Fetch pools for all client types and technicians for maintenance clients
+      fetchClientPools(client)
+      if (isMaintenanceClient(client)) {
+        fetchTechnicians()
+      } else {
+        // Clear technicians and assignments for non-maintenance clients
+        setTechnicians([])
+        setCurrentAssignment(null)
+      }
+    }
+  }, [client])
+
+  const fetchClientPools = async (client: Client) => {
+    try {
+      setPoolsLoading(true)
+      const token = localStorage.getItem('technicianToken')
+      const response = await fetch(`/api/pools?clientId=${client._id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        if (data.success) {
+          setPools(data.pools || [])
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching pools:', err)
+    } finally {
+      setPoolsLoading(false)
+    }
+  }
+
+  const fetchTechnicians = async () => {
+    try {
+      const token = localStorage.getItem('technicianToken')
+      const response = await fetch('/api/technicians', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        if (data.success) {
+          setTechnicians(data.technicians || [])
+          
+          // Find current assignment
+          if (client) {
+            const assignedTechnician = data.technicians.find((tech: Technician) =>
+              tech.assignedClients.includes(client._id.toString())
+            )
+            setCurrentAssignment(assignedTechnician || null)
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching technicians:', err)
+    }
+  }
+
+  const handleInputChange = (field: string, value: any) => {
+    const fieldParts = field.split('.')
+    
+    if (fieldParts.length === 1) {
+      setFormData(prev => ({ ...prev, [field]: value }))
+    } else if (fieldParts.length === 2) {
+      const [section, subField] = fieldParts
+      setFormData(prev => ({
+        ...prev,
+        [section]: {
+          ...(prev as any)[section],
+          [subField]: value,
+        },
+      }))
+    } else if (fieldParts.length === 3) {
+      const [section, subSection, subField] = fieldParts
+      setFormData(prev => ({
+        ...prev,
+        [section]: {
+          ...(prev as any)[section],
+          [subSection]: {
+            ...((prev as any)[section] || {})[subSection],
+            [subField]: value,
+          },
+        },
+      }))
+    }
+
+    // Clear error when user starts typing
+    if (formErrors[field]) {
+      setFormErrors(prev => {
+        const newErrors = { ...prev }
+        delete newErrors[field]
+        return newErrors
+      })
+    }
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!client || !formData) return
+
+    try {
+      await onSave(formData as Client)
+      onClose()
+    } catch (error) {
+      console.error('Error saving client:', error)
+    }
+  }
+
+  const handleSavePool = async (poolData: Partial<Pool>) => {
+    if (!client || !selectedPool) return
+
+    try {
+      const token = localStorage.getItem('technicianToken')
+      const response = await fetch(`/api/pools/${selectedPool._id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(poolData),
+      })
+
+      const data = await response.json()
+
+      if (response.ok && data.success) {
+        // Refresh pools list
+        await fetchClientPools(client)
+        setShowPoolEditor(false)
+        setSelectedPool(null)
+      } else {
+        console.error('Failed to update pool:', data.message)
+      }
+    } catch (error) {
+      console.error('Error updating pool:', error)
+    }
+  }
+
+  const handleCreatePool = async (poolData: Partial<Pool>) => {
+    if (!client) return
+
+    try {
+      const token = localStorage.getItem('technicianToken')
+      const response = await fetch('/api/pools', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          ...poolData,
+          clientId: client._id,
+          isActive: true,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (response.ok && data.success) {
+        // Refresh pools list
+        await fetchClientPools(client)
+        setShowAddPool(false)
+        setSelectedPool(null)
+      } else {
+        console.error('Failed to create pool:', data.message)
+      }
+    } catch (error) {
+      console.error('Error creating pool:', error)
+    }
+  }
+
+  if (!client || !formData) {
+    return null
+  }
+
+  const clientType = client.clientType
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            Edit Client: {client.name}
+            <Badge variant={clientType === 'retail' ? 'default' : clientType === 'service' ? 'secondary' : 'outline'}>
+              {clientType}
+            </Badge>
+          </DialogTitle>
+          <DialogDescription>
+            Update client information and preferences
+          </DialogDescription>
+        </DialogHeader>
+
+        <form onSubmit={handleSubmit} className="flex-1 overflow-hidden">
+          <Tabs defaultValue="basic" className="h-full flex flex-col">
+            <TabsList className="grid w-full gap-1 grid-cols-5">
+              <TabsTrigger value="basic" className="text-xs sm:text-sm px-2 sm:px-3">
+                Basic
+              </TabsTrigger>
+              <TabsTrigger value="contact" className="text-xs sm:text-sm px-2 sm:px-3">
+                Contact
+              </TabsTrigger>
+              <TabsTrigger value="type-specific" className="text-xs sm:text-sm px-2 sm:px-3">
+                {clientType === 'retail' ? 'Retail' : 
+                 clientType === 'service' ? 'Service' : 
+                 'Settings'}
+              </TabsTrigger>
+              <TabsTrigger value="pools" className="text-blue-600 text-xs sm:text-sm px-2 sm:px-3">
+                Pools
+              </TabsTrigger>
+              <TabsTrigger value="advanced" className="text-xs sm:text-sm px-2 sm:px-3">
+                Advanced
+              </TabsTrigger>
+            </TabsList>
+
+            <div className="flex-1 overflow-y-auto p-1">
+              <TabsContent value="basic" className="space-y-4 mt-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="name">Client Name *</Label>
+                    <Input
+                      id="name"
+                      value={formData.name || ''}
+                      onChange={(e) => handleInputChange('name', e.target.value)}
+                      className={formErrors.name ? 'border-red-500' : ''}
+                    />
+                    {formErrors.name && (
+                      <p className="text-red-500 text-sm mt-1">{formErrors.name}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <Label htmlFor="isActive">Status</Label>
+                    <Select
+                      value={formData.isActive ? 'active' : 'inactive'}
+                      onValueChange={(value) => handleInputChange('isActive', value === 'active')}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="active">Active</SelectItem>
+                        <SelectItem value="inactive">Inactive</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="specialInstructions">Special Instructions</Label>
+                  <Textarea
+                    id="specialInstructions"
+                    value={formData.specialInstructions || ''}
+                    onChange={(e) => handleInputChange('specialInstructions', e.target.value)}
+                    rows={3}
+                  />
+                </div>
+              </TabsContent>
+
+              <TabsContent value="contact" className="space-y-4 mt-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="email">Email *</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={formData.email || ''}
+                      onChange={(e) => handleInputChange('email', e.target.value)}
+                      className={formErrors.email ? 'border-red-500' : ''}
+                    />
+                    {formErrors.email && (
+                      <p className="text-red-500 text-sm mt-1">{formErrors.email}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <Label htmlFor="phone">Phone *</Label>
+                    <Input
+                      id="phone"
+                      value={formData.phone || ''}
+                      onChange={(e) => handleInputChange('phone', e.target.value)}
+                      className={formErrors.phone ? 'border-red-500' : ''}
+                    />
+                    {formErrors.phone && (
+                      <p className="text-red-500 text-sm mt-1">{formErrors.phone}</p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <h4 className="text-sm font-medium text-foreground">Address</h4>
+                  <div>
+                    <Label htmlFor="street">Street Address *</Label>
+                    <Input
+                      id="street"
+                      value={formData.address?.street || ''}
+                      onChange={(e) => handleInputChange('address.street', e.target.value)}
+                      className={formErrors['address.street'] ? 'border-red-500' : ''}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <Label htmlFor="city">City *</Label>
+                      <Input
+                        id="city"
+                        value={formData.address?.city || ''}
+                        onChange={(e) => handleInputChange('address.city', e.target.value)}
+                        className={formErrors['address.city'] ? 'border-red-500' : ''}
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="state">State *</Label>
+                      <Input
+                        id="state"
+                        value={formData.address?.state || ''}
+                        onChange={(e) => handleInputChange('address.state', e.target.value)}
+                        className={formErrors['address.state'] ? 'border-red-500' : ''}
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="zipCode">ZIP Code *</Label>
+                      <Input
+                        id="zipCode"
+                        value={formData.address?.zipCode || ''}
+                        onChange={(e) => handleInputChange('address.zipCode', e.target.value)}
+                        className={formErrors['address.zipCode'] ? 'border-red-500' : ''}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="type-specific" className="space-y-4 mt-4">
+                {clientType === 'retail' && isRetailClient(client) && (
+                  <div className="space-y-4">
+                    <h4 className="text-sm font-medium text-foreground">Retail Settings</h4>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="pricingTier">Pricing Tier</Label>
+                        <Select
+                          value={(formData as RetailClient).retail?.pricingTier || 'standard'}
+                          onValueChange={(value) => handleInputChange('retail.pricingTier', value)}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="standard">Standard</SelectItem>
+                            <SelectItem value="preferred">Preferred</SelectItem>
+                            <SelectItem value="commercial">Commercial</SelectItem>
+                            <SelectItem value="wholesale">Wholesale</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div>
+                        <Label htmlFor="paymentTerms">Payment Terms</Label>
+                        <Select
+                          value={(formData as RetailClient).retail?.paymentTerms || 'net-30'}
+                          onValueChange={(value) => handleInputChange('retail.paymentTerms', value)}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="net-30">Net 30</SelectItem>
+                            <SelectItem value="net-15">Net 15</SelectItem>
+                            <SelectItem value="cod">COD</SelectItem>
+                            <SelectItem value="prepaid">Prepaid</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="taxExempt"
+                        checked={(formData as RetailClient).retail?.taxExempt || false}
+                        onCheckedChange={(checked) => handleInputChange('retail.taxExempt', checked)}
+                      />
+                      <Label htmlFor="taxExempt">Tax Exempt</Label>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="creditLimit">Credit Limit ($)</Label>
+                      <Input
+                        id="creditLimit"
+                        type="number"
+                        min="0"
+                        step="100"
+                        value={(formData as RetailClient).retail?.creditLimit || ''}
+                        onChange={(e) => handleInputChange('retail.creditLimit', parseFloat(e.target.value) || undefined)}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {clientType === 'service' && isServiceClient(client) && (
+                  <div className="space-y-4">
+                    <h4 className="text-sm font-medium text-foreground">Service Settings</h4>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="standardRate">Standard Labor Rate ($/hr)</Label>
+                        <Input
+                          id="standardRate"
+                          type="number"
+                          min="0"
+                          step="5"
+                          value={(formData as ServiceClient).service?.laborRates?.standard || ''}
+                          onChange={(e) => handleInputChange('service.laborRates.standard', parseFloat(e.target.value) || 0)}
+                        />
+                      </div>
+
+                      <div>
+                        <Label htmlFor="emergencyRate">Emergency Labor Rate ($/hr)</Label>
+                        <Input
+                          id="emergencyRate"
+                          type="number"
+                          min="0"
+                          step="5"
+                          value={(formData as ServiceClient).service?.laborRates?.emergency || ''}
+                          onChange={(e) => handleInputChange('service.laborRates.emergency', parseFloat(e.target.value) || 0)}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="emergencyService"
+                        checked={(formData as ServiceClient).service?.emergencyService?.enabled || false}
+                        onCheckedChange={(checked) => handleInputChange('service.emergencyService.enabled', checked)}
+                      />
+                      <Label htmlFor="emergencyService">Emergency Service Available</Label>
+                    </div>
+                  </div>
+                )}
+
+                {clientType === 'maintenance' && isMaintenanceClient(client) && (
+                  <div className="space-y-4">
+                    <h4 className="text-sm font-medium text-foreground">Maintenance Settings</h4>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="serviceFrequency">Service Frequency</Label>
+                        <Select
+                          value={(formData as MaintenanceClient).maintenance?.serviceFrequency || 'weekly'}
+                          onValueChange={(value) => handleInputChange('maintenance.serviceFrequency', value)}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="twice-weekly">Twice Weekly</SelectItem>
+                            <SelectItem value="weekly">Weekly</SelectItem>
+                            <SelectItem value="bi-weekly">Bi-weekly</SelectItem>
+                            <SelectItem value="monthly">Monthly</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div>
+                        <Label htmlFor="serviceDay">Service Day</Label>
+                        <Input
+                          id="serviceDay"
+                          value={(formData as MaintenanceClient).maintenance?.serviceDay || ''}
+                          onChange={(e) => handleInputChange('maintenance.serviceDay', e.target.value)}
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="gateCode">Gate Code</Label>
+                      <Input
+                        id="gateCode"
+                        value={(formData as MaintenanceClient).maintenance?.accessInstructions?.gateCode || ''}
+                        onChange={(e) => handleInputChange('maintenance.accessInstructions.gateCode', e.target.value)}
+                      />
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="dogOnProperty"
+                        checked={(formData as MaintenanceClient).maintenance?.accessInstructions?.dogOnProperty || false}
+                        onCheckedChange={(checked) => handleInputChange('maintenance.accessInstructions.dogOnProperty', checked)}
+                      />
+                      <Label htmlFor="dogOnProperty">Dog on Property</Label>
+                    </div>
+                  </div>
+                )}
+              </TabsContent>
+
+              <TabsContent value="pools" className="space-y-4 mt-4">
+                <div className="space-y-6">
+                  {/* Technician Assignment Section - Only for Maintenance Clients */}
+                  {isMaintenanceClient(client) && (
+                    <div className="bg-blue-50 dark:bg-blue-950/30 rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-4">
+                        <h4 className="font-medium flex items-center gap-2 text-blue-700 dark:text-blue-300">
+                          <Target className="h-4 w-4" />
+                          Technician Assignment
+                        </h4>
+                      </div>
+
+                      {currentAssignment ? (
+                        <div className="flex items-center justify-between bg-background rounded p-3">
+                          <div className="flex items-center gap-3">
+                            <Users className="h-5 w-5 text-blue-600" />
+                            <div>
+                              <div className="font-medium text-blue-700 dark:text-blue-300">
+                                {currentAssignment.name}
+                              </div>
+                              <div className="text-sm text-muted-foreground">
+                                {currentAssignment.email} • {currentAssignment.phone}
+                              </div>
+                            </div>
+                          </div>
+                          <Badge variant="outline" className="text-blue-700 border-blue-300">
+                            Assigned
+                          </Badge>
+                        </div>
+                      ) : (
+                        <div className="text-center py-4 text-muted-foreground">
+                          <Users className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                          <p>No technician assigned</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Client Type Specific Header */}
+                  <div className="bg-gray-50 dark:bg-gray-900/30 rounded-lg p-3">
+                    <div className="flex items-center gap-2">
+                      <div className="h-2 w-2 rounded-full bg-blue-600"></div>
+                      <p className="text-sm text-muted-foreground">
+                        {clientType === 'maintenance' && "Pools for ongoing cleaning and chemical maintenance"}
+                        {clientType === 'service' && "Pools for equipment installation, repair, and service"}
+                        {clientType === 'retail' && "Pools for water testing and chemical sales"}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Pools Section */}
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-medium text-foreground">
+                        {clientType === 'maintenance' && "Maintenance Pools"}
+                        {clientType === 'service' && "Service Pools"}
+                        {clientType === 'retail' && "Customer Pools"}
+                      </h4>
+                        <Button 
+                          size="sm" 
+                          className="bg-blue-600 hover:bg-blue-700"
+                          onClick={() => {
+                            setSelectedPool({
+                              name: '',
+                              type: 'residential',
+                              shape: 'rectangular',
+                              dimensions: { avgDepth: 0 },
+                              volume: { gallons: 0, calculatedAt: new Date() },
+                              equipment: { filter: { type: 'sand' }, pump: {} },
+                              targetLevels: {
+                                ph: { target: 7.4, min: 7.2, max: 7.6 },
+                                freeChlorine: { target: 3.0, min: 1.0, max: 5.0 },
+                                totalAlkalinity: { target: 100, min: 80, max: 120 },
+                                calciumHardness: { target: 250, min: 200, max: 400 },
+                                cyanuricAcid: { target: 50, min: 30, max: 100 },
+                              },
+                              isActive: true,
+                            } as Pool)
+                            setShowAddPool(true)
+                          }}
+                        >
+                          <Plus className="h-4 w-4 mr-2" />
+                          Add Pool
+                        </Button>
+                      </div>
+
+                      {poolsLoading ? (
+                        <div className="text-center py-8">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                          <p className="text-muted-foreground">Loading pools...</p>
+                        </div>
+                      ) : pools.length === 0 ? (
+                        <div className="text-center py-8 text-muted-foreground">
+                          <div className="h-12 w-12 mx-auto mb-4 opacity-50 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
+                            <Target className="h-6 w-6 text-blue-600" />
+                          </div>
+                          <h3 className="text-lg font-medium mb-2">No pools found</h3>
+                          <p className="mb-4">
+                            {clientType === 'maintenance' && "Add pools to get started with maintenance tracking."}
+                            {clientType === 'service' && "Add pools for equipment service and installation."}
+                            {clientType === 'retail' && "Add pools for water testing and chemical sales."}
+                          </p>
+                          <Button 
+                            className="bg-blue-600 hover:bg-blue-700"
+                            onClick={() => {
+                              setSelectedPool({
+                                name: '',
+                                type: 'residential',
+                                shape: 'rectangular',
+                                dimensions: { avgDepth: 0 },
+                                volume: { gallons: 0, calculatedAt: new Date() },
+                                equipment: { filter: { type: 'sand' }, pump: {} },
+                                targetLevels: {
+                                  ph: { target: 7.4, min: 7.2, max: 7.6 },
+                                  freeChlorine: { target: 3.0, min: 1.0, max: 5.0 },
+                                  totalAlkalinity: { target: 100, min: 80, max: 120 },
+                                  calciumHardness: { target: 250, min: 200, max: 400 },
+                                  cyanuricAcid: { target: 50, min: 30, max: 100 },
+                                },
+                                isActive: true,
+                              } as Pool)
+                              setShowAddPool(true)
+                            }}
+                          >
+                            <Plus className="h-4 w-4 mr-2" />
+                            Add First Pool
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="grid gap-4">
+                          {pools.map((pool) => (
+                            <div key={pool._id.toString()} className="border rounded-lg p-4 hover:bg-muted/50 transition-colors">
+                              <div className="flex items-center justify-between">
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-3 mb-2">
+                                    <h5 className="font-medium text-foreground">{pool.name}</h5>
+                                    <Badge variant="outline" className="capitalize">
+                                      {pool.type}
+                                    </Badge>
+                                    <Badge variant="secondary" className="capitalize">
+                                      {pool.shape}
+                                    </Badge>
+                                  </div>
+                                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm text-muted-foreground">
+                                    <div>Volume: {pool.volume?.gallons?.toLocaleString() || 'N/A'} gallons</div>
+                                    <div>Depth: {pool.dimensions?.avgDepth || 'N/A'} ft</div>
+                                    <div>Filter: {pool.equipment?.filter?.type || 'N/A'}</div>
+                                    <div>Status: {pool.isActive ? 'Active' : 'Inactive'}</div>
+                                  </div>
+                                  {pool.notes && (
+                                    <p className="text-sm text-muted-foreground mt-2 italic">{pool.notes}</p>
+                                  )}
+                                </div>
+                                <div className="flex items-center gap-2 ml-4">
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="text-blue-600 border-blue-300 hover:bg-blue-50"
+                                    onClick={() => {
+                                      setSelectedPool(pool)
+                                      setShowPoolEditor(true)
+                                    }}
+                                  >
+                                    <Edit className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="text-red-600 border-red-300 hover:bg-red-50"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="advanced" className="space-y-4 mt-4">
+                <div>
+                  <Label>Client ID</Label>
+                  <Input value={client._id.toString()} disabled className="bg-muted" />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label>Created At</Label>
+                    <Input 
+                      value={client.createdAt ? new Date(client.createdAt).toLocaleDateString() : 'N/A'} 
+                      disabled 
+                      className="bg-muted" 
+                    />
+                  </div>
+
+                  <div>
+                    <Label>Last Updated</Label>
+                    <Input 
+                      value={client.updatedAt ? new Date(client.updatedAt).toLocaleDateString() : 'N/A'} 
+                      disabled 
+                      className="bg-muted" 
+                    />
+                  </div>
+                </div>
+              </TabsContent>
+            </div>
+          </Tabs>
+        </form>
+
+        <DialogFooter className="flex gap-2">
+          <Button type="button" variant="outline" onClick={onClose} disabled={saving}>
+            Cancel
+          </Button>
+          <Button 
+            type="submit" 
+            onClick={handleSubmit} 
+            disabled={saving}
+            className="bg-blue-600 hover:bg-blue-700"
+          >
+            {saving ? 'Saving...' : 'Save Changes'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+
+      {/* Pool Editor Dialog */}
+      <PoolEditor
+        pool={selectedPool}
+        isOpen={showPoolEditor || showAddPool}
+        onClose={() => {
+          setShowPoolEditor(false)
+          setShowAddPool(false)
+          setSelectedPool(null)
+        }}
+        onSave={showAddPool ? handleCreatePool : handleSavePool}
+        saving={saving}
+      />
+    </Dialog>
+  )
+}
+
+export default ClientEditForm

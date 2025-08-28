@@ -8,6 +8,7 @@ import {
   Plus,
   Search,
 } from 'lucide-react'
+import { useBreadcrumb } from '@/components/Navigation'
 
 // Import new components
 import ClientFilters from './ClientFilters'
@@ -15,6 +16,7 @@ import ClientCard from './ClientCard'
 import ClientTable from './ClientTable'
 import ClientModal from './ClientModal'
 import ClientCreateForm from './ClientCreateForm'
+import ClientEditForm from './ClientEditForm'
 import PoolManagementModal from './PoolManagementModal'
 
 import { useClientManagementState } from '../hooks/useClientManagementState'
@@ -27,6 +29,7 @@ import {
   Pool,
   isMaintenanceClient,
 } from '@/types/pool-service'
+import { showToast } from '@/lib/toast'
 
 interface Technician {
   _id: string
@@ -41,6 +44,7 @@ interface Technician {
 }
 
 export default function ClientManagement() {
+  const { setBreadcrumbs } = useBreadcrumb()
   const {
     viewMode,
     searchTerm,
@@ -67,6 +71,10 @@ export default function ClientManagement() {
   >('maintenance')
   const [clientSaving, setClientSaving] = useState(false)
   const [showCreateForm, setShowCreateForm] = useState(false)
+  
+  // Edit client state
+  const [showEditClient, setShowEditClient] = useState(false)
+  const [editingClient, setEditingClient] = useState<Client | null>(null)
 
   // Pool state (keeping existing functionality)
   const [selectedClient, setSelectedClient] = useState<Client | null>(null)
@@ -139,9 +147,13 @@ export default function ClientManagement() {
 
   // Fetch clients and technicians on component mount
   useEffect(() => {
+    setBreadcrumbs([
+      { label: 'Dashboard', href: '/dashboard' },
+      { label: 'Client Management' }
+    ])
     fetchClients()
     fetchTechnicians()
-  }, [])
+  }, [setBreadcrumbs])
 
   // Apply filters
   useEffect(() => {
@@ -427,8 +439,8 @@ export default function ClientManagement() {
         setShowCreateForm(false)
         resetClientForm()
         
-        // Show success message (you could use a toast notification here)
-        alert(`${clientData.name} has been created successfully!`)
+        // Show success message
+        showToast.success('Client created successfully', `${clientData.name} has been added to your client list.`)
       } else {
         // Handle validation errors
         if (data.errors) {
@@ -439,6 +451,45 @@ export default function ClientManagement() {
       }
     } catch (err) {
       console.error('Error creating client:', err)
+      setError('Network error - please try again')
+    } finally {
+      setClientSaving(false)
+    }
+  }
+
+  const handleEditClient = (client: Client) => {
+    setEditingClient(client)
+    setShowEditClient(true)
+  }
+
+  const handleUpdateClient = async (updatedClient: Client) => {
+    setClientSaving(true)
+    try {
+      const token = localStorage.getItem('technicianToken')
+      const response = await fetch(`/api/clients/${updatedClient._id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(updatedClient),
+      })
+
+      const data = await response.json()
+
+      if (response.ok && data.success) {
+        // Refresh the client list
+        await fetchClients()
+        setShowEditClient(false)
+        setEditingClient(null)
+        
+        // Show success message
+        showToast.success('Client updated successfully', `${updatedClient.name} has been updated.`)
+      } else {
+        setError(data.message || 'Failed to update client')
+      }
+    } catch (err) {
+      console.error('Error updating client:', err)
       setError('Network error - please try again')
     } finally {
       setClientSaving(false)
@@ -481,17 +532,17 @@ export default function ClientManagement() {
           setSelectedTechnician('')
           setShowAssignmentSection(false)
 
-          // Show success message (you might want to use a toast instead)
-          alert('Client assigned successfully!')
+          // Show success message
+          showToast.success('Client assigned successfully', 'The client has been assigned to the technician.')
         } else {
-          alert('Error: ' + data.error)
+          showToast.error('Assignment failed', data.error)
         }
       } else {
-        alert('Failed to assign client')
+        showToast.error('Assignment failed', 'Failed to assign client to technician.')
       }
     } catch (error) {
       console.error('Error assigning client:', error)
-      alert('Error assigning client')
+      showToast.error('Assignment failed', 'An error occurred while assigning the client.')
     } finally {
       setAssignmentLoading(false)
     }
@@ -529,16 +580,16 @@ export default function ClientManagement() {
           // Refresh technicians data
           await fetchTechnicians()
 
-          alert('Assignment removed successfully!')
+          showToast.success('Assignment removed', 'The client assignment has been removed successfully.')
         } else {
-          alert('Error: ' + data.error)
+          showToast.error('Removal failed', data.error)
         }
       } else {
-        alert('Failed to remove assignment')
+        showToast.error('Removal failed', 'Failed to remove client assignment.')
       }
     } catch (error) {
       console.error('Error removing assignment:', error)
-      alert('Error removing assignment')
+      showToast.error('Removal failed', 'An error occurred while removing the assignment.')
     } finally {
       setAssignmentLoading(false)
     }
@@ -623,7 +674,7 @@ export default function ClientManagement() {
           <ClientTable
             clients={filteredClients}
             onViewPools={fetchClientPools}
-            onEdit={(client) => console.log('Edit client:', client)}
+            onEdit={handleEditClient}
           />
         ) : (
           <div className='p-6'>
@@ -633,7 +684,7 @@ export default function ClientManagement() {
                   key={client._id.toString()}
                   client={client}
                   onViewPools={fetchClientPools}
-                  onEdit={(client) => console.log('Edit client:', client)}
+                  onEdit={handleEditClient}
                 />
               ))}
             </div>
@@ -704,6 +755,18 @@ export default function ClientManagement() {
           setShowCreateForm(false)
           resetClientForm()
         }}
+      />
+
+      {/* Client Edit Form */}
+      <ClientEditForm
+        isOpen={showEditClient}
+        client={editingClient}
+        onClose={() => {
+          setShowEditClient(false)
+          setEditingClient(null)
+        }}
+        onSave={handleUpdateClient}
+        saving={clientSaving}
       />
     </div>
   )

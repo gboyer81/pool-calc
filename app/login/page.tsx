@@ -3,6 +3,9 @@
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { NeonGradientCard } from 'components/magicui/neon-gradient-card'
+import { ShinyButton } from 'components/magicui/shiny-button'
+import { MagicCard } from 'components/magicui/magic-card'
+import { showToast } from '@/lib/toast'
 
 interface LoginCredentials {
   email: string
@@ -54,13 +57,16 @@ export default function TechnicianLogin() {
       if (!response.ok) {
         console.error('Response not ok:', response.status, response.statusText)
       }
-      
+
       const contentType = response.headers.get('content-type')
       console.log('Response content-type:', contentType)
-      
+
       if (!contentType || !contentType.includes('application/json')) {
         const htmlText = await response.text()
-        console.error('Expected JSON but received HTML:', htmlText.substring(0, 200))
+        console.error(
+          'Expected JSON but received HTML:',
+          htmlText.substring(0, 200)
+        )
         setError('Server error - please try again later')
         return
       }
@@ -73,16 +79,21 @@ export default function TechnicianLogin() {
         localStorage.setItem('technicianToken', data.token)
         localStorage.setItem('technicianData', JSON.stringify(data.technician))
 
+        showToast.success('Login successful!', `Welcome back, ${data.technician.firstName}`)
+        
         // Redirect to dashboard
         router.push('/')
       } else {
+        showToast.error('Login failed', data.error || 'Invalid credentials')
         setError(data.error || 'Login failed')
       }
     } catch (err) {
       console.error('Login error details:', err)
       if (err instanceof SyntaxError) {
+        showToast.error('Server Error', 'Please try again later')
         setError('Server response error - please try again')
       } else {
+        showToast.error('Network Error', 'Please check your connection')
         setError('Network error - please check your connection')
       }
     } finally {

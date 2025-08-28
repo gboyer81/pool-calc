@@ -3,6 +3,11 @@
 import React, { useState, useEffect } from 'react'
 import ProtectedRoute from '../components/ProtectedRoute'
 import { Search } from 'lucide-react'
+import { useBreadcrumb } from '@/components/Navigation'
+import { Badge } from '@/components/ui/badge'
+import { showToast } from '@/lib/toast'
+import AssignmentTable from '@/components/AssignmentTable'
+import ClientAssignmentTable from '@/components/ClientAssignmentTable'
 
 interface Technician {
   _id: string
@@ -44,6 +49,7 @@ interface AssignmentStats {
 }
 
 export default function AssignmentsPage() {
+  const { setBreadcrumbs } = useBreadcrumb()
   const [technicians, setTechnicians] = useState<Technician[]>([])
   const [clients, setClients] = useState<Client[]>([])
   const [unassignedClients, setUnassignedClients] = useState<Client[]>([])
@@ -82,8 +88,13 @@ export default function AssignmentsPage() {
   }
 
   useEffect(() => {
+    setBreadcrumbs([
+      { label: 'Dashboard', href: '/dashboard' },
+      { label: 'Admin', href: '/admin' },
+      { label: 'Client Assignments' }
+    ])
     fetchData()
-  }, [])
+  }, [setBreadcrumbs])
 
   useEffect(() => {
     if (technicians.length > 0 && clients.length > 0) {
@@ -262,15 +273,16 @@ export default function AssignmentsPage() {
           setShowAssignModal(false)
           setSelectedClient(null)
           setSelectedTechnician(null)
+          showToast.success('Client assigned successfully', 'The client has been assigned to the technician.')
         } else {
-          alert('Error: ' + data.error)
+          showToast.error('Assignment failed', data.error)
         }
       } else {
-        alert('Failed to assign client')
+        showToast.error('Assignment failed', 'Failed to assign client to technician.')
       }
     } catch (error) {
       console.error('Error assigning client:', error)
-      alert('Error assigning client')
+      showToast.error('Assignment failed', 'An error occurred while assigning the client.')
     } finally {
       setActionLoading(false)
     }
@@ -303,34 +315,61 @@ export default function AssignmentsPage() {
         const data = await response.json()
         if (data.success) {
           await fetchData() // Refresh data
+          showToast.success('Assignment removed', 'The client assignment has been removed successfully.')
         } else {
-          alert('Error: ' + data.error)
+          showToast.error('Removal failed', data.error)
         }
       } else {
-        alert('Failed to remove client assignment')
+        showToast.error('Removal failed', 'Failed to remove client assignment.')
       }
     } catch (error) {
       console.error('Error removing assignment:', error)
-      alert('Error removing assignment')
+      showToast.error('Removal failed', 'An error occurred while removing the assignment.')
     } finally {
       setActionLoading(false)
     }
   }
 
-  const getFrequencyBadgeColor = (frequency: string | undefined | null) => {
-    if (!frequency) return 'bg-muted text-gray-800' // Default for undefined/null
+  const getFrequencyBadge = (frequency: string | undefined | null) => {
+    if (!frequency) {
+      return (
+        <Badge variant="secondary" className="text-xs">
+          Not set
+        </Badge>
+      )
+    }
 
     switch (frequency) {
       case 'twice-weekly':
-        return 'bg-purple-100 text-purple-800'
+        return (
+          <Badge variant="outline" className="border-purple-200 bg-purple-50 text-purple-700 hover:bg-purple-100 dark:border-purple-800 dark:bg-purple-950 dark:text-purple-300 text-xs">
+            Twice Weekly
+          </Badge>
+        )
       case 'weekly':
-        return 'bg-blue-100 text-blue-800'
+        return (
+          <Badge variant="outline" className="border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-300 text-xs">
+            Weekly
+          </Badge>
+        )
       case 'bi-weekly':
-        return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+        return (
+          <Badge variant="outline" className="border-green-200 bg-green-50 text-green-700 hover:bg-green-100 dark:border-green-800 dark:bg-green-950 dark:text-green-300 text-xs">
+            Bi-weekly
+          </Badge>
+        )
       case 'monthly':
-        return 'bg-orange-100 text-orange-800'
+        return (
+          <Badge variant="outline" className="border-orange-200 bg-orange-50 text-orange-700 hover:bg-orange-100 dark:border-orange-800 dark:bg-orange-950 dark:text-orange-300 text-xs">
+            Monthly
+          </Badge>
+        )
       default:
-        return 'bg-muted text-gray-800'
+        return (
+          <Badge variant="secondary" className="text-xs">
+            {frequency}
+          </Badge>
+        )
     }
   }
 
@@ -460,118 +499,22 @@ export default function AssignmentsPage() {
 
         {/* Technicians View */}
         {view === 'technicians' && (
-          <div className='bg-background rounded-lg shadow-sm border overflow-hidden'>
-            <div className='px-6 py-4 border-b border-border'>
-              <h2 className='text-lg font-semibold text-foreground'>
+          <div className='space-y-4'>
+            <div className='bg-background rounded-lg shadow-sm border p-6'>
+              <h2 className='text-lg font-semibold text-foreground mb-4'>
                 Technicians & Their Assignments
               </h2>
-            </div>
-            <div className='overflow-x-auto'>
-              <table className='min-w-full divide-y divide-gray-200'>
-                <thead className='bg-muted/50'>
-                  <tr>
-                    <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-                      Technician
-                    </th>
-                    <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-                      Role
-                    </th>
-                    <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-                      Assigned Clients
-                    </th>
-                    <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-                      Service Areas
-                    </th>
-                    <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-                      Status
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className='bg-background divide-y divide-gray-200'>
-                  {technicians.map((technician) => (
-                    <tr key={technician._id} className='hover:bg-muted/50'>
-                      <td className='px-6 py-4 whitespace-nowrap'>
-                        <div>
-                          <div className='text-sm font-medium text-foreground'>
-                            {technician.name}
-                          </div>
-                          <div className='text-sm text-gray-500'>
-                            {technician.email}
-                          </div>
-                          <div className='text-xs text-gray-400'>
-                            ID: {technician.employeeId}
-                          </div>
-                        </div>
-                      </td>
-                      <td className='px-6 py-4 whitespace-nowrap'>
-                        <span
-                          className={`px-2 py-1 rounded-full text-xs font-medium ${getRoleBadgeColor(
-                            technician.role
-                          )}`}>
-                          {technician.role.toUpperCase()}
-                        </span>
-                      </td>
-                      <td className='px-6 py-4'>
-                        <div className='space-y-1'>
-                          <div className='text-sm font-medium text-foreground'>
-                            {technician.assignedClients.length} clients assigned
-                          </div>
-                          {technician.assignedClients
-                            .slice(0, 3)
-                            .map((clientId) => {
-                              const client = getClientById(clientId)
-                              return client ? (
-                                <div
-                                  key={clientId}
-                                  className='flex items-center justify-between bg-muted/50 p-2 rounded text-xs'>
-                                  <div>
-                                    <span className='font-medium'>
-                                      {client.name}
-                                    </span>
-                                    <span className='text-gray-500 ml-2'>
-                                      {client.address.city}
-                                    </span>
-                                  </div>
-                                  <button
-                                    onClick={() =>
-                                      removeClientFromTechnician(
-                                        technician._id,
-                                        clientId
-                                      )
-                                    }
-                                    disabled={actionLoading}
-                                    className='text-red-600 hover:text-red-800 ml-2'>
-                                    ✕
-                                  </button>
-                                </div>
-                              ) : null
-                            })}
-                          {technician.assignedClients.length > 3 && (
-                            <div className='text-xs text-gray-500'>
-                              +{technician.assignedClients.length - 3} more
-                            </div>
-                          )}
-                        </div>
-                      </td>
-                      <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
-                        {technician.serviceAreas.length > 0
-                          ? technician.serviceAreas.join(', ')
-                          : 'No areas set'}
-                      </td>
-                      <td className='px-6 py-4 whitespace-nowrap'>
-                        <span
-                          className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            technician.isActive
-                              ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
-                              : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
-                          }`}>
-                          {technician.isActive ? 'Active' : 'Inactive'}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <AssignmentTable
+                technicians={technicians}
+                clients={clients}
+                onAssignClient={assignClientToTechnician}
+                onRemoveClient={removeClientFromTechnician}
+                onViewAssignments={(technician) => {
+                  setSelectedTechnician(technician)
+                  // Additional logic for viewing assignments
+                }}
+                loading={loading}
+              />
             </div>
           </div>
         )}
@@ -767,14 +710,7 @@ export default function AssignmentsPage() {
                               </button>
                             </div>
                             <div className='flex items-center space-x-2'>
-                              <span
-                                className={`px-2 py-1 rounded text-xs font-medium ${getFrequencyBadgeColor(
-                                  client.serviceFrequency || ''
-                                )}`}>
-                                {formatServiceFrequency(
-                                  client.serviceFrequency
-                                )}
-                              </span>
+                              {getFrequencyBadge(client.serviceFrequency)}
                               {client.serviceDay && (
                                 <span className='text-xs text-gray-500'>
                                   {client.serviceDay}s
@@ -842,14 +778,7 @@ export default function AssignmentsPage() {
                             </td>
                             <td className='px-6 py-4 whitespace-nowrap'>
                               <div className='space-y-1'>
-                                <span
-                                  className={`px-2 py-1 rounded text-xs font-medium ${getFrequencyBadgeColor(
-                                    client.serviceFrequency || ''
-                                  )}`}>
-                                  {formatServiceFrequency(
-                                    client.serviceFrequency
-                                  )}
-                                </span>
+                                {getFrequencyBadge(client.serviceFrequency)}
                                 {client.serviceDay && (
                                   <div className='text-xs text-gray-500'>
                                     {client.serviceDay}s
@@ -907,6 +836,29 @@ export default function AssignmentsPage() {
                   </tbody>
                 </table>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modern Client Assignment Table (Alternative View) */}
+        {view === 'clients' && (
+          <div className='mt-6 space-y-4'>
+            <div className='bg-background rounded-lg shadow-sm border p-6'>
+              <h2 className='text-lg font-semibold text-foreground mb-4'>
+                Client Assignments (Table View)
+              </h2>
+              <ClientAssignmentTable
+                clients={filteredClients}
+                technicians={technicians}
+                onAssignClient={assignClientToTechnician}
+                onUnassignClient={(clientId) => {
+                  const assignedTech = technicians.find(t => t.assignedClients.includes(clientId))
+                  if (assignedTech) {
+                    removeClientFromTechnician(assignedTech._id, clientId)
+                  }
+                }}
+                loading={loading}
+              />
             </div>
           </div>
         )}

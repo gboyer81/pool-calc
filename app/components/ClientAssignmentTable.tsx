@@ -7,12 +7,15 @@ import {
   Calendar,
   Users,
   MoreHorizontal,
-  ColumnsIcon,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
+  ColumnsIcon,
+  UserCheck,
+  UserX,
+  UserPlus,
 } from 'lucide-react'
 import {
   ColumnDef,
@@ -50,18 +53,46 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import {
-  Client,
-  isMaintenanceClient,
-} from '@/types/pool-service'
 
-interface ClientTableProps {
-  clients: Client[]
-  onViewPools?: (client: Client) => void
-  onEdit?: (client: Client) => void
+interface Client {
+  _id: string
+  name: string
+  email: string
+  phone: string
+  address: {
+    street: string
+    city: string
+    state: string
+    zipCode: string
+  }
+  clientType?: 'retail' | 'service' | 'maintenance'
+  serviceFrequency?: 'twice-weekly' | 'weekly' | 'bi-weekly' | 'monthly'
+  serviceDay?: string
+  isActive: boolean
+  assignedTechnician?: string
 }
 
-const getClientTypeIcon = (type: string) => {
+interface Technician {
+  _id: string
+  name: string
+  email: string
+  phone: string
+  employeeId: string
+  role: 'technician' | 'supervisor' | 'admin'
+  assignedClients: string[]
+  isActive: boolean
+  serviceAreas: string[]
+}
+
+interface ClientAssignmentTableProps {
+  clients: Client[]
+  technicians: Technician[]
+  onAssignClient?: (clientId: string, technicianId: string) => void
+  onUnassignClient?: (clientId: string) => void
+  loading?: boolean
+}
+
+const getClientTypeIcon = (type: string | undefined) => {
   switch (type) {
     case 'retail':
       return <ShoppingCart className='h-4 w-4 text-green-600' />
@@ -74,9 +105,19 @@ const getClientTypeIcon = (type: string) => {
   }
 }
 
+const getAssignedTechnician = (client: Client, technicians: Technician[]): Technician | null => {
+  return technicians.find(tech => tech.assignedClients.includes(client._id)) || null
+}
+
+const formatServiceFrequency = (frequency: string | undefined) => {
+  if (!frequency || typeof frequency !== 'string') return 'Not set'
+  return frequency.replace('-', ' ')
+}
+
 const columns = (
-  onViewPools?: (client: Client) => void,
-  onEdit?: (client: Client) => void
+  technicians: Technician[],
+  onAssignClient?: (clientId: string, technicianId: string) => void,
+  onUnassignClient?: (clientId: string) => void
 ): ColumnDef<Client>[] => [
   {
     accessorKey: 'name',
@@ -85,13 +126,16 @@ const columns = (
       const client = row.original
       return (
         <div className='flex items-center'>
-          {getClientTypeIcon(client.clientType)}
+          {getClientTypeIcon(client.clientType || 'maintenance')}
           <div className='ml-3'>
             <div className='text-sm font-medium text-foreground'>
               {client.name}
             </div>
             <div className='text-sm text-muted-foreground'>
               {client.address.city}, {client.address.state}
+            </div>
+            <div className='text-xs text-muted-foreground'>
+              {client.email}
             </div>
           </div>
         </div>
@@ -107,11 +151,11 @@ const columns = (
       const getTypeStyles = (type: string) => {
         switch (type) {
           case 'retail':
-            return 'border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-300'
-          case 'service':
             return 'border-green-200 bg-green-50 text-green-700 hover:bg-green-100 dark:border-green-800 dark:bg-green-950 dark:text-green-300'
+          case 'service':
+            return 'border-orange-200 bg-orange-50 text-orange-700 hover:bg-orange-100 dark:border-orange-800 dark:bg-orange-950 dark:text-orange-300'
           default:
-            return 'border-purple-200 bg-purple-50 text-purple-700 hover:bg-purple-100 dark:border-purple-800 dark:bg-purple-950 dark:text-purple-300'
+            return 'border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-300'
         }
       }
       
@@ -128,6 +172,49 @@ const columns = (
     },
   },
   {
+    id: 'serviceFrequency',
+    header: 'Service Frequency',
+    cell: ({ row }) => {
+      const client = row.original
+      return (
+        <div className='text-sm text-muted-foreground'>
+          {formatServiceFrequency(client.serviceFrequency)}
+        </div>
+      )
+    },
+  },
+  {
+    id: 'assignedTechnician',
+    header: 'Assigned Technician',
+    cell: ({ row }) => {
+      const client = row.original
+      const assignedTech = getAssignedTechnician(client, technicians)
+      
+      return (
+        <div className='space-y-2'>
+          {assignedTech ? (
+            <div className='flex items-center gap-2'>
+              <UserCheck className='h-4 w-4 text-green-600' />
+              <div>
+                <div className='text-sm font-medium text-foreground'>
+                  {assignedTech.name}
+                </div>
+                <div className='text-xs text-muted-foreground'>
+                  {assignedTech.email}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className='flex items-center gap-2'>
+              <UserX className='h-4 w-4 text-muted-foreground' />
+              <span className='text-sm text-muted-foreground'>Unassigned</span>
+            </div>
+          )}
+        </div>
+      )
+    },
+  },
+  {
     id: 'contact',
     header: 'Contact',
     cell: ({ row }) => {
@@ -135,7 +222,9 @@ const columns = (
       return (
         <div>
           <div className='text-sm text-foreground'>{client.phone}</div>
-          <div className='text-sm text-muted-foreground'>{client.email}</div>
+          <div className='text-xs text-muted-foreground'>
+            {client.address.street}
+          </div>
         </div>
       )
     },
@@ -157,6 +246,8 @@ const columns = (
     header: 'Actions',
     cell: ({ row }) => {
       const client = row.original
+      const assignedTech = getAssignedTechnician(client, technicians)
+      
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -166,16 +257,21 @@ const columns = (
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align='end'>
-            {isMaintenanceClient(client) && onViewPools && (
-              <DropdownMenuItem onClick={() => onViewPools(client)}>
-                View Pools
+            {!assignedTech && onAssignClient && (
+              <DropdownMenuItem>
+                <UserPlus className='mr-2 h-4 w-4' />
+                Assign Technician
               </DropdownMenuItem>
             )}
-            {onEdit && (
-              <DropdownMenuItem onClick={() => onEdit(client)}>
-                Edit
+            {assignedTech && onUnassignClient && (
+              <DropdownMenuItem onClick={() => onUnassignClient(client._id)}>
+                <UserX className='mr-2 h-4 w-4' />
+                Unassign Technician
               </DropdownMenuItem>
             )}
+            <DropdownMenuItem>
+              Edit Client
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       )
@@ -183,10 +279,12 @@ const columns = (
   },
 ]
 
-const ClientTable: React.FC<ClientTableProps> = ({
+const ClientAssignmentTable: React.FC<ClientAssignmentTableProps> = ({
   clients,
-  onViewPools,
-  onEdit,
+  technicians,
+  onAssignClient,
+  onUnassignClient,
+  loading = false,
 }) => {
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
@@ -198,7 +296,7 @@ const ClientTable: React.FC<ClientTableProps> = ({
 
   const table = useReactTable({
     data: clients,
-    columns: columns(onViewPools, onEdit),
+    columns: columns(technicians, onAssignClient, onUnassignClient),
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
@@ -215,10 +313,27 @@ const ClientTable: React.FC<ClientTableProps> = ({
     },
   })
 
+  if (loading) {
+    return (
+      <div className='space-y-4'>
+        <div className='h-8 bg-muted animate-pulse rounded' />
+        <div className='border rounded-lg'>
+          <div className='p-8 text-center'>
+            <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto' />
+            <p className='mt-2 text-muted-foreground'>Loading client assignments...</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className='space-y-4'>
+      {/* Table Controls */}
       <div className='flex items-center justify-between'>
-        <div></div>
+        <div className='text-sm text-muted-foreground'>
+          Showing {clients.length} clients
+        </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant='outline' size='sm' className='ml-auto'>
@@ -239,13 +354,18 @@ const ClientTable: React.FC<ClientTableProps> = ({
                     checked={column.getIsVisible()}
                     onCheckedChange={(value) => column.toggleVisibility(!!value)}
                   >
-                    {column.id === 'clientType' ? 'Type' : column.id === 'isActive' ? 'Status' : column.id}
+                    {column.id === 'clientType' ? 'Type' : 
+                     column.id === 'serviceFrequency' ? 'Service Frequency' :
+                     column.id === 'assignedTechnician' ? 'Assigned Technician' :
+                     column.id === 'isActive' ? 'Status' : column.id}
                   </DropdownMenuCheckboxItem>
                 )
               })}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+
+      {/* Data Table */}
       <div className='rounded-md border'>
         <Table>
           <TableHeader>
@@ -272,6 +392,7 @@ const ClientTable: React.FC<ClientTableProps> = ({
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && 'selected'}
+                  className='hover:bg-muted/50'
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
@@ -366,4 +487,4 @@ const ClientTable: React.FC<ClientTableProps> = ({
   )
 }
 
-export default ClientTable
+export default ClientAssignmentTable

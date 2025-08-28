@@ -2,17 +2,18 @@
 
 import React from 'react'
 import {
-  ShoppingCart,
-  Wrench,
-  Calendar,
+  UserCheck,
+  UserX,
   Users,
   MoreHorizontal,
-  ColumnsIcon,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
+  ColumnsIcon,
+  UserPlus,
+  UserMinus,
 } from 'lucide-react'
 import {
   ColumnDef,
@@ -41,6 +42,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -50,48 +52,90 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import {
-  Client,
-  isMaintenanceClient,
-} from '@/types/pool-service'
 
-interface ClientTableProps {
-  clients: Client[]
-  onViewPools?: (client: Client) => void
-  onEdit?: (client: Client) => void
+interface Technician {
+  _id: string
+  name: string
+  email: string
+  phone: string
+  employeeId: string
+  role: 'technician' | 'supervisor' | 'admin'
+  assignedClients: string[]
+  isActive: boolean
+  serviceAreas: string[]
 }
 
-const getClientTypeIcon = (type: string) => {
-  switch (type) {
-    case 'retail':
-      return <ShoppingCart className='h-4 w-4 text-green-600' />
-    case 'service':
-      return <Wrench className='h-4 w-4 text-orange-600' />
-    case 'maintenance':
-      return <Calendar className='h-4 w-4 text-blue-600' />
+interface Client {
+  _id: string
+  name: string
+  email: string
+  phone: string
+  address: {
+    street: string
+    city: string
+    state: string
+    zipCode: string
+  }
+  clientType?: 'retail' | 'service' | 'maintenance'
+  serviceFrequency?: 'twice-weekly' | 'weekly' | 'bi-weekly' | 'monthly'
+  serviceDay?: string
+  isActive: boolean
+  assignedTechnician?: string
+}
+
+interface AssignmentTableProps {
+  technicians: Technician[]
+  clients: Client[]
+  onAssignClient?: (technicianId: string, clientId: string) => void
+  onRemoveClient?: (technicianId: string, clientId: string) => void
+  onViewAssignments?: (technician: Technician) => void
+  loading?: boolean
+}
+
+const getRoleBadgeColor = (role: string) => {
+  switch (role) {
+    case 'admin':
+      return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
+    case 'supervisor':
+      return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
+    case 'technician':
+      return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
     default:
-      return <Users className='h-4 w-4 text-gray-600' />
+      return 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300'
   }
 }
 
+const getClientById = (clients: Client[], clientId: string): Client | undefined => {
+  return clients.find(client => client._id === clientId)
+}
+
 const columns = (
-  onViewPools?: (client: Client) => void,
-  onEdit?: (client: Client) => void
-): ColumnDef<Client>[] => [
+  clients: Client[],
+  onAssignClient?: (technicianId: string, clientId: string) => void,
+  onRemoveClient?: (technicianId: string, clientId: string) => void,
+  onViewAssignments?: (technician: Technician) => void
+): ColumnDef<Technician>[] => [
   {
     accessorKey: 'name',
-    header: 'Client',
+    header: 'Technician',
     cell: ({ row }) => {
-      const client = row.original
+      const technician = row.original
       return (
         <div className='flex items-center'>
-          {getClientTypeIcon(client.clientType)}
-          <div className='ml-3'>
+          <div className='flex-shrink-0 h-10 w-10'>
+            <div className='h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center'>
+              <Users className='h-5 w-5 text-primary' />
+            </div>
+          </div>
+          <div className='ml-4'>
             <div className='text-sm font-medium text-foreground'>
-              {client.name}
+              {technician.name}
             </div>
             <div className='text-sm text-muted-foreground'>
-              {client.address.city}, {client.address.state}
+              {technician.email}
+            </div>
+            <div className='text-xs text-muted-foreground'>
+              ID: {technician.employeeId}
             </div>
           </div>
         </div>
@@ -100,42 +144,73 @@ const columns = (
     enableHiding: false,
   },
   {
-    accessorKey: 'clientType',
-    header: 'Type',
+    accessorKey: 'role',
+    header: 'Role',
     cell: ({ row }) => {
-      const type = row.getValue('clientType') as string
-      const getTypeStyles = (type: string) => {
-        switch (type) {
-          case 'retail':
-            return 'border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-300'
-          case 'service':
-            return 'border-green-200 bg-green-50 text-green-700 hover:bg-green-100 dark:border-green-800 dark:bg-green-950 dark:text-green-300'
-          default:
-            return 'border-purple-200 bg-purple-50 text-purple-700 hover:bg-purple-100 dark:border-purple-800 dark:bg-purple-950 dark:text-purple-300'
-        }
-      }
-      
+      const role = row.getValue('role') as string
       return (
-        <Badge variant="outline" className={`capitalize ${getTypeStyles(type)}`}>
-          <div className='flex items-center gap-1'>
-            {type === 'retail' && <ShoppingCart className="h-3 w-3" />}
-            {type === 'service' && <Wrench className="h-3 w-3" />}
-            {type === 'maintenance' && <Calendar className="h-3 w-3" />}
-            {type}
-          </div>
+        <Badge className={getRoleBadgeColor(role)}>
+          {role.toUpperCase()}
         </Badge>
       )
     },
   },
   {
-    id: 'contact',
-    header: 'Contact',
+    id: 'assignedClients',
+    header: 'Assigned Clients',
     cell: ({ row }) => {
-      const client = row.original
+      const technician = row.original
+      const assignedClients = technician.assignedClients
+        .map(clientId => getClientById(clients, clientId))
+        .filter(Boolean) as Client[]
+
       return (
-        <div>
-          <div className='text-sm text-foreground'>{client.phone}</div>
-          <div className='text-sm text-muted-foreground'>{client.email}</div>
+        <div className='space-y-2'>
+          <div className='text-sm font-medium text-foreground'>
+            {assignedClients.length} clients assigned
+          </div>
+          <div className='space-y-1'>
+            {assignedClients.slice(0, 3).map((client) => (
+              <div
+                key={client._id}
+                className='flex items-center justify-between bg-muted/50 p-2 rounded text-xs'
+              >
+                <div>
+                  <span className='font-medium'>{client.name}</span>
+                  <span className='text-muted-foreground ml-2'>
+                    {client.address.city}
+                  </span>
+                </div>
+                {onRemoveClient && (
+                  <Button
+                    variant='ghost'
+                    size='sm'
+                    onClick={() => onRemoveClient(technician._id, client._id)}
+                    className='h-6 w-6 p-0 text-destructive hover:text-destructive'
+                  >
+                    <UserMinus className='h-3 w-3' />
+                  </Button>
+                )}
+              </div>
+            ))}
+            {assignedClients.length > 3 && (
+              <div className='text-xs text-muted-foreground'>
+                +{assignedClients.length - 3} more
+              </div>
+            )}
+          </div>
+        </div>
+      )
+    },
+  },
+  {
+    accessorKey: 'serviceAreas',
+    header: 'Service Areas',
+    cell: ({ row }) => {
+      const serviceAreas = row.getValue('serviceAreas') as string[]
+      return (
+        <div className='text-sm text-muted-foreground'>
+          {serviceAreas.length > 0 ? serviceAreas.join(', ') : 'No areas set'}
         </div>
       )
     },
@@ -147,7 +222,17 @@ const columns = (
       const isActive = row.getValue('isActive') as boolean
       return (
         <Badge variant={isActive ? 'default' : 'destructive'}>
-          {isActive ? 'Active' : 'Inactive'}
+          {isActive ? (
+            <>
+              <UserCheck className='mr-1 h-3 w-3' />
+              Active
+            </>
+          ) : (
+            <>
+              <UserX className='mr-1 h-3 w-3' />
+              Inactive
+            </>
+          )}
         </Badge>
       )
     },
@@ -156,7 +241,7 @@ const columns = (
     id: 'actions',
     header: 'Actions',
     cell: ({ row }) => {
-      const client = row.original
+      const technician = row.original
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -166,16 +251,22 @@ const columns = (
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align='end'>
-            {isMaintenanceClient(client) && onViewPools && (
-              <DropdownMenuItem onClick={() => onViewPools(client)}>
-                View Pools
+            {onViewAssignments && (
+              <DropdownMenuItem onClick={() => onViewAssignments(technician)}>
+                <Users className='mr-2 h-4 w-4' />
+                View All Assignments
               </DropdownMenuItem>
             )}
-            {onEdit && (
-              <DropdownMenuItem onClick={() => onEdit(client)}>
-                Edit
+            {onAssignClient && (
+              <DropdownMenuItem onClick={() => {/* TODO: Open assign modal */}}>
+                <UserPlus className='mr-2 h-4 w-4' />
+                Assign Client
               </DropdownMenuItem>
             )}
+            <DropdownMenuSeparator />
+            <DropdownMenuItem>
+              Edit Technician
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       )
@@ -183,10 +274,13 @@ const columns = (
   },
 ]
 
-const ClientTable: React.FC<ClientTableProps> = ({
+const AssignmentTable: React.FC<AssignmentTableProps> = ({
+  technicians,
   clients,
-  onViewPools,
-  onEdit,
+  onAssignClient,
+  onRemoveClient,
+  onViewAssignments,
+  loading = false,
 }) => {
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
@@ -197,8 +291,8 @@ const ClientTable: React.FC<ClientTableProps> = ({
   })
 
   const table = useReactTable({
-    data: clients,
-    columns: columns(onViewPools, onEdit),
+    data: technicians,
+    columns: columns(clients, onAssignClient, onRemoveClient, onViewAssignments),
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
@@ -215,10 +309,27 @@ const ClientTable: React.FC<ClientTableProps> = ({
     },
   })
 
+  if (loading) {
+    return (
+      <div className='space-y-4'>
+        <div className='h-8 bg-muted animate-pulse rounded' />
+        <div className='border rounded-lg'>
+          <div className='p-8 text-center'>
+            <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto' />
+            <p className='mt-2 text-muted-foreground'>Loading assignments...</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className='space-y-4'>
+      {/* Table Controls */}
       <div className='flex items-center justify-between'>
-        <div></div>
+        <div className='text-sm text-muted-foreground'>
+          Showing {technicians.length} technicians
+        </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant='outline' size='sm' className='ml-auto'>
@@ -239,13 +350,17 @@ const ClientTable: React.FC<ClientTableProps> = ({
                     checked={column.getIsVisible()}
                     onCheckedChange={(value) => column.toggleVisibility(!!value)}
                   >
-                    {column.id === 'clientType' ? 'Type' : column.id === 'isActive' ? 'Status' : column.id}
+                    {column.id === 'assignedClients' ? 'Assigned Clients' : 
+                     column.id === 'serviceAreas' ? 'Service Areas' : 
+                     column.id === 'isActive' ? 'Status' : column.id}
                   </DropdownMenuCheckboxItem>
                 )
               })}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+
+      {/* Data Table */}
       <div className='rounded-md border'>
         <Table>
           <TableHeader>
@@ -272,6 +387,7 @@ const ClientTable: React.FC<ClientTableProps> = ({
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && 'selected'}
+                  className='hover:bg-muted/50'
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
@@ -283,7 +399,7 @@ const ClientTable: React.FC<ClientTableProps> = ({
             ) : (
               <TableRow>
                 <TableCell colSpan={columns.length} className='h-24 text-center'>
-                  No clients found.
+                  No technicians found.
                 </TableCell>
               </TableRow>
             )}
@@ -366,4 +482,4 @@ const ClientTable: React.FC<ClientTableProps> = ({
   )
 }
 
-export default ClientTable
+export default AssignmentTable

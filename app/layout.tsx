@@ -4,6 +4,7 @@ import { ThemeProvider } from './components/ThemeProvider'
 import { PrimeReactProvider } from 'primereact/api'
 import './globals.css'
 import Navigation from '@/components/Navigation'
+import { Toaster } from '../app/components/ui/sonner'
 
 //import { AnimatedThemeToggler } from 'components/magicui/animated-theme-toggler'
 
@@ -91,6 +92,7 @@ export default function RootLayout({
           <PrimeReactProvider>
             {/* Navigation Component handles the complete layout structure including footer */}
             <Navigation>{children}</Navigation>
+            <Toaster position="top-right" richColors />
           </PrimeReactProvider>
         </ThemeProvider>
       </body>

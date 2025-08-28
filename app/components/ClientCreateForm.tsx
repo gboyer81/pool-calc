@@ -1,6 +1,14 @@
 'use client'
 
 import React from 'react'
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb'
 
 interface ClientFormData {
   name: string
@@ -73,6 +81,22 @@ const ClientCreateForm: React.FC<ClientCreateFormProps> = ({
   return (
     <div className='fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-50 p-4'>
       <div className='bg-background rounded-lg p-4 sm:p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto'>
+        <Breadcrumb className='mb-4'>
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink href='/dashboard'>Dashboard</BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbLink href='/clients'>Client Management</BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>Create Client</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+        
         <h3 className='text-lg font-semibold mb-4'>
           Create {clientType.charAt(0).toUpperCase() + clientType.slice(1)} Client
         </h3>

@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect } from 'react'
 import ProtectedRoute from '../components/ProtectedRoute'
+import { useBreadcrumb } from '@/components/Navigation'
+import { showToast } from '@/lib/toast'
 
 interface Technician {
   _id: string
@@ -27,6 +29,7 @@ interface TechnicianFormData {
 }
 
 export default function AdminPanel() {
+  const { setBreadcrumbs } = useBreadcrumb()
   const [technicians, setTechnicians] = useState<Technician[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -46,8 +49,12 @@ export default function AdminPanel() {
   const [formLoading, setFormLoading] = useState(false)
 
   useEffect(() => {
+    setBreadcrumbs([
+      { label: 'Dashboard', href: '/dashboard' },
+      { label: 'Admin Panel' }
+    ])
     fetchTechnicians()
-  }, [])
+  }, [setBreadcrumbs])
 
   const fetchTechnicians = async () => {
     try {
@@ -110,7 +117,7 @@ export default function AdminPanel() {
     if (!formData.password) errors.push('Password')
 
     if (errors.length > 0) {
-      alert(`Please fill in these required fields: ${errors.join(', ')}`)
+      showToast.error('Missing required fields', `Please fill in: ${errors.join(', ')}`)
       return false
     }
     return true
@@ -142,28 +149,25 @@ export default function AdminPanel() {
         if (data.success) {
           await fetchTechnicians()
           resetForm()
-          alert(
-            `Technician ${
-              editingTechnician ? 'updated' : 'created'
-            } successfully!`
+          showToast.success(
+            `Technician ${editingTechnician ? 'updated' : 'created'}`,
+            `Successfully ${editingTechnician ? 'updated' : 'created'} the technician.`
           )
         } else {
-          alert('Error: ' + data.error)
+          showToast.error('Operation failed', data.error)
         }
       } else {
         const responseText = await response.text()
         try {
           const errorData = JSON.parse(responseText)
-          alert(
-            'Failed to save technician: ' + (errorData.error || responseText)
-          )
+          showToast.error('Save failed', errorData.error || responseText)
         } catch {
-          alert('Failed to save technician: ' + responseText)
+          showToast.error('Save failed', responseText)
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving technician:', error)
-      alert('Error saving technician: ' + error)
+      showToast.error('Save failed', 'An error occurred while saving the technician.')
     } finally {
       setFormLoading(false)
     }
@@ -200,15 +204,16 @@ export default function AdminPanel() {
 
       if (response.ok) {
         await fetchTechnicians()
-        alert(
-          `Technician ${!isActive ? 'activated' : 'deactivated'} successfully`
+        showToast.success(
+          'Status updated',
+          `Technician has been ${!isActive ? 'activated' : 'deactivated'} successfully.`
         )
       } else {
-        alert('Failed to update technician status')
+        showToast.error('Update failed', 'Failed to update technician status.')
       }
     } catch (error) {
       console.error('Error updating status:', error)
-      alert('Error updating technician status')
+      showToast.error('Update failed', 'An error occurred while updating technician status.')
     }
   }
 
