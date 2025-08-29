@@ -1,5 +1,5 @@
-import TechnicianDashboard from './components/TechnicianDashboard'
+import { PoolServiceDashboard } from './components/PoolServiceDashboard'
 
 export default function Home() {
-  return <TechnicianDashboard />
+  return <PoolServiceDashboard />
 }

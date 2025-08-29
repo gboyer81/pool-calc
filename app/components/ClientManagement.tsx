@@ -9,6 +9,9 @@ import {
   Search,
 } from 'lucide-react'
 import { useBreadcrumb } from '@/components/Navigation'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
 // Import new components
 import ClientFilters from './ClientFilters'
@@ -605,91 +608,109 @@ export default function ClientManagement() {
   }
 
   return (
-    <div className='p-4 sm:p-6'>
-      {/* Header with search - Mobile responsive */}
-      <div className='flex flex-col lg:flex-row lg:justify-between lg:items-start gap-4 mb-6'>
-        <div className='flex-1'>
-          <div className='flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-4'>
-            <div>
-              <h1 className='text-2xl sm:text-3xl font-bold text-foreground'>
-                Client Management
-              </h1>
-              <p className='text-muted-foreground text-sm sm:text-base'>
-                Manage retail, service, and maintenance clients
-              </p>
-            </div>
-            <button
-              onClick={() => {
-                resetClientForm()
-                setShowAddClient(true)
-              }}
-              className='bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 hover:bg-blue-700 w-full sm:w-auto'>
-              <Plus className='h-4 w-4' />
-              Add Client
-            </button>
-          </div>
-          
-          {/* Search integrated into header */}
-          <div className='relative'>
-            <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400' />
-            <input
-              type='text'
-              placeholder='Search clients...'
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className='w-full pl-10 pr-4 py-2 border border-input rounded-lg focus:ring-2 focus:ring-blue-500'
-            />
-          </div>
+    <div className='flex flex-1 flex-col'>
+      {/* Header */}
+      <div className='flex items-center justify-between p-6 border-b border-blue-100 dark:border-blue-800'>
+        <div>
+          <h1 className='text-2xl font-bold text-blue-900 dark:text-blue-100'>
+            Client Management
+          </h1>
+          <p className='text-muted-foreground mt-1'>
+            Manage retail, service, and maintenance clients
+          </p>
         </div>
+        <Button
+          onClick={() => {
+            resetClientForm()
+            setShowAddClient(true)
+          }}
+          className='bg-blue-600 hover:bg-blue-700 text-white'>
+          <Plus className='h-4 w-4 mr-2' />
+          Add Client
+        </Button>
       </div>
 
-      {error && (
-        <div className='bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 p-4 rounded-lg mb-6'>
-          <strong>Error:</strong> {error}
-        </div>
-      )}
-
-      {/* Filters */}
-      <ClientFilters
-        clientTypeFilter={clientTypeFilter}
-        frequencyFilter={frequencyFilter}
-        viewMode={viewMode}
-        filteredCount={filteredClients.length}
-        totalCount={clients.length}
-        onClientTypeChange={setClientTypeFilter}
-        onFrequencyChange={setFrequencyFilter}
-        onViewModeChange={setViewMode}
-        onClearFilters={clearFilters}
-        onResetFilters={resetFilters}
-      />
-      {/* Client List */}
-      <div className='bg-background rounded-lg shadow'>
-        {filteredClients.length === 0 ? (
-          <div className='p-8 text-center text-muted-foreground'>
-            <Users className='h-12 w-12 mx-auto mb-4 opacity-50' />
-            <h3 className='text-lg font-medium mb-2'>No clients found</h3>
-            <p>Try adjusting your filters or add a new client.</p>
-          </div>
-        ) : viewMode === 'table' ? (
-          <ClientTable
-            clients={filteredClients}
-            onViewPools={fetchClientPools}
-            onEdit={handleEditClient}
-          />
-        ) : (
-          <div className='p-6'>
-            <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6'>
-              {filteredClients.map((client) => (
-                <ClientCard
-                  key={client._id.toString()}
-                  client={client}
-                  onViewPools={fetchClientPools}
-                  onEdit={handleEditClient}
-                />
-              ))}
+      <div className='flex-1 p-6 space-y-6'>
+        {/* Search Section */}
+        <Card className='border-blue-100 dark:border-blue-800'>
+          <CardHeader>
+            <CardTitle className='text-blue-900 dark:text-blue-100 flex items-center gap-2'>
+              <Search className='h-5 w-5' />
+              Search Clients
+            </CardTitle>
+            <CardDescription>
+              Search by name, email, phone, or address
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className='relative'>
+              <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground' />
+              <Input
+                placeholder='Search clients...'
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className='pl-10 border-blue-200 dark:border-blue-700 focus-visible:ring-blue-500'
+              />
             </div>
-          </div>
+          </CardContent>
+        </Card>
+
+        {/* Error Handling */}
+        {error && (
+          <Card className='border-red-200 dark:border-red-700 bg-red-50 dark:bg-red-900/10'>
+            <CardContent className='p-4'>
+              <div className='text-red-800 dark:text-red-300'>
+                <strong>Error:</strong> {error}
+              </div>
+            </CardContent>
+          </Card>
         )}
+
+        {/* Filters */}
+        <ClientFilters
+          clientTypeFilter={clientTypeFilter}
+          frequencyFilter={frequencyFilter}
+          viewMode={viewMode}
+          filteredCount={filteredClients.length}
+          totalCount={clients.length}
+          onClientTypeChange={setClientTypeFilter}
+          onFrequencyChange={setFrequencyFilter}
+          onViewModeChange={setViewMode}
+          onClearFilters={clearFilters}
+          onResetFilters={resetFilters}
+        />
+
+        {/* Client List */}
+        <Card className='border-blue-100 dark:border-blue-800'>
+          {filteredClients.length === 0 ? (
+            <CardContent className='flex flex-col items-center justify-center py-12 text-center'>
+              <Users className='h-12 w-12 text-muted-foreground mb-4' />
+              <h3 className='text-lg font-medium mb-2 text-blue-900 dark:text-blue-100'>No clients found</h3>
+              <p className='text-muted-foreground'>Try adjusting your filters or add a new client.</p>
+            </CardContent>
+          ) : viewMode === 'table' ? (
+            <CardContent className='p-0'>
+              <ClientTable
+                clients={filteredClients}
+                onViewPools={fetchClientPools}
+                onEdit={handleEditClient}
+              />
+            </CardContent>
+          ) : (
+            <CardContent className='p-6'>
+              <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6'>
+                {filteredClients.map((client) => (
+                  <ClientCard
+                    key={client._id.toString()}
+                    client={client}
+                    onViewPools={fetchClientPools}
+                    onEdit={handleEditClient}
+                  />
+                ))}
+              </div>
+            </CardContent>
+          )}
+        </Card>
       </div>
 
       {/* Pool Management Modal */}

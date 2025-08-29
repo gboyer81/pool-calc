@@ -110,15 +110,15 @@ export const getStatusBadgeConfig = (
 
   if (isActive) {
     return {
-      variant: 'secondary',
+      variant: 'outline',
       className:
-        'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800/30',
+        'border-green-200 bg-green-50 text-green-700 hover:bg-green-100 dark:border-green-800 dark:bg-green-950 dark:text-green-300',
     }
   } else {
     return {
-      variant: 'destructive',
+      variant: 'outline',
       className:
-        'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800/30',
+        'border-orange-200 bg-orange-50 text-orange-700 hover:bg-orange-100 dark:border-orange-800 dark:bg-orange-950 dark:text-orange-300',
     }
   }
 }

@@ -46,6 +46,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Badge } from '@/components/ui/badge'
+import { getStatusBadgeConfig } from '@/lib/badge-utils'
 import {
   Select,
   SelectContent,
@@ -234,8 +235,9 @@ const columns = (
     header: 'Status',
     cell: ({ row }) => {
       const isActive = row.getValue('isActive') as boolean
+      const config = getStatusBadgeConfig(isActive)
       return (
-        <Badge variant={isActive ? 'default' : 'destructive'}>
+        <Badge variant={config.variant} className={config.className}>
           {isActive ? 'Active' : 'Inactive'}
         </Badge>
       )

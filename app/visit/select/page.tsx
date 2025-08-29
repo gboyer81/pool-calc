@@ -5,6 +5,11 @@ import React, { useState, useEffect, useRef, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import { Client } from '@/types/pool-service'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Search, Clock, Users, AlertCircle } from 'lucide-react'
 
 interface VisitOption {
   type: string
@@ -259,240 +264,232 @@ function VisitSelectContent() {
 
   return (
     <ProtectedRoute requiredRoles={['technician', 'supervisor', 'admin']}>
-      <div className='p-4 sm:p-6'>
+      <div className='flex flex-1 flex-col'>
         {/* Header */}
-        <div className='mb-8'>
-          <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4'>
-            <div className='flex-1 min-w-0'>
-              <h1 className='text-2xl sm:text-3xl font-bold text-gray-900'>
-                Select Visit Type
-              </h1>
-              {client ? (
-                <div className='mt-2'>
-                  <p className='text-base sm:text-lg text-gray-600'>{client.name}</p>
-                  <p className='text-sm text-gray-500'>
-                    {client.address.street}, {client.address.city} •{' '}
-                    {getClientTypeLabel(client.clientType)}
-                  </p>
-                </div>
-              ) : (
-                <p className='text-gray-600 mt-2 text-sm sm:text-base'>
-                  Select a client and choose the type of visit you want to log
+        <div className='flex items-center justify-between p-6 border-b border-blue-100 dark:border-blue-800'>
+          <div>
+            <h1 className='text-2xl font-bold text-blue-900 dark:text-blue-100'>
+              Select Visit Type
+            </h1>
+            {client ? (
+              <div className='mt-2'>
+                <p className='text-lg text-blue-700 dark:text-blue-300'>{client.name}</p>
+                <p className='text-sm text-muted-foreground'>
+                  {client.address.street}, {client.address.city} • {getClientTypeLabel(client.clientType)}
                 </p>
-              )}
-            </div>
-
-            <button
-              onClick={() => router.push('/')}
-              className='bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 w-full sm:w-auto flex-shrink-0'>
-              Cancel
-            </button>
+              </div>
+            ) : (
+              <p className='text-muted-foreground mt-1'>
+                Select a client and choose the type of visit you want to log
+              </p>
+            )}
           </div>
+          <Button 
+            variant="outline" 
+            onClick={() => router.push('/')}
+            className='flex-shrink-0'
+          >
+            Cancel
+          </Button>
         </div>
+        
+        <div className='flex-1 p-6 space-y-6'>
 
-        {/* Client Selection - Show if no client selected or if multiple clients available */}
-        {(!selectedClientId || availableClients.length > 0) && (
-          <div className='bg-white rounded-lg shadow p-6 mb-6'>
-            <label className='block text-sm font-medium text-gray-700 mb-2'>
-              Select or Search for Client
-            </label>
-            <div className='relative' ref={searchRef}>
-              <input
-                type='text'
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onFocus={() => setShowResults(true)}
-                placeholder='Search client name, address, or city... (or click to browse all)'
-                className='w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
-              />
+          {/* Client Selection */}
+          {(!selectedClientId || availableClients.length > 0) && (
+            <Card className='border-blue-100 dark:border-blue-800'>
+              <CardHeader>
+                <CardTitle className='text-blue-900 dark:text-blue-100 flex items-center gap-2'>
+                  <Users className='h-5 w-5' />
+                  Select or Search for Client
+                </CardTitle>
+                <CardDescription>
+                  Search by name, address, or city, or browse all available clients
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className='relative' ref={searchRef}>
+                  <Search className='absolute left-3 top-3 h-4 w-4 text-muted-foreground' />
+                  <Input
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onFocus={() => setShowResults(true)}
+                    placeholder='Search client name, address, or city... (or click to browse all)'
+                    className='pl-10 border-blue-200 dark:border-blue-700 focus-visible:ring-blue-500'
+                  />
 
-              {/* Client Results Dropdown - Shows filtered results or all clients */}
-              {showResults && filteredClients.length > 0 && (
-                <div className='absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto'>
-                  {filteredClients.map((availableClient) => (
-                    <div
-                      key={availableClient._id.toString()}
-                      onClick={() => {
-                        setSelectedClientId(availableClient._id.toString())
-                        setSearchQuery(availableClient.name)
-                        setShowResults(false)
-                      }}
-                      className='px-4 py-3 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0'>
-                      <div className='font-medium text-gray-900'>
-                        {availableClient.name}
-                      </div>
-                      <div className='text-sm text-gray-600'>
-                        {availableClient.address.street},{' '}
-                        {availableClient.address.city}
-                      </div>
-                      <div className='text-xs text-gray-500'>
-                        {getClientTypeLabel(availableClient.clientType)}
-                      </div>
+                  {/* Client Results Dropdown */}
+                  {showResults && filteredClients.length > 0 && (
+                    <div className='absolute z-10 w-full mt-1 bg-card border border-blue-200 dark:border-blue-700 rounded-md shadow-lg max-h-60 overflow-y-auto'>
+                      {filteredClients.map((availableClient) => (
+                        <div
+                          key={availableClient._id.toString()}
+                          onClick={() => {
+                            setSelectedClientId(availableClient._id.toString())
+                            setSearchQuery(availableClient.name)
+                            setShowResults(false)
+                          }}
+                          className='px-4 py-3 hover:bg-blue-50 dark:hover:bg-blue-900/20 cursor-pointer border-b border-blue-100 dark:border-blue-800 last:border-b-0'>
+                          <div className='font-medium text-foreground'>
+                            {availableClient.name}
+                          </div>
+                          <div className='text-sm text-muted-foreground'>
+                            {availableClient.address.street}, {availableClient.address.city}
+                          </div>
+                          <Badge variant="outline" className='text-xs mt-1 border-blue-200 text-blue-700 dark:border-blue-700 dark:text-blue-300'>
+                            {getClientTypeLabel(availableClient.clientType)}
+                          </Badge>
+                        </div>
+                      ))}
                     </div>
+                  )}
+
+                  {/* No results message */}
+                  {showResults && searchQuery.trim() && filteredClients.length === 0 && (
+                    <div className='absolute z-10 w-full mt-1 bg-card border border-blue-200 dark:border-blue-700 rounded-md shadow-lg p-4 text-muted-foreground text-center'>
+                      No clients found matching "{searchQuery}"
+                    </div>
+                  )}
+
+                  {/* Browse all clients */}
+                  {showResults && !searchQuery.trim() && filteredClients.length > 0 && (
+                    <div className='absolute z-10 w-full mt-1 bg-card border border-blue-200 dark:border-blue-700 rounded-md shadow-lg max-h-60 overflow-y-auto'>
+                      <div className='px-4 py-2 bg-blue-50 dark:bg-blue-900/20 border-b border-blue-100 dark:border-blue-800 text-sm text-blue-700 dark:text-blue-300 font-medium'>
+                        All Clients ({filteredClients.length})
+                      </div>
+                      {filteredClients.map((availableClient) => (
+                        <div
+                          key={availableClient._id.toString()}
+                          onClick={() => {
+                            setSelectedClientId(availableClient._id.toString())
+                            setSearchQuery(availableClient.name)
+                            setShowResults(false)
+                          }}
+                          className='px-4 py-3 hover:bg-blue-50 dark:hover:bg-blue-900/20 cursor-pointer border-b border-blue-100 dark:border-blue-800 last:border-b-0'>
+                          <div className='font-medium text-foreground'>
+                            {availableClient.name}
+                          </div>
+                          <div className='text-sm text-muted-foreground'>
+                            {availableClient.address.street}, {availableClient.address.city}
+                          </div>
+                          <Badge variant="outline" className='text-xs mt-1 border-blue-200 text-blue-700 dark:border-blue-700 dark:text-blue-300'>
+                            {getClientTypeLabel(availableClient.clientType)}
+                          </Badge>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Visit Options Grid */}
+          {selectedClientId && client ? (
+            <div className='space-y-6'>
+              <div>
+                <h2 className='text-lg font-semibold text-blue-900 dark:text-blue-100 mb-4'>
+                  Available Visit Types for {client.name}
+                </h2>
+                <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
+                  {getAvailableVisits().map((option) => (
+                    <Card
+                      key={option.type}
+                      className={`cursor-pointer transition-all duration-200 hover:shadow-md border-blue-100 dark:border-blue-800 hover:border-blue-300 dark:hover:border-blue-600 ${
+                        selectedVisit?.type === option.type
+                          ? 'border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/20'
+                          : ''
+                      }`}
+                      onClick={() => setSelectedVisit(option)}>
+                      <CardHeader className='pb-3'>
+                        <div className='flex items-center justify-between'>
+                          <div className={`w-10 h-10 ${option.color} rounded-lg flex items-center justify-center text-lg`}>
+                            {option.icon}
+                          </div>
+                          {option.priority && (
+                            <Badge
+                              variant={option.priority === 'emergency' ? 'destructive' : 'secondary'}
+                              className='text-xs'>
+                              {option.priority.toUpperCase()}
+                            </Badge>
+                          )}
+                        </div>
+                        <CardTitle className='text-lg text-blue-900 dark:text-blue-100'>
+                          {option.title}
+                        </CardTitle>
+                        <CardDescription>
+                          {option.description}
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className='pt-0'>
+                        <div className='flex items-center justify-between text-sm text-muted-foreground mb-4'>
+                          {option.estimatedDuration && (
+                            <div className='flex items-center gap-1'>
+                              <Clock className='h-4 w-4' />
+                              {option.estimatedDuration} min
+                            </div>
+                          )}
+                          <Badge variant="outline" className='text-xs border-blue-200 text-blue-700 dark:border-blue-700 dark:text-blue-300'>
+                            {option.clientTypes.map(type => type.charAt(0).toUpperCase() + type.slice(1)).join(', ')}
+                          </Badge>
+                        </div>
+                        <Button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            startVisit(option)
+                          }}
+                          className='w-full bg-blue-600 hover:bg-blue-700 text-white'>
+                          Start {option.title}
+                        </Button>
+                      </CardContent>
+                    </Card>
                   ))}
                 </div>
-              )}
+              </div>
 
-              {/* No results message - only show when actively searching */}
-              {showResults &&
-                searchQuery.trim() &&
-                filteredClients.length === 0 && (
-                  <div className='absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg p-4 text-gray-500 text-center'>
-                    No clients found matching "{searchQuery}"
-                  </div>
-                )}
-
-              {/* Show all clients message when dropdown is open but no search */}
-              {showResults &&
-                !searchQuery.trim() &&
-                filteredClients.length > 0 && (
-                  <div className='absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto'>
-                    <div className='px-4 py-2 bg-blue-50 border-b text-sm text-blue-700 font-medium'>
-                      All Clients ({filteredClients.length})
-                    </div>
-                    {filteredClients.map((availableClient) => (
-                      <div
-                        key={availableClient._id.toString()}
-                        onClick={() => {
-                          setSelectedClientId(availableClient._id.toString())
-                          setSearchQuery(availableClient.name)
-                          setShowResults(false)
-                        }}
-                        className='px-4 py-3 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0'>
-                        <div className='font-medium text-gray-900'>
-                          {availableClient.name}
-                        </div>
-                        <div className='text-sm text-gray-600'>
-                          {availableClient.address.street},{' '}
-                          {availableClient.address.city}
-                        </div>
-                        <div className='text-xs text-gray-500'>
-                          {getClientTypeLabel(availableClient.clientType)}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-            </div>
-          </div>
-        )}
-
-        {/* Show visit options only when client is selected */}
-        {selectedClientId && client ? (
-          <>
-            {/* Visit Options Grid */}
-            <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
-              {getAvailableVisits().map((option) => (
-                <div
-                  key={option.type}
-                  className={`relative bg-white rounded-xl shadow-lg border-2 border-transparent hover:border-blue-300 transition-all duration-200 cursor-pointer transform hover:scale-105 ${
-                    selectedVisit?.type === option.type
-                      ? 'border-blue-500 bg-blue-50'
-                      : ''
-                  }`}
-                  onClick={() => setSelectedVisit(option)}>
-                  <div className='p-6'>
-                    {/* Header */}
-                    <div className='flex items-center justify-between mb-3'>
-                      <div
-                        className={`w-12 h-12 ${option.color} rounded-lg flex items-center justify-center text-2xl`}>
-                        {option.icon}
-                      </div>
-                      {option.priority && (
-                        <span
-                          className={`px-2 py-1 text-xs rounded-full font-medium ${
-                            option.priority === 'emergency'
-                              ? 'bg-red-100 text-red-800'
-                              : option.priority === 'high'
-                              ? 'bg-orange-100 text-orange-800'
-                              : 'bg-blue-100 text-blue-800'
-                          }`}>
-                          {option.priority.toUpperCase()}
-                        </span>
-                      )}
-                    </div>
-
-                    <h3 className='text-xl font-bold text-gray-900 mb-2'>
-                      {option.title}
-                    </h3>
-
-                    {/* Description */}
-                    <p className='text-gray-600 mb-4'>{option.description}</p>
-
-                    {/* Duration & Details */}
-                    <div className='flex items-center justify-between text-sm text-gray-500 mb-4'>
-                      {option.estimatedDuration && (
-                        <span>⏱️ ~{option.estimatedDuration} min</span>
-                      )}
-                      <span>
-                        {option.clientTypes
-                          .map(
-                            (type) =>
-                              type.charAt(0).toUpperCase() + type.slice(1)
-                          )
-                          .join(', ')}
-                      </span>
-                    </div>
-
-                    {/* Start Button */}
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        startVisit(option)
-                      }}
-                      className={`w-full ${option.color} hover:opacity-90 text-white py-3 px-4 rounded-lg font-medium transition-opacity`}>
-                      Start {option.title}
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Emergency Quick Actions */}
-            <div className='mt-8 bg-red-50 border border-red-200 rounded-lg p-6'>
-              <div className='flex items-center mb-4'>
-                <div className='w-10 h-10 bg-red-500 rounded-lg flex items-center justify-center text-white text-xl mr-3'>
-                  🚨
-                </div>
-                <div>
-                  <h3 className='text-lg font-semibold text-red-900'>
+              {/* Emergency Quick Actions */}
+              <Card className='border-red-200 dark:border-red-700 bg-red-50 dark:bg-red-900/10'>
+                <CardHeader>
+                  <CardTitle className='text-red-900 dark:text-red-100 flex items-center gap-2'>
+                    <AlertCircle className='h-5 w-5' />
                     Emergency Service
-                  </h3>
-                  <p className='text-sm text-red-700'>
+                  </CardTitle>
+                  <CardDescription className='text-red-700 dark:text-red-300'>
                     For urgent issues requiring immediate attention
-                  </p>
-                </div>
-              </div>
-
-              <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-                <button
-                  onClick={() =>
-                    startVisit(
-                      visitOptions.find((v) => v.type === 'service-emergency')!
-                    )
-                  }
-                  className='bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 font-medium'>
-                  🚨 Emergency Service Call
-                </button>
-                <button
-                  onClick={() =>
-                    startVisit(
-                      visitOptions.find((v) => v.type === 'service-repair')!
-                    )
-                  }
-                  className='bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 font-medium'>
-                  🔧 Urgent Repair
-                </button>
-              </div>
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                    <Button
+                      onClick={() =>
+                        startVisit(visitOptions.find((v) => v.type === 'service-emergency')!)
+                      }
+                      variant="destructive"
+                      className='bg-red-600 hover:bg-red-700'>
+                      🚨 Emergency Service Call
+                    </Button>
+                    <Button
+                      onClick={() =>
+                        startVisit(visitOptions.find((v) => v.type === 'service-repair')!)
+                      }
+                      className='bg-orange-600 hover:bg-orange-700 text-white'>
+                      🔧 Urgent Repair
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
-          </>
-        ) : (
-          <div className='bg-gray-50 rounded-lg p-8 text-center'>
-            <p className='text-gray-600'>
-              Please select a client to see available visit types.
-            </p>
-          </div>
-        )}
+          ) : (
+            <Card className='border-blue-100 dark:border-blue-800'>
+              <CardContent className='flex flex-col items-center justify-center py-12 text-center'>
+                <Users className='h-12 w-12 text-muted-foreground mb-4' />
+                <p className='text-muted-foreground text-lg'>
+                  Please select a client to see available visit types.
+                </p>
+              </CardContent>
+            </Card>
+          )}
+        </div>
       </div>
     </ProtectedRoute>
   )

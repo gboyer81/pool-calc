@@ -79,7 +79,10 @@ export default function TechnicianLogin() {
         localStorage.setItem('technicianToken', data.token)
         localStorage.setItem('technicianData', JSON.stringify(data.technician))
 
-        showToast.success('Login successful!', `Welcome back, ${data.technician.firstName}`)
+        // Dispatch custom event to notify other components of auth change
+        window.dispatchEvent(new CustomEvent('authStateChanged'))
+
+        showToast.success('Login successful!', `Welcome back, ${data.technician.name}`)
         
         // Redirect to dashboard
         router.push('/')

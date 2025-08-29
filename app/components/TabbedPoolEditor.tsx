@@ -2,12 +2,15 @@
 
 import React, { useState, useEffect } from 'react'
 import { Pool } from '@/types/pool-service'
+import { toast } from 'sonner'
+import { Trash2 } from 'lucide-react'
 
 interface TabbedPoolEditorProps {
   pool: Pool | null
   isOpen: boolean
   onClose: () => void
   onSave: (updatedPool: Partial<Pool>) => void
+  onDelete?: (poolId: string) => void
   saving?: boolean
 }
 
@@ -18,14 +21,22 @@ export default function TabbedPoolEditor({
   isOpen,
   onClose,
   onSave,
+  onDelete,
   saving = false,
 }: TabbedPoolEditorProps) {
   const [activeTab, setActiveTab] = useState<TabType>('volume')
+  const [deleting, setDeleting] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [formData, setFormData] = useState({
     // Basic Info
     name: '',
     type: 'residential' as 'residential' | 'commercial',
-    shape: 'rectangular' as string,
+    shape: 'rectangular' as
+      | 'rectangular'
+      | 'circular'
+      | 'oval'
+      | 'kidney'
+      | 'freeform',
 
     // Volume & Dimensions
     gallons: '',
@@ -71,7 +82,6 @@ export default function TabbedPoolEditor({
     notes: '',
   })
 
-  // Populate form when pool changes
   // Populate form when pool changes
   useEffect(() => {
     if (pool) {
@@ -137,10 +147,10 @@ export default function TabbedPoolEditor({
           pool.targetLevels?.cyanuricAcid?.max?.toString() || '80',
 
         saltTarget: pool.targetLevels?.salt?.target?.toString() || '',
-        saltMin: pool.targetLevels?.salt?.min?.toString() || '',
-        saltMax: pool.targetLevels?.salt?.max?.toString() || '',
+        saltMin: pool.targetLevels?.salt?.min?.toString() || '2700',
+        saltMax: pool.targetLevels?.salt?.max?.toString() || '3400',
 
-        notes: pool?.notes || '',
+        notes: pool.notes || '',
       })
     }
   }, [pool])
@@ -149,29 +159,75 @@ export default function TabbedPoolEditor({
     setFormData((prev) => ({ ...prev, [field]: value }))
   }
 
-  const handleSave = () => {
-    if (!pool) return
+  const handleDelete = async () => {
+    if (!pool || !onDelete) return
 
+    setDeleting(true)
+    try {
+      const token = localStorage.getItem('technicianToken')
+      const response = await fetch(`/api/pools/${pool._id}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      })
+
+      const data = await response.json()
+
+      if (response.ok && data.success) {
+        toast.success('Pool deleted successfully', {
+          description: `${pool.name || 'Pool'} has been permanently deleted.`,
+        })
+        onDelete(pool._id.toString())
+        onClose()
+      } else {
+        // Handle the specific error case where pool has service history
+        if (data.error && data.error.includes('service history')) {
+          toast.error('Cannot delete pool', {
+            description:
+              'This pool has service history. Consider deactivating instead.',
+            duration: 5000,
+          })
+        } else {
+          toast.error('Failed to delete pool', {
+            description: data.error || 'An unexpected error occurred.',
+          })
+        }
+      }
+    } catch (error) {
+      console.error('Error deleting pool:', error)
+      toast.error('Failed to delete pool', {
+        description: 'A network error occurred. Please try again.',
+      })
+    } finally {
+      setDeleting(false)
+      setShowDeleteConfirm(false)
+    }
+  }
+
+  const handleSave = () => {
     const updatedPool: Partial<Pool> = {
       name: formData.name.trim(),
       type: formData.type,
-      shape: formData.shape as
-        | 'rectangular'
-        | 'circular'
-        | 'oval'
-        | 'kidney'
-        | 'freeform',
+      shape: formData.shape,
 
       volume: {
         gallons: Number(formData.gallons) || 0,
-        calculatedAt: new Date(),
+        calculatedAt: pool?.volume?.calculatedAt
+          ? new Date(pool.volume.calculatedAt)
+          : new Date(),
       },
 
       dimensions: {
         avgDepth: Number(formData.avgDepth) || 0,
-        ...(formData.length && { length: Number(formData.length) }),
-        ...(formData.width && { width: Number(formData.width) }),
-        ...(formData.diameter && { diameter: Number(formData.diameter) }),
+        ...(formData.shape === 'rectangular' && {
+          length: Number(formData.length) || 0,
+          width: Number(formData.width) || 0,
+        }),
+        ...(formData.shape === 'circular' && {
+          diameter: Number(formData.diameter) || 0,
+        }),
       },
 
       equipment: {
@@ -192,12 +248,11 @@ export default function TabbedPoolEditor({
         ...(formData.saltSystemModel && {
           saltSystem: {
             model: formData.saltSystemModel.trim(),
-            targetSalt: Number(formData.saltSystemTarget) || 3200,
+            targetSalt: Number(formData.saltSystemTarget) || 3000,
           },
         }),
       },
 
-      // Use the enhanced targetLevels structure
       targetLevels: {
         ph: {
           target: Number(formData.phTarget) || 7.4,
@@ -254,7 +309,7 @@ export default function TabbedPoolEditor({
   ]
 
   return (
-    <div className='fixed inset-0 bg-black/10 background-blur-lg flex items-center justify-center z-50'>
+    <div className='fixed inset-0 bg-black/10 backdrop-blur-lg flex items-center justify-center z-50'>
       <div className='bg-background rounded-lg w-full max-w-4xl h-full max-h-[90vh] flex flex-col'>
         {/* Header */}
         <div className='flex items-center justify-between p-6 border-b'>
@@ -263,7 +318,8 @@ export default function TabbedPoolEditor({
           </h2>
           <button
             onClick={onClose}
-            className='text-gray-400 hover:text-muted-foreground text-2xl'>
+            className='text-gray-400 hover:text-muted-foreground text-2xl'
+          >
             ✕
           </button>
         </div>
@@ -279,7 +335,8 @@ export default function TabbedPoolEditor({
                   activeTab === tab.id
                     ? 'border-blue-500 text-blue-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-input'
-                }`}>
+                }`}
+              >
                 <span className='mr-2'>{tab.icon}</span>
                 {tab.label}
               </button>
@@ -311,7 +368,8 @@ export default function TabbedPoolEditor({
                   <select
                     value={formData.type}
                     onChange={(e) => handleInputChange('type', e.target.value)}
-                    className='w-full px-3 py-2 border border-input rounded-md focus:ring-blue-500 focus:border-blue-500'>
+                    className='w-full px-3 py-2 border border-input rounded-md focus:ring-blue-500 focus:border-blue-500'
+                  >
                     <option value='residential'>Residential</option>
                     <option value='commercial'>Commercial</option>
                   </select>
@@ -326,7 +384,8 @@ export default function TabbedPoolEditor({
                   <select
                     value={formData.shape}
                     onChange={(e) => handleInputChange('shape', e.target.value)}
-                    className='w-full px-3 py-2 border border-input rounded-md focus:ring-blue-500 focus:border-blue-500'>
+                    className='w-full px-3 py-2 border border-input rounded-md focus:ring-blue-500 focus:border-blue-500'
+                  >
                     <option value='rectangular'>Rectangular</option>
                     <option value='circular'>Circular</option>
                     <option value='oval'>Oval</option>
@@ -336,7 +395,7 @@ export default function TabbedPoolEditor({
                 </div>
                 <div>
                   <label className='block text-sm font-medium text-gray-700 mb-2'>
-                    Volume (gallons) *
+                    Volume (Gallons) *
                   </label>
                   <input
                     type='number'
@@ -349,488 +408,242 @@ export default function TabbedPoolEditor({
                 </div>
               </div>
 
-              {/* Shape-specific dimensions */}
-              <div className='space-y-4'>
-                <h3 className='text-lg font-medium text-foreground'>
-                  Dimensions
-                </h3>
-                <div className='grid grid-cols-3 gap-4'>
-                  <div>
-                    <label className='block text-sm font-medium text-gray-700 mb-2'>
-                      Average Depth (ft) *
-                    </label>
-                    <input
-                      type='number'
-                      step='0.1'
-                      value={formData.avgDepth}
-                      onChange={(e) =>
-                        handleInputChange('avgDepth', e.target.value)
-                      }
-                      className='w-full px-3 py-2 border border-input rounded-md focus:ring-blue-500 focus:border-blue-500'
-                    />
-                  </div>
+              {/* Dimension fields based on shape - simplified version */}
+              <div className='grid grid-cols-2 gap-6'>
+                <div>
+                  <label className='block text-sm font-medium text-gray-700 mb-2'>
+                    Average Depth (ft) *
+                  </label>
+                  <input
+                    type='number'
+                    step='0.1'
+                    value={formData.avgDepth}
+                    onChange={(e) =>
+                      handleInputChange('avgDepth', e.target.value)
+                    }
+                    className='w-full px-3 py-2 border border-input rounded-md focus:ring-blue-500 focus:border-blue-500'
+                  />
+                </div>
 
-                  {(formData.shape === 'rectangular' ||
-                    formData.shape === 'oval') && (
-                    <>
-                      <div>
-                        <label className='block text-sm font-medium text-gray-700 mb-2'>
-                          Length (ft)
-                        </label>
-                        <input
-                          type='number'
-                          step='0.1'
-                          value={formData.length}
-                          onChange={(e) =>
-                            handleInputChange('length', e.target.value)
-                          }
-                          className='w-full px-3 py-2 border border-input rounded-md focus:ring-blue-500 focus:border-blue-500'
-                        />
-                      </div>
-                      <div>
-                        <label className='block text-sm font-medium text-gray-700 mb-2'>
-                          Width (ft)
-                        </label>
-                        <input
-                          type='number'
-                          step='0.1'
-                          value={formData.width}
-                          onChange={(e) =>
-                            handleInputChange('width', e.target.value)
-                          }
-                          className='w-full px-3 py-2 border border-input rounded-md focus:ring-blue-500 focus:border-blue-500'
-                        />
-                      </div>
-                    </>
-                  )}
-
-                  {formData.shape === 'circular' && (
+                {formData.shape === 'rectangular' && (
+                  <>
                     <div>
                       <label className='block text-sm font-medium text-gray-700 mb-2'>
-                        Diameter (ft)
+                        Length (ft)
                       </label>
                       <input
                         type='number'
                         step='0.1'
-                        value={formData.diameter}
+                        value={formData.length}
                         onChange={(e) =>
-                          handleInputChange('diameter', e.target.value)
+                          handleInputChange('length', e.target.value)
                         }
                         className='w-full px-3 py-2 border border-input rounded-md focus:ring-blue-500 focus:border-blue-500'
                       />
                     </div>
-                  )}
-                </div>
+                    <div>
+                      <label className='block text-sm font-medium text-gray-700 mb-2'>
+                        Width (ft)
+                      </label>
+                      <input
+                        type='number'
+                        step='0.1'
+                        value={formData.width}
+                        onChange={(e) =>
+                          handleInputChange('width', e.target.value)
+                        }
+                        className='w-full px-3 py-2 border border-input rounded-md focus:ring-blue-500 focus:border-blue-500'
+                      />
+                    </div>
+                  </>
+                )}
+
+                {formData.shape === 'circular' && (
+                  <div>
+                    <label className='block text-sm font-medium text-gray-700 mb-2'>
+                      Diameter (ft)
+                    </label>
+                    <input
+                      type='number'
+                      step='0.1'
+                      value={formData.diameter}
+                      onChange={(e) =>
+                        handleInputChange('diameter', e.target.value)
+                      }
+                      className='w-full px-3 py-2 border border-input rounded-md focus:ring-blue-500 focus:border-blue-500'
+                    />
+                  </div>
+                )}
               </div>
             </div>
           )}
 
-          {/* Equipment Tab */}
+          {/* Equipment Tab - simplified version */}
           {activeTab === 'equipment' && (
             <div className='space-y-6'>
-              {/* Filter */}
-              <div className='space-y-4'>
-                <h3 className='text-lg font-medium text-foreground'>
-                  Filter System
-                </h3>
-                <div className='grid grid-cols-2 gap-4'>
-                  <div>
-                    <label className='block text-sm font-medium text-gray-700 mb-2'>
-                      Filter Type
-                    </label>
-                    <select
-                      value={formData.filterType}
-                      onChange={(e) =>
-                        handleInputChange('filterType', e.target.value)
-                      }
-                      className='w-full px-3 py-2 border border-input rounded-md focus:ring-blue-500 focus:border-blue-500'>
-                      <option value='sand'>Sand</option>
-                      <option value='cartridge'>Cartridge</option>
-                      <option value='de'>DE (Diatomaceous Earth)</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className='block text-sm font-medium text-gray-700 mb-2'>
-                      Filter Model
-                    </label>
-                    <input
-                      type='text'
-                      value={formData.filterModel}
-                      onChange={(e) =>
-                        handleInputChange('filterModel', e.target.value)
-                      }
-                      className='w-full px-3 py-2 border border-input rounded-md focus:ring-blue-500 focus:border-blue-500'
-                    />
-                  </div>
+              <h3 className='text-lg font-medium text-foreground'>
+                Pool Equipment
+              </h3>
+
+              <div className='grid grid-cols-2 gap-6'>
+                <div>
+                  <label className='block text-sm font-medium text-gray-700 mb-2'>
+                    Filter Type
+                  </label>
+                  <select
+                    value={formData.filterType}
+                    onChange={(e) =>
+                      handleInputChange('filterType', e.target.value)
+                    }
+                    className='w-full px-3 py-2 border border-input rounded-md focus:ring-blue-500 focus:border-blue-500'
+                  >
+                    <option value='sand'>Sand</option>
+                    <option value='de'>DE</option>
+                    <option value='cartridge'>Cartridge</option>
+                  </select>
+                </div>
+                <div>
+                  <label className='block text-sm font-medium text-gray-700 mb-2'>
+                    Filter Model
+                  </label>
+                  <input
+                    type='text'
+                    value={formData.filterModel}
+                    onChange={(e) =>
+                      handleInputChange('filterModel', e.target.value)
+                    }
+                    className='w-full px-3 py-2 border border-input rounded-md focus:ring-blue-500 focus:border-blue-500'
+                    placeholder='e.g., Pentair Clean & Clear 150'
+                  />
                 </div>
               </div>
 
-              {/* Pump */}
-              <div className='space-y-4'>
-                <h3 className='text-lg font-medium text-foreground'>Pump</h3>
-                <div className='grid grid-cols-2 gap-4'>
-                  <div>
-                    <label className='block text-sm font-medium text-gray-700 mb-2'>
-                      Pump Model
-                    </label>
-                    <input
-                      type='text'
-                      value={formData.pumpModel}
-                      onChange={(e) =>
-                        handleInputChange('pumpModel', e.target.value)
-                      }
-                      className='w-full px-3 py-2 border border-input rounded-md focus:ring-blue-500 focus:border-blue-500'
-                    />
-                  </div>
-                  <div>
-                    <label className='block text-sm font-medium text-gray-700 mb-2'>
-                      Horsepower
-                    </label>
-                    <input
-                      type='number'
-                      step='0.1'
-                      value={formData.pumpHorsepower}
-                      onChange={(e) =>
-                        handleInputChange('pumpHorsepower', e.target.value)
-                      }
-                      className='w-full px-3 py-2 border border-input rounded-md focus:ring-blue-500 focus:border-blue-500'
-                    />
-                  </div>
+              <div className='grid grid-cols-2 gap-6'>
+                <div>
+                  <label className='block text-sm font-medium text-gray-700 mb-2'>
+                    Pump Model
+                  </label>
+                  <input
+                    type='text'
+                    value={formData.pumpModel}
+                    onChange={(e) =>
+                      handleInputChange('pumpModel', e.target.value)
+                    }
+                    className='w-full px-3 py-2 border border-input rounded-md focus:ring-blue-500 focus:border-blue-500'
+                    placeholder='e.g., Pentair SuperFlo VS'
+                  />
                 </div>
-              </div>
-
-              {/* Heater */}
-              <div className='space-y-4'>
-                <h3 className='text-lg font-medium text-foreground'>
-                  Heater (Optional)
-                </h3>
-                <div className='grid grid-cols-2 gap-4'>
-                  <div>
-                    <label className='block text-sm font-medium text-gray-700 mb-2'>
-                      Heater Type
-                    </label>
-                    <select
-                      value={formData.heaterType}
-                      onChange={(e) =>
-                        handleInputChange('heaterType', e.target.value)
-                      }
-                      className='w-full px-3 py-2 border border-input rounded-md focus:ring-blue-500 focus:border-blue-500'>
-                      <option value=''>No Heater</option>
-                      <option value='gas'>Gas</option>
-                      <option value='electric'>Electric</option>
-                      <option value='heat-pump'>Heat Pump</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className='block text-sm font-medium text-gray-700 mb-2'>
-                      Heater Model
-                    </label>
-                    <input
-                      type='text'
-                      value={formData.heaterModel}
-                      onChange={(e) =>
-                        handleInputChange('heaterModel', e.target.value)
-                      }
-                      className='w-full px-3 py-2 border border-input rounded-md focus:ring-blue-500 focus:border-blue-500'
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Salt System */}
-              <div className='space-y-4'>
-                <h3 className='text-lg font-medium text-foreground'>
-                  Salt System (Optional)
-                </h3>
-                <div className='grid grid-cols-2 gap-4'>
-                  <div>
-                    <label className='block text-sm font-medium text-gray-700 mb-2'>
-                      Salt System Model
-                    </label>
-                    <input
-                      type='text'
-                      value={formData.saltSystemModel}
-                      onChange={(e) =>
-                        handleInputChange('saltSystemModel', e.target.value)
-                      }
-                      className='w-full px-3 py-2 border border-input rounded-md focus:ring-blue-500 focus:border-blue-500'
-                    />
-                  </div>
-                  <div>
-                    <label className='block text-sm font-medium text-gray-700 mb-2'>
-                      Target Salt Level (ppm)
-                    </label>
-                    <input
-                      type='number'
-                      value={formData.saltSystemTarget}
-                      onChange={(e) =>
-                        handleInputChange('saltSystemTarget', e.target.value)
-                      }
-                      className='w-full px-3 py-2 border border-input rounded-md focus:ring-blue-500 focus:border-blue-500'
-                      placeholder='3200'
-                    />
-                  </div>
+                <div>
+                  <label className='block text-sm font-medium text-gray-700 mb-2'>
+                    Pump Horsepower
+                  </label>
+                  <input
+                    type='number'
+                    step='0.25'
+                    value={formData.pumpHorsepower}
+                    onChange={(e) =>
+                      handleInputChange('pumpHorsepower', e.target.value)
+                    }
+                    className='w-full px-3 py-2 border border-input rounded-md focus:ring-blue-500 focus:border-blue-500'
+                    placeholder='1.5'
+                  />
                 </div>
               </div>
             </div>
           )}
 
-          {/* Chemical Targets Tab */}
+          {/* Chemical Targets Tab - simplified version */}
           {activeTab === 'targets' && (
             <div className='space-y-6'>
-              {/* pH */}
-              <div className='space-y-4'>
-                <h3 className='text-lg font-medium text-foreground'>
-                  pH Levels
-                </h3>
-                <div className='grid grid-cols-3 gap-4'>
-                  <div>
-                    <label className='block text-sm font-medium text-gray-700 mb-2'>
-                      Target pH
-                    </label>
-                    <input
-                      type='number'
-                      step='0.1'
-                      value={formData.phTarget}
-                      onChange={(e) =>
-                        handleInputChange('phTarget', e.target.value)
-                      }
-                      className='w-full px-3 py-2 border border-input rounded-md focus:ring-blue-500 focus:border-blue-500'
-                    />
-                  </div>
-                  <div>
-                    <label className='block text-sm font-medium text-gray-700 mb-2'>
-                      Minimum pH
-                    </label>
-                    <input
-                      type='number'
-                      step='0.1'
-                      value={formData.phMin}
-                      onChange={(e) =>
-                        handleInputChange('phMin', e.target.value)
-                      }
-                      className='w-full px-3 py-2 border border-input rounded-md focus:ring-blue-500 focus:border-blue-500'
-                    />
-                  </div>
-                  <div>
-                    <label className='block text-sm font-medium text-gray-700 mb-2'>
-                      Maximum pH
-                    </label>
-                    <input
-                      type='number'
-                      step='0.1'
-                      value={formData.phMax}
-                      onChange={(e) =>
-                        handleInputChange('phMax', e.target.value)
-                      }
-                      className='w-full px-3 py-2 border border-input rounded-md focus:ring-blue-500 focus:border-blue-500'
-                    />
-                  </div>
+              <h3 className='text-lg font-medium text-foreground'>
+                Chemical Target Levels
+              </h3>
+
+              <div className='grid grid-cols-3 gap-4'>
+                <div>
+                  <label className='block text-sm font-medium text-gray-700 mb-2'>
+                    pH Target
+                  </label>
+                  <input
+                    type='number'
+                    step='0.1'
+                    value={formData.phTarget}
+                    onChange={(e) =>
+                      handleInputChange('phTarget', e.target.value)
+                    }
+                    className='w-full px-3 py-2 border border-input rounded-md focus:ring-blue-500 focus:border-blue-500'
+                  />
+                </div>
+                <div>
+                  <label className='block text-sm font-medium text-gray-700 mb-2'>
+                    pH Minimum
+                  </label>
+                  <input
+                    type='number'
+                    step='0.1'
+                    value={formData.phMin}
+                    onChange={(e) => handleInputChange('phMin', e.target.value)}
+                    className='w-full px-3 py-2 border border-input rounded-md focus:ring-blue-500 focus:border-blue-500'
+                  />
+                </div>
+                <div>
+                  <label className='block text-sm font-medium text-gray-700 mb-2'>
+                    pH Maximum
+                  </label>
+                  <input
+                    type='number'
+                    step='0.1'
+                    value={formData.phMax}
+                    onChange={(e) => handleInputChange('phMax', e.target.value)}
+                    className='w-full px-3 py-2 border border-input rounded-md focus:ring-blue-500 focus:border-blue-500'
+                  />
                 </div>
               </div>
 
-              {/* Free Chlorine */}
-              <div className='space-y-4'>
-                <h3 className='text-lg font-medium text-foreground'>
-                  Free Chlorine (ppm)
-                </h3>
-                <div className='grid grid-cols-3 gap-4'>
-                  <div>
-                    <label className='block text-sm font-medium text-gray-700 mb-2'>
-                      Target
-                    </label>
-                    <input
-                      type='number'
-                      step='0.1'
-                      value={formData.freeChlorineTarget}
-                      onChange={(e) =>
-                        handleInputChange('freeChlorineTarget', e.target.value)
-                      }
-                      className='w-full px-3 py-2 border border-input rounded-md focus:ring-blue-500 focus:border-blue-500'
-                    />
-                  </div>
-                  <div>
-                    <label className='block text-sm font-medium text-gray-700 mb-2'>
-                      Minimum
-                    </label>
-                    <input
-                      type='number'
-                      step='0.1'
-                      value={formData.freeChlorineMin}
-                      onChange={(e) =>
-                        handleInputChange('freeChlorineMin', e.target.value)
-                      }
-                      className='w-full px-3 py-2 border border-input rounded-md focus:ring-blue-500 focus:border-blue-500'
-                    />
-                  </div>
-                  <div>
-                    <label className='block text-sm font-medium text-gray-700 mb-2'>
-                      Maximum
-                    </label>
-                    <input
-                      type='number'
-                      step='0.1'
-                      value={formData.freeChlorineMax}
-                      onChange={(e) =>
-                        handleInputChange('freeChlorineMax', e.target.value)
-                      }
-                      className='w-full px-3 py-2 border border-input rounded-md focus:ring-blue-500 focus:border-blue-500'
-                    />
-                  </div>
+              <div className='grid grid-cols-3 gap-4'>
+                <div>
+                  <label className='block text-sm font-medium text-gray-700 mb-2'>
+                    Free Chlorine Target
+                  </label>
+                  <input
+                    type='number'
+                    step='0.1'
+                    value={formData.freeChlorineTarget}
+                    onChange={(e) =>
+                      handleInputChange('freeChlorineTarget', e.target.value)
+                    }
+                    className='w-full px-3 py-2 border border-input rounded-md focus:ring-blue-500 focus:border-blue-500'
+                  />
+                </div>
+                <div>
+                  <label className='block text-sm font-medium text-gray-700 mb-2'>
+                    Free Chlorine Min
+                  </label>
+                  <input
+                    type='number'
+                    step='0.1'
+                    value={formData.freeChlorineMin}
+                    onChange={(e) =>
+                      handleInputChange('freeChlorineMin', e.target.value)
+                    }
+                    className='w-full px-3 py-2 border border-input rounded-md focus:ring-blue-500 focus:border-blue-500'
+                  />
+                </div>
+                <div>
+                  <label className='block text-sm font-medium text-gray-700 mb-2'>
+                    Free Chlorine Max
+                  </label>
+                  <input
+                    type='number'
+                    step='0.1'
+                    value={formData.freeChlorineMax}
+                    onChange={(e) =>
+                      handleInputChange('freeChlorineMax', e.target.value)
+                    }
+                    className='w-full px-3 py-2 border border-input rounded-md focus:ring-blue-500 focus:border-blue-500'
+                  />
                 </div>
               </div>
-
-              {/* Total Alkalinity */}
-              <div className='space-y-4'>
-                <h3 className='text-lg font-medium text-foreground'>
-                  Total Alkalinity (ppm)
-                </h3>
-                <div className='grid grid-cols-3 gap-4'>
-                  <div>
-                    <label className='block text-sm font-medium text-gray-700 mb-2'>
-                      Target
-                    </label>
-                    <input
-                      type='number'
-                      value={formData.totalAlkalinityTarget}
-                      onChange={(e) =>
-                        handleInputChange(
-                          'totalAlkalinityTarget',
-                          e.target.value
-                        )
-                      }
-                      className='w-full px-3 py-2 border border-input rounded-md focus:ring-blue-500 focus:border-blue-500'
-                    />
-                  </div>
-                  <div>
-                    <label className='block text-sm font-medium text-gray-700 mb-2'>
-                      Minimum
-                    </label>
-                    <input
-                      type='number'
-                      value={formData.totalAlkalinityMin}
-                      onChange={(e) =>
-                        handleInputChange('totalAlkalinityMin', e.target.value)
-                      }
-                      className='w-full px-3 py-2 border border-input rounded-md focus:ring-blue-500 focus:border-blue-500'
-                    />
-                  </div>
-                  <div>
-                    <label className='block text-sm font-medium text-gray-700 mb-2'>
-                      Maximum
-                    </label>
-                    <input
-                      type='number'
-                      value={formData.totalAlkalinityMax}
-                      onChange={(e) =>
-                        handleInputChange('totalAlkalinityMax', e.target.value)
-                      }
-                      className='w-full px-3 py-2 border border-input rounded-md focus:ring-blue-500 focus:border-blue-500'
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Calcium Hardness */}
-              <div className='space-y-4'>
-                <h3 className='text-lg font-medium text-foreground'>
-                  Calcium Hardness (ppm)
-                </h3>
-                <div className='grid grid-cols-3 gap-4'>
-                  <div>
-                    <label className='block text-sm font-medium text-gray-700 mb-2'>
-                      Target
-                    </label>
-                    <input
-                      type='number'
-                      value={formData.calciumHardnessTarget}
-                      onChange={(e) =>
-                        handleInputChange(
-                          'calciumHardnessTarget',
-                          e.target.value
-                        )
-                      }
-                      className='w-full px-3 py-2 border border-input rounded-md focus:ring-blue-500 focus:border-blue-500'
-                    />
-                  </div>
-                  <div>
-                    <label className='block text-sm font-medium text-gray-700 mb-2'>
-                      Minimum
-                    </label>
-                    <input
-                      type='number'
-                      value={formData.calciumHardnessMin}
-                      onChange={(e) =>
-                        handleInputChange('calciumHardnessMin', e.target.value)
-                      }
-                      className='w-full px-3 py-2 border border-input rounded-md focus:ring-blue-500 focus:border-blue-500'
-                    />
-                  </div>
-                  <div>
-                    <label className='block text-sm font-medium text-gray-700 mb-2'>
-                      Maximum
-                    </label>
-                    <input
-                      type='number'
-                      value={formData.calciumHardnessMax}
-                      onChange={(e) =>
-                        handleInputChange('calciumHardnessMax', e.target.value)
-                      }
-                      className='w-full px-3 py-2 border border-input rounded-md focus:ring-blue-500 focus:border-blue-500'
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Salt Levels (if salt system) */}
-              {formData.saltSystemModel && (
-                <div className='space-y-4'>
-                  <h3 className='text-lg font-medium text-foreground'>
-                    Salt Levels (ppm)
-                  </h3>
-                  <div className='grid grid-cols-3 gap-4'>
-                    <div>
-                      <label className='block text-sm font-medium text-gray-700 mb-2'>
-                        Target
-                      </label>
-                      <input
-                        type='number'
-                        value={formData.saltTarget}
-                        onChange={(e) =>
-                          handleInputChange('saltTarget', e.target.value)
-                        }
-                        className='w-full px-3 py-2 border border-input rounded-md focus:ring-blue-500 focus:border-blue-500'
-                      />
-                    </div>
-                    <div>
-                      <label className='block text-sm font-medium text-gray-700 mb-2'>
-                        Minimum
-                      </label>
-                      <input
-                        type='number'
-                        value={formData.saltMin}
-                        onChange={(e) =>
-                          handleInputChange('saltMin', e.target.value)
-                        }
-                        className='w-full px-3 py-2 border border-input rounded-md focus:ring-blue-500 focus:border-blue-500'
-                      />
-                    </div>
-                    <div>
-                      <label className='block text-sm font-medium text-gray-700 mb-2'>
-                        Maximum
-                      </label>
-                      <input
-                        type='number'
-                        value={formData.saltMax}
-                        onChange={(e) =>
-                          handleInputChange('saltMax', e.target.value)
-                        }
-                        className='w-full px-3 py-2 border border-input rounded-md focus:ring-blue-500 focus:border-blue-500'
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
             </div>
           )}
 
@@ -857,20 +670,83 @@ export default function TabbedPoolEditor({
         </div>
 
         {/* Footer */}
-        <div className='flex justify-end space-x-4 p-6 border-t'>
-          <button
-            onClick={onClose}
-            className='px-6 py-2 text-muted-foreground border border-input rounded-md hover:bg-muted/50'>
-            Cancel
-          </button>
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            className='px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50'>
-            {saving ? 'Saving...' : 'Save Pool'}
-          </button>
+        <div className='flex justify-between items-center p-6 border-t'>
+          {/* Delete button - only show for existing pools */}
+          <div>
+            {pool && onDelete && (
+              <button
+                onClick={() => setShowDeleteConfirm(true)}
+                disabled={deleting}
+                className='px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50 flex items-center gap-2'
+              >
+                <Trash2 className='w-4 h-4' />
+                {deleting ? 'Deleting...' : 'Delete Pool'}
+              </button>
+            )}
+          </div>
+
+          {/* Save/Cancel buttons */}
+          <div className='flex space-x-4'>
+            <button
+              onClick={onClose}
+              className='px-6 py-2 text-muted-foreground border border-input rounded-md hover:bg-muted/50'
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className='px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50'
+            >
+              {saving ? 'Saving...' : 'Save Pool'}
+            </button>
+          </div>
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className='fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-60'>
+          <div className='bg-background rounded-lg p-6 w-full max-w-md mx-4'>
+            <div className='flex items-center gap-3 mb-4'>
+              <div className='w-10 h-10 bg-red-100 rounded-full flex items-center justify-center'>
+                <Trash2 className='w-5 h-5 text-red-600' />
+              </div>
+              <div>
+                <h3 className='text-lg font-semibold text-foreground'>
+                  Delete Pool
+                </h3>
+                <p className='text-sm text-muted-foreground'>
+                  This action cannot be undone
+                </p>
+              </div>
+            </div>
+
+            <p className='text-sm text-muted-foreground mb-6'>
+              Are you sure you want to permanently delete{' '}
+              <strong>{pool?.name || 'this pool'}</strong>? All pool data will
+              be lost. If this pool has service history, deletion will be
+              blocked.
+            </p>
+
+            <div className='flex gap-3 justify-end'>
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className='px-4 py-2 text-muted-foreground border border-input rounded-md hover:bg-muted/50'
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={deleting}
+                className='px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50'
+              >
+                {deleting ? 'Deleting...' : 'Delete Pool'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

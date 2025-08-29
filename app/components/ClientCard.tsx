@@ -8,6 +8,7 @@ import {
   Users,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
+import { getStatusBadgeConfig } from '@/lib/badge-utils'
 import {
   Client,
   isRetailClient,
@@ -58,7 +59,7 @@ const ClientCard: React.FC<ClientCardProps> = ({
         </div>
 
         {/* Status Badge */}
-        <Badge variant={client.isActive ? "default" : "destructive"}>
+        <Badge variant={getStatusBadgeConfig(client.isActive).variant} className={getStatusBadgeConfig(client.isActive).className}>
           {client.isActive ? 'Active' : 'Inactive'}
         </Badge>
       </div>

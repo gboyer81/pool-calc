@@ -1,5 +1,7 @@
 'use client'
 
+// TODO: Remove old tables use only ClientAssignmentTable
+
 import React, { useState, useEffect } from 'react'
 import ProtectedRoute from '../components/ProtectedRoute'
 import { Search } from 'lucide-react'
@@ -8,6 +10,9 @@ import { Badge } from '@/components/ui/badge'
 import { showToast } from '@/lib/toast'
 import AssignmentTable from '@/components/AssignmentTable'
 import ClientAssignmentTable from '@/components/ClientAssignmentTable'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
 interface Technician {
   _id: string
@@ -91,7 +96,7 @@ export default function AssignmentsPage() {
     setBreadcrumbs([
       { label: 'Dashboard', href: '/dashboard' },
       { label: 'Admin', href: '/admin' },
-      { label: 'Client Assignments' }
+      { label: 'Client Assignments' },
     ])
     fetchData()
   }, [setBreadcrumbs])
@@ -273,16 +278,25 @@ export default function AssignmentsPage() {
           setShowAssignModal(false)
           setSelectedClient(null)
           setSelectedTechnician(null)
-          showToast.success('Client assigned successfully', 'The client has been assigned to the technician.')
+          showToast.success(
+            'Client assigned successfully',
+            'The client has been assigned to the technician.'
+          )
         } else {
           showToast.error('Assignment failed', data.error)
         }
       } else {
-        showToast.error('Assignment failed', 'Failed to assign client to technician.')
+        showToast.error(
+          'Assignment failed',
+          'Failed to assign client to technician.'
+        )
       }
     } catch (error) {
       console.error('Error assigning client:', error)
-      showToast.error('Assignment failed', 'An error occurred while assigning the client.')
+      showToast.error(
+        'Assignment failed',
+        'An error occurred while assigning the client.'
+      )
     } finally {
       setActionLoading(false)
     }
@@ -315,7 +329,10 @@ export default function AssignmentsPage() {
         const data = await response.json()
         if (data.success) {
           await fetchData() // Refresh data
-          showToast.success('Assignment removed', 'The client assignment has been removed successfully.')
+          showToast.success(
+            'Assignment removed',
+            'The client assignment has been removed successfully.'
+          )
         } else {
           showToast.error('Removal failed', data.error)
         }
@@ -324,7 +341,10 @@ export default function AssignmentsPage() {
       }
     } catch (error) {
       console.error('Error removing assignment:', error)
-      showToast.error('Removal failed', 'An error occurred while removing the assignment.')
+      showToast.error(
+        'Removal failed',
+        'An error occurred while removing the assignment.'
+      )
     } finally {
       setActionLoading(false)
     }
@@ -333,7 +353,7 @@ export default function AssignmentsPage() {
   const getFrequencyBadge = (frequency: string | undefined | null) => {
     if (!frequency) {
       return (
-        <Badge variant="secondary" className="text-xs">
+        <Badge variant='secondary' className='text-xs'>
           Not set
         </Badge>
       )
@@ -342,31 +362,39 @@ export default function AssignmentsPage() {
     switch (frequency) {
       case 'twice-weekly':
         return (
-          <Badge variant="outline" className="border-purple-200 bg-purple-50 text-purple-700 hover:bg-purple-100 dark:border-purple-800 dark:bg-purple-950 dark:text-purple-300 text-xs">
+          <Badge
+            variant='outline'
+            className='border-purple-200 bg-purple-50 text-purple-700 hover:bg-purple-100 dark:border-purple-800 dark:bg-purple-950 dark:text-purple-300 text-xs'>
             Twice Weekly
           </Badge>
         )
       case 'weekly':
         return (
-          <Badge variant="outline" className="border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-300 text-xs">
+          <Badge
+            variant='outline'
+            className='border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-300 text-xs'>
             Weekly
           </Badge>
         )
       case 'bi-weekly':
         return (
-          <Badge variant="outline" className="border-green-200 bg-green-50 text-green-700 hover:bg-green-100 dark:border-green-800 dark:bg-green-950 dark:text-green-300 text-xs">
+          <Badge
+            variant='outline'
+            className='border-green-200 bg-green-50 text-green-700 hover:bg-green-100 dark:border-green-800 dark:bg-green-950 dark:text-green-300 text-xs'>
             Bi-weekly
           </Badge>
         )
       case 'monthly':
         return (
-          <Badge variant="outline" className="border-orange-200 bg-orange-50 text-orange-700 hover:bg-orange-100 dark:border-orange-800 dark:bg-orange-950 dark:text-orange-300 text-xs">
+          <Badge
+            variant='outline'
+            className='border-orange-200 bg-orange-50 text-orange-700 hover:bg-orange-100 dark:border-orange-800 dark:bg-orange-950 dark:text-orange-300 text-xs'>
             Monthly
           </Badge>
         )
       default:
         return (
-          <Badge variant="secondary" className="text-xs">
+          <Badge variant='secondary' className='text-xs'>
             {frequency}
           </Badge>
         )
@@ -398,148 +426,186 @@ export default function AssignmentsPage() {
 
   return (
     <ProtectedRoute requiredRoles={['admin', 'supervisor']}>
-      <div className='p-6'>
+      <div className='flex flex-1 flex-col'>
         {/* Header */}
-        <div className='flex flex-col items-center md:flex-row md:justify-between md:items-center mb-6'>
+        <div className='flex items-center justify-between p-6 border-b border-blue-100 dark:border-blue-800'>
           <div>
-            <h1 className='md:mb-0 text-3xl font-bold text-foreground'>
+            <h1 className='text-2xl font-bold text-blue-900 dark:text-blue-100'>
               Client Assignments
             </h1>
-            <p className='text-muted-foreground mb-2 md:mb-0'>
+            <p className='text-muted-foreground mt-1'>
               Manage technician-client assignments
             </p>
           </div>
-          <div className='flex gap-3'>
-            <button
+          <div className='flex items-center gap-3'>
+            <Button
               onClick={() => setShowAssignModal(true)}
-              className='bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors'>
+              className='bg-green-600 hover:bg-green-700 text-white'>
               + Assign Client
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="outline"
               onClick={() => (window.location.href = '/admin')}
-              className='bg-muted/50 text-gray-700 dark:text-white px-4 py-2 rounded-lg hover:bg-gray-400 transition-colors'>
+              className='border-blue-200 dark:border-blue-700'>
               ← Admin Panel
-            </button>
+            </Button>
           </div>
         </div>
 
-        {error && (
-          <div className='bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 p-4 rounded-lg mb-6'>
-            <strong>Error:</strong> {error}
-          </div>
-        )}
+        <div className='flex-1 p-6 space-y-6'>
+          {/* Error Handling */}
+          {error && (
+            <Card className='border-red-200 dark:border-red-700 bg-red-50 dark:bg-red-900/10'>
+              <CardContent className='p-4'>
+                <div className='text-red-800 dark:text-red-300'>
+                  <strong>Error:</strong> {error}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
-        {/* View Toggle */}
-        <div className='flex space-x-1 bg-muted p-1 rounded-lg mb-6 w-fit'>
-          {(['overview', 'technicians', 'clients'] as const).map((viewType) => (
-            <button
-              key={viewType}
-              onClick={() => setView(viewType)}
-              className={`px-4 py-2 rounded-md font-medium transition-colors ${
-                view === viewType
-                  ? 'bg-background text-blue-600 shadow-sm'
-                  : 'text-gray-500 hover:text-gray-700'
-              }`}>
-              {viewType.charAt(0).toUpperCase() + viewType.slice(1)}
-            </button>
-          ))}
-        </div>
+          {/* View Toggle */}
+          <Card className='border-blue-100 dark:border-blue-800'>
+            <CardContent className='p-4'>
+              <div className='flex space-x-1 bg-muted p-1 rounded-lg w-fit'>
+                {(['overview', 'technicians', 'clients'] as const).map((viewType) => (
+                  <Button
+                    key={viewType}
+                    onClick={() => setView(viewType)}
+                    variant={view === viewType ? "default" : "ghost"}
+                    size="sm"
+                    className={`${
+                      view === viewType
+                        ? 'bg-blue-600 text-white hover:bg-blue-700'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}>
+                    {viewType.charAt(0).toUpperCase() + viewType.slice(1)}
+                  </Button>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
 
-        {/* Stats Overview */}
-        {view === 'overview' && stats && (
-          <div className='grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-6 mb-8'>
-            <div className='bg-background p-6 rounded-lg shadow-sm border'>
-              <div className='text-2xl font-bold text-blue-600'>
-                {stats.totalTechnicians}
-              </div>
-              <div className='text-sm text-muted-foreground'>
-                Total Technicians
-              </div>
+          {/* Stats Overview */}
+          {view === 'overview' && stats && (
+            <div className='grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4'>
+              <Card className='border-blue-100 dark:border-blue-800'>
+                <CardContent className='p-4'>
+                  <div className='text-2xl font-bold text-blue-600'>
+                    {stats.totalTechnicians}
+                  </div>
+                  <div className='text-sm text-muted-foreground'>
+                    Total Technicians
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className='border-blue-100 dark:border-blue-800'>
+                <CardContent className='p-4'>
+                  <div className='text-2xl font-bold text-green-600'>
+                    {stats.activeTechnicians}
+                  </div>
+                  <div className='text-sm text-muted-foreground'>
+                    Active Technicians
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className='border-blue-100 dark:border-blue-800'>
+                <CardContent className='p-4'>
+                  <div className='text-2xl font-bold text-blue-700 dark:text-blue-300'>
+                    {stats.totalClients}
+                  </div>
+                  <div className='text-sm text-muted-foreground'>Total Clients</div>
+                </CardContent>
+              </Card>
+              <Card className='border-blue-100 dark:border-blue-800'>
+                <CardContent className='p-4'>
+                  <div className='text-2xl font-bold text-blue-600'>
+                    {stats.assignedClients}
+                  </div>
+                  <div className='text-sm text-muted-foreground'>
+                    Assigned Clients
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className='border-blue-100 dark:border-blue-800'>
+                <CardContent className='p-4'>
+                  <div className='text-2xl font-bold text-orange-600'>
+                    {stats.unassignedClients}
+                  </div>
+                  <div className='text-sm text-muted-foreground'>
+                    Unassigned Clients
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className='border-blue-100 dark:border-blue-800'>
+                <CardContent className='p-4'>
+                  <div className='text-2xl font-bold text-blue-800 dark:text-blue-200'>
+                    {stats.avgClientsPerTechnician}
+                  </div>
+                  <div className='text-sm text-muted-foreground'>
+                    Avg per Technician
+                  </div>
+                </CardContent>
+              </Card>
             </div>
-            <div className='bg-background p-6 rounded-lg shadow-sm border'>
-              <div className='text-2xl font-bold text-green-600'>
-                {stats.activeTechnicians}
-              </div>
-              <div className='text-sm text-muted-foreground'>
-                Active Technicians
-              </div>
-            </div>
-            <div className='bg-background p-6 rounded-lg shadow-sm border'>
-              <div className='text-2xl font-bold text-purple-600'>
-                {stats.totalClients}
-              </div>
-              <div className='text-sm text-muted-foreground'>Total Clients</div>
-            </div>
-            <div className='bg-background p-6 rounded-lg shadow-sm border'>
-              <div className='text-2xl font-bold text-blue-600'>
-                {stats.assignedClients}
-              </div>
-              <div className='text-sm text-muted-foreground'>
-                Assigned Clients
-              </div>
-            </div>
-            <div className='bg-background p-6 rounded-lg shadow-sm border'>
-              <div className='text-2xl font-bold text-orange-600'>
-                {stats.unassignedClients}
-              </div>
-              <div className='text-sm text-muted-foreground'>
-                Unassigned Clients
-              </div>
-            </div>
-            <div className='bg-background p-6 rounded-lg shadow-sm border'>
-              <div className='text-2xl font-bold text-indigo-600'>
-                {stats.avgClientsPerTechnician}
-              </div>
-              <div className='text-sm text-muted-foreground'>
-                Avg per Technician
-              </div>
-            </div>
-          </div>
-        )}
+          )}
 
-        {/* Technicians View */}
-        {view === 'technicians' && (
-          <div className='space-y-4'>
-            <div className='bg-background rounded-lg shadow-sm border p-6'>
-              <h2 className='text-lg font-semibold text-foreground mb-4'>
-                Technicians & Their Assignments
-              </h2>
-              <AssignmentTable
-                technicians={technicians}
-                clients={clients}
-                onAssignClient={assignClientToTechnician}
-                onRemoveClient={removeClientFromTechnician}
-                onViewAssignments={(technician) => {
-                  setSelectedTechnician(technician)
-                  // Additional logic for viewing assignments
-                }}
-                loading={loading}
-              />
-            </div>
-          </div>
-        )}
+          {/* Technicians View */}
+          {view === 'technicians' && (
+            <Card className='border-blue-100 dark:border-blue-800'>
+              <CardHeader>
+                <CardTitle className='text-blue-900 dark:text-blue-100'>
+                  Technicians & Their Assignments
+                </CardTitle>
+                <CardDescription>
+                  View and manage client assignments for each technician
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <AssignmentTable
+                  technicians={technicians}
+                  clients={clients}
+                  onAssignClient={assignClientToTechnician}
+                  onRemoveClient={removeClientFromTechnician}
+                  onViewAssignments={(technician) => {
+                    setSelectedTechnician(technician)
+                  }}
+                  loading={loading}
+                />
+              </CardContent>
+            </Card>
+          )}
 
         {/* Clients View with Search */}
         {view === 'clients' && (
-          <div className='space-y-6'>
-            {/* Search and Filters */}
-            <div className='bg-background p-4 rounded-lg shadow border'>
-              <div className='grid grid-cols-1 md:grid-cols-6 gap-4'>
-                <div className='md:col-span-2'>
-                  <label className='block text-sm font-medium text-gray-700 mb-1'>
-                    Search Clients
-                  </label>
-                  <div className='relative'>
-                    <Search className='absolute left-3 top-3 h-4 w-4 text-gray-400' />
-                    <input
-                      type='text'
-                      placeholder='Search by name, email, phone, or address...'
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className='pl-10 pr-4 py-2 w-full border border-input rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent'
-                    />
-                  </div>
-                </div>
+            <div className='space-y-6'>
+              {/* Search and Filters */}
+              <Card className='border-blue-100 dark:border-blue-800'>
+                <CardHeader>
+                  <CardTitle className='text-blue-900 dark:text-blue-100 flex items-center gap-2'>
+                    <Search className='h-5 w-5' />
+                    Search & Filter Clients
+                  </CardTitle>
+                  <CardDescription>
+                    Find and filter clients by various criteria
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className='grid grid-cols-1 md:grid-cols-6 gap-4'>
+                    <div className='md:col-span-2'>
+                      <label className='block text-sm font-medium text-foreground mb-2'>
+                        Search Clients
+                      </label>
+                      <div className='relative'>
+                        <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground' />
+                        <Input
+                          placeholder='Search by name, email, phone, or address...'
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                          className='pl-10 border-blue-200 dark:border-blue-700 focus-visible:ring-blue-500'
+                        />
+                      </div>
+                    </div>
 
                 <div>
                   <label className='block text-sm font-medium text-gray-700 mb-1'>
@@ -610,7 +676,8 @@ export default function AssignmentsPage() {
                 Showing {filteredClients.length} of {clients.length} clients
                 {searchTerm && ` matching "${searchTerm}"`}
               </div>
-            </div>
+                </CardContent>
+              </Card>
 
             {/* Quick Stats for Filtered Results */}
             <div className='grid grid-cols-2 md:grid-cols-4 gap-4'>
@@ -852,7 +919,9 @@ export default function AssignmentsPage() {
                 technicians={technicians}
                 onAssignClient={assignClientToTechnician}
                 onUnassignClient={(clientId) => {
-                  const assignedTech = technicians.find(t => t.assignedClients.includes(clientId))
+                  const assignedTech = technicians.find((t) =>
+                    t.assignedClients.includes(clientId)
+                  )
                   if (assignedTech) {
                     removeClientFromTechnician(assignedTech._id, clientId)
                   }
@@ -910,19 +979,21 @@ export default function AssignmentsPage() {
                   ))}
               </div>
 
-              <div className='flex justify-end space-x-3'>
-                <button
-                  onClick={() => {
-                    setShowAssignModal(false)
-                    setSelectedClient(null)
-                  }}
-                  className='px-4 py-2 text-muted-foreground border border-input rounded hover:bg-muted/50'>
-                  Cancel
-                </button>
+                <div className='flex justify-end space-x-3'>
+                  <Button
+                    onClick={() => {
+                      setShowAssignModal(false)
+                      setSelectedClient(null)
+                    }}
+                    variant="outline"
+                    className='border-blue-200 dark:border-blue-700'>
+                    Cancel
+                  </Button>
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </ProtectedRoute>
   )

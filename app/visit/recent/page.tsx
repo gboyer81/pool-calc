@@ -21,6 +21,8 @@ import RecentInventoryUsage from '@/components/RecentInventoryUsage'
 import PendingBillingComponent from '@/components/PendingBilling'
 import SummaryStats from '@/components/SummaryStats'
 import { Calendar } from '@/components/ui/calendar'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
 const VisitHistoryHomepage = () => {
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
@@ -336,107 +338,108 @@ const VisitHistoryHomepage = () => {
   }
 
   return (
-    <div className='min-h-screen p-6'>
-      <div>
-        {/* Header */}
-        <div className='bg-white rounded-lg shadow-sm border p-4 sm:p-6 mb-6'>
-          <div className='flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-4'>
-            <div className='flex-1 min-w-0'>
-              <h1 className='text-2xl sm:text-3xl font-bold text-gray-900'>
-                Visit History Dashboard
-              </h1>
-              <p className='text-gray-600 mt-1 text-sm sm:text-base'>
-                Overview of recent jobs, inventory usage, and pending tasks
-              </p>
-            </div>
-            <div className='flex flex-col sm:flex-row gap-3'>
-              <div className='relative calendar-container'>
-                <button
-                  onClick={() => setShowCalendar(!showCalendar)}
-                  className='w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent flex items-center gap-2 hover:bg-gray-50'>
-                  <CalendarIcon className='w-4 h-4' />
-                  {dateRange?.from ? (
-                    dateRange.to ? (
-                      <>
-                        {format(dateRange.from, 'LLL dd')} -{' '}
-                        {format(dateRange.to, 'LLL dd, y')}
-                      </>
-                    ) : (
-                      format(dateRange.from, 'LLL dd, y')
-                    )
-                  ) : (
-                    'Pick date range'
-                  )}
-                </button>
-                {showCalendar && (
-                  <div className='absolute top-full left-0 mt-2 z-50 bg-white border border-gray-200 rounded-lg shadow-lg p-3'>
-                    <Calendar
-                      mode='range'
-                      defaultMonth={dateRange?.from}
-                      selected={dateRange}
-                      onSelect={setDateRange}
-                      numberOfMonths={2}
-                      disabled={(date) =>
-                        date > new Date() || date < new Date('2020-01-01')
-                      }
-                    />
-                    <div className='flex gap-2 mt-3 pt-3 border-t'>
-                      <button
-                        onClick={() => {
-                          setDateRange({
-                            from: new Date(new Date().getTime() - 7 * 24 * 60 * 60 * 1000),
-                            to: new Date(),
-                          })
-                          setShowCalendar(false)
-                        }}
-                        className='px-3 py-1 text-xs border border-gray-300 rounded hover:bg-gray-50'>
-                        Last 7 days
-                      </button>
-                      <button
-                        onClick={() => {
-                          setDateRange({
-                            from: new Date(new Date().getTime() - 30 * 24 * 60 * 60 * 1000),
-                            to: new Date(),
-                          })
-                          setShowCalendar(false)
-                        }}
-                        className='px-3 py-1 text-xs border border-gray-300 rounded hover:bg-gray-50'>
-                        Last 30 days
-                      </button>
-                      <button
-                        onClick={() => setShowCalendar(false)}
-                        className='px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 ml-auto'>
-                        Done
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-              <div className='flex gap-3'>
-                <button
-                  onClick={handleRefresh}
-                  disabled={refreshing}
-                  className='flex-1 sm:flex-none px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2 disabled:opacity-50'>
-                  <RefreshCw
-                    className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`}
-                  />
-                  Refresh
-                </button>
-                <button className='flex-1 sm:flex-none px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center justify-center gap-2'>
-                  <Download className='w-4 h-4' />
-                  Export
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Summary Stats */}
-          <SummaryStats
-            stats={stats}
-            dateRange={dateRange}
-            loading={loading}
-          />
+    <div className='flex flex-1 flex-col'>
+      {/* Header */}
+      <div className='flex items-center justify-between p-6 border-b border-blue-100 dark:border-blue-800'>
+        <div>
+          <h1 className='text-2xl font-bold text-blue-900 dark:text-blue-100'>
+            Visit History Dashboard
+          </h1>
+          <p className='text-muted-foreground mt-1'>
+            Overview of recent jobs, inventory usage, and pending tasks
+          </p>
         </div>
+        <div className='flex items-center gap-3'>
+          <div className='relative calendar-container'>
+            <Button
+              variant="outline"
+              onClick={() => setShowCalendar(!showCalendar)}
+              className='border-blue-200 dark:border-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20'>
+              <CalendarIcon className='w-4 h-4 mr-2' />
+              {dateRange?.from ? (
+                dateRange.to ? (
+                  <>
+                    {format(dateRange.from, 'LLL dd')} - {format(dateRange.to, 'LLL dd, y')}
+                  </>
+                ) : (
+                  format(dateRange.from, 'LLL dd, y')
+                )
+              ) : (
+                'Pick date range'
+              )}
+            </Button>
+            {showCalendar && (
+              <div className='absolute top-full left-0 mt-2 z-50 bg-card border border-blue-200 dark:border-blue-700 rounded-lg shadow-lg p-3'>
+                <Calendar
+                  mode='range'
+                  defaultMonth={dateRange?.from}
+                  selected={dateRange}
+                  onSelect={setDateRange}
+                  numberOfMonths={2}
+                  disabled={(date) =>
+                    date > new Date() || date < new Date('2020-01-01')
+                  }
+                />
+                <div className='flex gap-2 mt-3 pt-3 border-t border-blue-200 dark:border-blue-700'>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setDateRange({
+                        from: new Date(new Date().getTime() - 7 * 24 * 60 * 60 * 1000),
+                        to: new Date(),
+                      })
+                      setShowCalendar(false)
+                    }}>
+                    Last 7 days
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setDateRange({
+                        from: new Date(new Date().getTime() - 30 * 24 * 60 * 60 * 1000),
+                        to: new Date(),
+                      })
+                      setShowCalendar(false)
+                    }}>
+                    Last 30 days
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={() => setShowCalendar(false)}
+                    className='ml-auto bg-blue-600 hover:bg-blue-700'>
+                    Done
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+          <Button
+            onClick={handleRefresh}
+            disabled={refreshing}
+            className='bg-blue-600 hover:bg-blue-700 text-white'>
+            <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+          <Button variant="outline" className='border-blue-200 dark:border-blue-700'>
+            <Download className='w-4 h-4 mr-2' />
+            Export
+          </Button>
+        </div>
+      </div>
+
+      <div className='flex-1 p-6 space-y-6'>
+        {/* Summary Stats */}
+        <Card className='border-blue-100 dark:border-blue-800'>
+          <CardContent className='p-6'>
+            <SummaryStats
+              stats={stats}
+              dateRange={dateRange}
+              loading={loading}
+            />
+          </CardContent>
+        </Card>
 
         {/* Main Content Grid */}
         <div className='grid grid-cols-1 lg:grid-cols-3 gap-6'>
@@ -448,7 +451,7 @@ const VisitHistoryHomepage = () => {
         </div>
 
         {/* Bottom Row */}
-        <div className='grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6'>
+        <div className='grid grid-cols-1 lg:grid-cols-2 gap-6'>
           <FollowupVisits
             followUps={followUps}
             loading={loading}

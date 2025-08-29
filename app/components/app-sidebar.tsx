@@ -20,6 +20,7 @@ import { NavUser } from "@/components/nav-user"
 import { AuroraText } from "components/magicui/aurora-text"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { RoleBadge } from "@/lib/badge-utils"
+import { WeatherWidget } from "./WeatherWidget"
 import {
   Sidebar,
   SidebarContent,
@@ -128,6 +129,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   // Check if we're on the visit select page
   const isVisitSelectPage = pathname === '/visit/select'
+  
+  // Check if we're on the home page
+  const isHomePage = pathname === '/'
 
   // Check authentication status
   React.useEffect(() => {
@@ -153,13 +157,21 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
     checkAuth()
 
-    // Listen for storage changes
+    // Listen for storage changes and auth state changes
     const handleStorageChange = () => {
       checkAuth()
     }
 
+    const handleAuthStateChange = () => {
+      checkAuth()
+    }
+
     window.addEventListener('storage', handleStorageChange)
-    return () => window.removeEventListener('storage', handleStorageChange)
+    window.addEventListener('authStateChanged', handleAuthStateChange)
+    return () => {
+      window.removeEventListener('storage', handleStorageChange)
+      window.removeEventListener('authStateChanged', handleAuthStateChange)
+    }
   }, [])
 
   // Load clients when authenticated and on visit/select page
@@ -203,6 +215,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       localStorage.removeItem('technicianData')
       setTechnician(null)
       setIsAuthenticated(false)
+      
+      // Dispatch custom event to notify other components of auth change
+      window.dispatchEvent(new CustomEvent('authStateChanged'))
+      
       window.location.href = '/login'
     } catch (error) {
       console.error('Logout error:', error)
@@ -352,8 +368,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <SidebarHeader>
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton size="lg" asChild className="md:h-8 md:p-0">
-                <Link href="/">
+              <SidebarMenuButton size="lg" asChild className="md:h-8 md:p-0 cursor-pointer hover:bg-sidebar-accent">
+                <Link href="/" className="cursor-pointer">
                   <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
                     <span className="text-lg">🏊‍♀️</span>
                   </div>
@@ -386,10 +402,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                           setOpen(true)
                         }}
                         isActive={isActive}
-                        className="px-2.5 md:px-2"
+                        className="px-2.5 md:px-2 cursor-pointer hover:bg-sidebar-accent transition-colors"
                         asChild
                       >
-                        <Link href={item.href}>
+                        <Link href={item.href} className="cursor-pointer">
                           <item.icon className="h-4 w-4" />
                           <span>{item.name}</span>
                         </Link>
@@ -423,7 +439,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     <RoleBadge role={technician.role} />
                     <button
                       onClick={handleLogout}
-                      className="flex items-center gap-1 px-1.5 py-0.5 rounded text-xs text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-900/20 transition-colors"
+                      className="flex items-center gap-1 px-1.5 py-0.5 rounded text-xs text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-900/20 transition-colors cursor-pointer"
                       title="Logout"
                     >
                       <LogOut className="h-3 w-3" />
@@ -442,10 +458,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <SidebarHeader className="gap-3.5 border-b p-4">
           <div className="flex w-full items-center justify-between">
             <div className="text-foreground text-base font-medium">
-              {isVisitSelectPage ? 'Service Types' : (activeItem?.name || 'Recent Activity')}
+              {isVisitSelectPage ? 'Service Types' : (isHomePage ? 'Dashboard' : (activeItem?.name || 'Recent Activity'))}
             </div>
           </div>
-          {isAuthenticated && (
+          {isAuthenticated && !isHomePage && (
             <SidebarInput 
               placeholder={isVisitSelectPage ? "Search services & clients..." : "Search visits, clients..."} 
               value={searchQuery}
@@ -536,6 +552,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                       </div>
                     )}
                   </>
+                ) : isHomePage ? (
+                  // Show weather widget on home page
+                  <div className="p-4">
+                    <WeatherWidget />
+                  </div>
                 ) : (
                   // Show recent visits on other pages
                   mockVisits.map((visit) => (

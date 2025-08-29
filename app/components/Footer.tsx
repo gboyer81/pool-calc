@@ -58,7 +58,7 @@ export default function Footer() {
                 {currentTime.toLocaleTimeString()}
               </span>
             </div>
-            <span>v1.1.0</span>
+            <span>v1.9.1</span>
           </div>
         </div>
       </div>

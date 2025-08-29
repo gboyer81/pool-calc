@@ -45,6 +45,7 @@ import {
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu'
 import { Badge } from '@/components/ui/badge'
+import { getStatusBadgeConfig } from '@/lib/badge-utils'
 import {
   Select,
   SelectContent,
@@ -220,8 +221,9 @@ const columns = (
     header: 'Status',
     cell: ({ row }) => {
       const isActive = row.getValue('isActive') as boolean
+      const config = getStatusBadgeConfig(isActive)
       return (
-        <Badge variant={isActive ? 'default' : 'destructive'}>
+        <Badge variant={config.variant} className={config.className}>
           {isActive ? (
             <>
               <UserCheck className='mr-1 h-3 w-3' />
