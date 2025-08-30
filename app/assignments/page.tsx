@@ -12,7 +12,13 @@ import AssignmentTable from '@/components/AssignmentTable'
 import ClientAssignmentTable from '@/components/ClientAssignmentTable'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
 
 interface Technician {
   _id: string
@@ -57,7 +63,6 @@ export default function AssignmentsPage() {
   const { setBreadcrumbs } = useBreadcrumb()
   const [technicians, setTechnicians] = useState<Technician[]>([])
   const [clients, setClients] = useState<Client[]>([])
-  const [unassignedClients, setUnassignedClients] = useState<Client[]>([])
   const [selectedTechnician, setSelectedTechnician] =
     useState<Technician | null>(null)
   const [selectedClient, setSelectedClient] = useState<Client | null>(null)
@@ -94,7 +99,7 @@ export default function AssignmentsPage() {
 
   useEffect(() => {
     setBreadcrumbs([
-      { label: 'Dashboard', href: '/dashboard' },
+      { label: 'Dashboard', href: '/' },
       { label: 'Admin', href: '/admin' },
       { label: 'Client Assignments' },
     ])
@@ -199,17 +204,6 @@ export default function AssignmentsPage() {
           setTechnicians(techniciansData.technicians || [])
           setClients(clientsData.clients || [])
 
-          // Find unassigned clients
-          const allAssignedClientIds = (
-            techniciansData.technicians || []
-          ).flatMap((tech: Technician) => tech.assignedClients)
-
-          const unassigned = (clientsData.clients || []).filter(
-            (client: Client) =>
-              !allAssignedClientIds.includes(client._id) && client.isActive
-          )
-
-          setUnassignedClients(unassigned)
           setError(null)
         } else {
           setError('Failed to fetch data')
@@ -364,7 +358,8 @@ export default function AssignmentsPage() {
         return (
           <Badge
             variant='outline'
-            className='border-purple-200 bg-purple-50 text-purple-700 hover:bg-purple-100 dark:border-purple-800 dark:bg-purple-950 dark:text-purple-300 text-xs'>
+            className='border-purple-200 bg-purple-50 text-purple-700 hover:bg-purple-100 dark:border-purple-800 dark:bg-purple-950 dark:text-purple-300 text-xs'
+          >
             Twice Weekly
           </Badge>
         )
@@ -372,7 +367,8 @@ export default function AssignmentsPage() {
         return (
           <Badge
             variant='outline'
-            className='border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-300 text-xs'>
+            className='border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-300 text-xs'
+          >
             Weekly
           </Badge>
         )
@@ -380,7 +376,8 @@ export default function AssignmentsPage() {
         return (
           <Badge
             variant='outline'
-            className='border-green-200 bg-green-50 text-green-700 hover:bg-green-100 dark:border-green-800 dark:bg-green-950 dark:text-green-300 text-xs'>
+            className='border-green-200 bg-green-50 text-green-700 hover:bg-green-100 dark:border-green-800 dark:bg-green-950 dark:text-green-300 text-xs'
+          >
             Bi-weekly
           </Badge>
         )
@@ -388,7 +385,8 @@ export default function AssignmentsPage() {
         return (
           <Badge
             variant='outline'
-            className='border-orange-200 bg-orange-50 text-orange-700 hover:bg-orange-100 dark:border-orange-800 dark:bg-orange-950 dark:text-orange-300 text-xs'>
+            className='border-orange-200 bg-orange-50 text-orange-700 hover:bg-orange-100 dark:border-orange-800 dark:bg-orange-950 dark:text-orange-300 text-xs'
+          >
             Monthly
           </Badge>
         )
@@ -440,13 +438,15 @@ export default function AssignmentsPage() {
           <div className='flex items-center gap-3'>
             <Button
               onClick={() => setShowAssignModal(true)}
-              className='bg-green-600 hover:bg-green-700 text-white'>
+              className='bg-green-600 hover:bg-green-700 text-white'
+            >
               + Assign Client
             </Button>
             <Button
-              variant="outline"
+              variant='outline'
               onClick={() => (window.location.href = '/admin')}
-              className='border-blue-200 dark:border-blue-700'>
+              className='border-blue-200 dark:border-blue-700'
+            >
               ← Admin Panel
             </Button>
           </div>
@@ -466,22 +466,25 @@ export default function AssignmentsPage() {
 
           {/* View Toggle */}
           <Card className='border-blue-100 dark:border-blue-800'>
-            <CardContent className='p-4'>
+            <CardContent className='px-2 py-1'>
               <div className='flex space-x-1 bg-muted p-1 rounded-lg w-fit'>
-                {(['overview', 'technicians', 'clients'] as const).map((viewType) => (
-                  <Button
-                    key={viewType}
-                    onClick={() => setView(viewType)}
-                    variant={view === viewType ? "default" : "ghost"}
-                    size="sm"
-                    className={`${
-                      view === viewType
-                        ? 'bg-blue-600 text-white hover:bg-blue-700'
-                        : 'text-muted-foreground hover:text-foreground'
-                    }`}>
-                    {viewType.charAt(0).toUpperCase() + viewType.slice(1)}
-                  </Button>
-                ))}
+                {(['overview', 'technicians', 'clients'] as const).map(
+                  (viewType) => (
+                    <Button
+                      key={viewType}
+                      onClick={() => setView(viewType)}
+                      variant={view === viewType ? 'default' : 'ghost'}
+                      size='sm'
+                      className={`${
+                        view === viewType
+                          ? 'bg-blue-600 text-white hover:bg-blue-700'
+                          : 'text-muted-foreground hover:text-foreground'
+                      }`}
+                    >
+                      {viewType.charAt(0).toUpperCase() + viewType.slice(1)}
+                    </Button>
+                  )
+                )}
               </div>
             </CardContent>
           </Card>
@@ -514,7 +517,9 @@ export default function AssignmentsPage() {
                   <div className='text-2xl font-bold text-blue-700 dark:text-blue-300'>
                     {stats.totalClients}
                   </div>
-                  <div className='text-sm text-muted-foreground'>Total Clients</div>
+                  <div className='text-sm text-muted-foreground'>
+                    Total Clients
+                  </div>
                 </CardContent>
               </Card>
               <Card className='border-blue-100 dark:border-blue-800'>
@@ -576,8 +581,8 @@ export default function AssignmentsPage() {
             </Card>
           )}
 
-        {/* Clients View with Search */}
-        {view === 'clients' && (
+          {/* Clients View with Search */}
+          {view === 'clients' && (
             <div className='space-y-6'>
               {/* Search and Filters */}
               <Card className='border-blue-100 dark:border-blue-800'>
@@ -607,377 +612,218 @@ export default function AssignmentsPage() {
                       </div>
                     </div>
 
-                <div>
-                  <label className='block text-sm font-medium text-gray-700 mb-1'>
-                    Client Type
-                  </label>
-                  <select
-                    value={clientTypeFilter}
-                    onChange={(e) => setClientTypeFilter(e.target.value as any)}
-                    className='w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-blue-500'>
-                    <option value='all'>All Types</option>
-                    <option value='maintenance'>Maintenance</option>
-                    <option value='service'>Service</option>
-                    <option value='retail'>Retail</option>
-                  </select>
-                </div>
+                    <div>
+                      <label className='block text-sm font-medium text-gray-700 mb-1'>
+                        Client Type
+                      </label>
+                      <select
+                        value={clientTypeFilter}
+                        onChange={(e) =>
+                          setClientTypeFilter(e.target.value as any)
+                        }
+                        className='w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-blue-500'
+                      >
+                        <option value='all'>All Types</option>
+                        <option value='maintenance'>Maintenance</option>
+                        <option value='service'>Service</option>
+                        <option value='retail'>Retail</option>
+                      </select>
+                    </div>
 
-                <div>
-                  <label className='block text-sm font-medium text-gray-700 mb-1'>
-                    Status
-                  </label>
-                  <select
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value as any)}
-                    className='w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-blue-500'>
-                    <option value='all'>All Status</option>
-                    <option value='active'>Active</option>
-                    <option value='inactive'>Inactive</option>
-                  </select>
-                </div>
+                    <div>
+                      <label className='block text-sm font-medium text-gray-700 mb-1'>
+                        Status
+                      </label>
+                      <select
+                        value={statusFilter}
+                        onChange={(e) => setStatusFilter(e.target.value as any)}
+                        className='w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-blue-500'
+                      >
+                        <option value='all'>All Status</option>
+                        <option value='active'>Active</option>
+                        <option value='inactive'>Inactive</option>
+                      </select>
+                    </div>
 
-                <div>
-                  <label className='block text-sm font-medium text-gray-700 mb-1'>
-                    Assignment
-                  </label>
-                  <select
-                    value={assignmentFilter}
-                    onChange={(e) => setAssignmentFilter(e.target.value as any)}
-                    className='w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-blue-500'>
-                    <option value='all'>All Clients</option>
-                    <option value='assigned'>Assigned</option>
-                    <option value='unassigned'>Unassigned</option>
-                  </select>
-                </div>
+                    <div>
+                      <label className='block text-sm font-medium text-gray-700 mb-1'>
+                        Assignment
+                      </label>
+                      <select
+                        value={assignmentFilter}
+                        onChange={(e) =>
+                          setAssignmentFilter(e.target.value as any)
+                        }
+                        className='w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-blue-500'
+                      >
+                        <option value='all'>All Clients</option>
+                        <option value='assigned'>Assigned</option>
+                        <option value='unassigned'>Unassigned</option>
+                      </select>
+                    </div>
 
-                <div>
-                  <label className='block text-sm font-medium text-gray-700 mb-1'>
-                    Frequency
-                  </label>
-                  <select
-                    value={frequencyFilter}
-                    onChange={(e) => setFrequencyFilter(e.target.value as any)}
-                    className='w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-blue-500'
-                    disabled={
-                      clientTypeFilter !== 'all' &&
-                      clientTypeFilter !== 'maintenance'
-                    }>
-                    <option value='all'>All Frequencies</option>
-                    <option value='twice-weekly'>Twice Weekly</option>
-                    <option value='weekly'>Weekly</option>
-                    <option value='bi-weekly'>Bi-weekly</option>
-                    <option value='monthly'>Monthly</option>
-                  </select>
-                </div>
-              </div>
+                    <div>
+                      <label className='block text-sm font-medium text-gray-700 mb-1'>
+                        Frequency
+                      </label>
+                      <select
+                        value={frequencyFilter}
+                        onChange={(e) =>
+                          setFrequencyFilter(e.target.value as any)
+                        }
+                        className='w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-blue-500'
+                        disabled={
+                          clientTypeFilter !== 'all' &&
+                          clientTypeFilter !== 'maintenance'
+                        }
+                      >
+                        <option value='all'>All Frequencies</option>
+                        <option value='twice-weekly'>Twice Weekly</option>
+                        <option value='weekly'>Weekly</option>
+                        <option value='bi-weekly'>Bi-weekly</option>
+                        <option value='monthly'>Monthly</option>
+                      </select>
+                    </div>
+                  </div>
 
-              {/* Results summary */}
-              <div className='mt-3 text-sm text-muted-foreground'>
-                Showing {filteredClients.length} of {clients.length} clients
-                {searchTerm && ` matching "${searchTerm}"`}
-              </div>
+                  {/* Results summary */}
+                  <div className='mt-3 text-sm text-muted-foreground mx-4'>
+                    Showing {filteredClients.length} of {clients.length} clients
+                    {searchTerm && ` matching "${searchTerm}"`}
+                  </div>
                 </CardContent>
               </Card>
 
-            {/* Quick Stats for Filtered Results */}
-            <div className='grid grid-cols-2 md:grid-cols-4 gap-4'>
-              <div className='bg-blue-50 p-4 rounded-lg border'>
-                <div className='text-lg font-bold text-blue-600'>
-                  {
-                    filteredClients.filter((c) =>
-                      technicians.some((t) => t.assignedClients.includes(c._id))
-                    ).length
-                  }
-                </div>
-                <div className='text-sm text-muted-foreground'>Assigned</div>
-              </div>
-              <div className='bg-orange-50 p-4 rounded-lg border'>
-                <div className='text-lg font-bold text-orange-600'>
-                  {
-                    filteredClients.filter(
-                      (c) =>
-                        !technicians.some((t) =>
+              {/* Quick Stats for Filtered Results */}
+              <div className='grid grid-cols-2 md:grid-cols-4 gap-4'>
+                <div className='bg-blue-50 p-4 rounded-lg border'>
+                  <div className='text-lg font-bold text-blue-600'>
+                    {
+                      filteredClients.filter((c) =>
+                        technicians.some((t) =>
                           t.assignedClients.includes(c._id)
                         )
-                    ).length
-                  }
+                      ).length
+                    }
+                  </div>
+                  <div className='text-sm text-muted-foreground'>Assigned</div>
                 </div>
-                <div className='text-sm text-muted-foreground'>Unassigned</div>
-              </div>
-              <div className='bg-green-50 p-4 rounded-lg border'>
-                <div className='text-lg font-bold text-green-600'>
-                  {filteredClients.filter((c) => c.isActive).length}
+                <div className='bg-orange-50 p-4 rounded-lg border'>
+                  <div className='text-lg font-bold text-orange-600'>
+                    {
+                      filteredClients.filter(
+                        (c) =>
+                          !technicians.some((t) =>
+                            t.assignedClients.includes(c._id)
+                          )
+                      ).length
+                    }
+                  </div>
+                  <div className='text-sm text-muted-foreground'>
+                    Unassigned
+                  </div>
                 </div>
-                <div className='text-sm text-muted-foreground'>Active</div>
-              </div>
-              <div className='bg-purple-50 p-4 rounded-lg border'>
-                <div className='text-lg font-bold text-purple-600'>
-                  {
-                    filteredClients.filter(
-                      (c) => c.clientType === 'maintenance'
-                    ).length
-                  }
+                <div className='bg-green-50 p-4 rounded-lg border'>
+                  <div className='text-lg font-bold text-green-600'>
+                    {filteredClients.filter((c) => c.isActive).length}
+                  </div>
+                  <div className='text-sm text-muted-foreground'>Active</div>
                 </div>
-                <div className='text-sm text-muted-foreground'>Maintenance</div>
+                <div className='bg-purple-50 p-4 rounded-lg border'>
+                  <div className='text-lg font-bold text-purple-600'>
+                    {
+                      filteredClients.filter(
+                        (c) => c.clientType === 'maintenance'
+                      ).length
+                    }
+                  </div>
+                  <div className='text-sm text-muted-foreground'>
+                    Maintenance
+                  </div>
+                </div>
               </div>
-            </div>
 
-            {/* Unassigned Clients - Now filtered */}
-            {filteredClients.filter(
-              (c) =>
-                !technicians.some((t) => t.assignedClients.includes(c._id)) &&
-                c.isActive
-            ).length > 0 &&
-              (assignmentFilter === 'all' ||
-                assignmentFilter === 'unassigned') && (
-                <div className='bg-orange-50 rounded-lg shadow-sm border border-orange-200'>
-                  <div className='px-6 py-4 border-b border-orange-200'>
-                    <h2 className='text-lg font-semibold text-orange-900'>
-                      Unassigned Clients (
-                      {
-                        filteredClients.filter(
-                          (c) =>
-                            !technicians.some((t) =>
-                              t.assignedClients.includes(c._id)
-                            ) && c.isActive
-                        ).length
-                      }
+              {/* Client Assignments Table */}
+              <Card className='border-blue-100 dark:border-blue-800'>
+                <CardHeader>
+                  <CardTitle className='text-blue-900 dark:text-blue-100'>
+                    Client Assignments ({filteredClients.length})
+                  </CardTitle>
+                  <CardDescription>
+                    Manage client assignments and technician relationships
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className='p-0'>
+                  <ClientAssignmentTable
+                    clients={filteredClients}
+                    technicians={technicians}
+                    onAssignClient={assignClientToTechnician}
+                    onUnassignClient={(clientId) => {
+                      const assignedTech = technicians.find((t) =>
+                        t.assignedClients.includes(clientId)
                       )
-                    </h2>
+                      if (assignedTech) {
+                        removeClientFromTechnician(assignedTech._id, clientId)
+                      }
+                    }}
+                    loading={loading}
+                  />
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {/* Assignment Modal */}
+          {showAssignModal && (
+            <div className='fixed inset-0 bg-black/70 backdrop-blur-lg flex items-center justify-center p-4 z-50'>
+              <div className='bg-background rounded-lg p-6 w-full max-w-md'>
+                <h3 className='text-lg font-semibold mb-4'>
+                  Assign Client to Technician
+                </h3>
+
+                {selectedClient && (
+                  <div className='mb-4 p-3 bg-muted/50 rounded'>
+                    <div className='font-medium'>{selectedClient.name}</div>
+                    <div className='text-sm text-gray-500'>
+                      {selectedClient.address.city},{' '}
+                      {selectedClient.address.state}
+                    </div>
                   </div>
-                  <div className='p-6'>
-                    <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
-                      {filteredClients
-                        .filter(
-                          (c) =>
-                            !technicians.some((t) =>
-                              t.assignedClients.includes(c._id)
-                            ) && c.isActive
-                        )
-                        .map((client) => (
-                          <div
-                            key={client._id}
-                            className='bg-background p-4 rounded-lg border'>
-                            <div className='flex justify-between items-start mb-2'>
-                              <div>
-                                <h3 className='font-medium text-foreground'>
-                                  {client.name}
-                                </h3>
-                                <p className='text-sm text-gray-500'>
-                                  {client.address.city}, {client.address.state}
-                                </p>
-                              </div>
-                              <button
-                                onClick={() => {
-                                  setSelectedClient(client)
-                                  setShowAssignModal(true)
-                                }}
-                                className='text-green-600 hover:text-green-800 text-sm'>
-                                Assign
-                              </button>
-                            </div>
-                            <div className='flex items-center space-x-2'>
-                              {getFrequencyBadge(client.serviceFrequency)}
-                              {client.serviceDay && (
-                                <span className='text-xs text-gray-500'>
-                                  {client.serviceDay}s
-                                </span>
-                              )}
-                            </div>
+                )}
+
+                <div className='space-y-3 mb-6'>
+                  <label className='block text-sm font-medium text-gray-700'>
+                    Select Technician:
+                  </label>
+                  {technicians
+                    .filter((t) => t.isActive && t.role === 'technician')
+                    .map((tech) => (
+                      <div
+                        key={tech._id}
+                        className='flex items-center justify-between p-3 border rounded'
+                      >
+                        <div>
+                          <div className='font-medium'>{tech.name}</div>
+                          <div className='text-sm text-gray-500'>
+                            {tech.assignedClients.length} clients assigned
                           </div>
-                        ))}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-            {/* All Clients Table - Now with filtered results */}
-            <div className='bg-background rounded-lg shadow-sm border overflow-hidden'>
-              <div className='px-6 py-4 border-b border-border'>
-                <h2 className='text-lg font-semibold text-foreground'>
-                  Client Assignments ({filteredClients.length})
-                </h2>
-              </div>
-              <div className='overflow-x-auto'>
-                <table className='min-w-full divide-y divide-gray-200'>
-                  <thead className='bg-muted/50'>
-                    <tr>
-                      <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-                        Client
-                      </th>
-                      <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-                        Service Info
-                      </th>
-                      <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-                        Assigned Technician
-                      </th>
-                      <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className='bg-background divide-y divide-gray-200'>
-                    {filteredClients.length === 0 ? (
-                      <tr>
-                        <td
-                          colSpan={4}
-                          className='px-6 py-8 text-center text-gray-500'>
-                          No clients found matching your filters
-                        </td>
-                      </tr>
-                    ) : (
-                      filteredClients.map((client) => {
-                        const assignedTech = getTechnicianForClient(client._id)
-                        return (
-                          <tr key={client._id} className='hover:bg-muted/50'>
-                            <td className='px-6 py-4 whitespace-nowrap'>
-                              <div>
-                                <div className='text-sm font-medium text-foreground'>
-                                  {client.name}
-                                </div>
-                                <div className='text-sm text-gray-500'>
-                                  {client.email}
-                                </div>
-                                <div className='text-xs text-gray-400'>
-                                  {client.address.street}, {client.address.city}
-                                </div>
-                              </div>
-                            </td>
-                            <td className='px-6 py-4 whitespace-nowrap'>
-                              <div className='space-y-1'>
-                                {getFrequencyBadge(client.serviceFrequency)}
-                                {client.serviceDay && (
-                                  <div className='text-xs text-gray-500'>
-                                    {client.serviceDay}s
-                                  </div>
-                                )}
-                                <div className='text-xs text-gray-500'>
-                                  Type: {client.clientType || 'maintenance'}
-                                </div>
-                              </div>
-                            </td>
-                            <td className='px-6 py-4 whitespace-nowrap'>
-                              {assignedTech ? (
-                                <div>
-                                  <div className='text-sm font-medium text-foreground'>
-                                    {assignedTech.name}
-                                  </div>
-                                  <div className='text-xs text-gray-500'>
-                                    {assignedTech.employeeId}
-                                  </div>
-                                </div>
-                              ) : (
-                                <span className='text-sm text-orange-600 font-medium'>
-                                  Unassigned
-                                </span>
-                              )}
-                            </td>
-                            <td className='px-6 py-4 whitespace-nowrap text-sm space-x-2'>
-                              {assignedTech ? (
-                                <button
-                                  onClick={() =>
-                                    removeClientFromTechnician(
-                                      assignedTech._id,
-                                      client._id
-                                    )
-                                  }
-                                  disabled={actionLoading}
-                                  className='text-red-600 hover:text-red-800'>
-                                  Remove
-                                </button>
-                              ) : (
-                                <button
-                                  onClick={() => {
-                                    setSelectedClient(client)
-                                    setShowAssignModal(true)
-                                  }}
-                                  className='text-green-600 hover:text-green-800'>
-                                  Assign
-                                </button>
-                              )}
-                            </td>
-                          </tr>
-                        )
-                      })
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Modern Client Assignment Table (Alternative View) */}
-        {view === 'clients' && (
-          <div className='mt-6 space-y-4'>
-            <div className='bg-background rounded-lg shadow-sm border p-6'>
-              <h2 className='text-lg font-semibold text-foreground mb-4'>
-                Client Assignments (Table View)
-              </h2>
-              <ClientAssignmentTable
-                clients={filteredClients}
-                technicians={technicians}
-                onAssignClient={assignClientToTechnician}
-                onUnassignClient={(clientId) => {
-                  const assignedTech = technicians.find((t) =>
-                    t.assignedClients.includes(clientId)
-                  )
-                  if (assignedTech) {
-                    removeClientFromTechnician(assignedTech._id, clientId)
-                  }
-                }}
-                loading={loading}
-              />
-            </div>
-          </div>
-        )}
-
-        {/* Assignment Modal */}
-        {showAssignModal && (
-          <div className='fixed inset-0 bg-black/70 backdrop-blur-lg flex items-center justify-center p-4 z-50'>
-            <div className='bg-background rounded-lg p-6 w-full max-w-md'>
-              <h3 className='text-lg font-semibold mb-4'>
-                Assign Client to Technician
-              </h3>
-
-              {selectedClient && (
-                <div className='mb-4 p-3 bg-muted/50 rounded'>
-                  <div className='font-medium'>{selectedClient.name}</div>
-                  <div className='text-sm text-gray-500'>
-                    {selectedClient.address.city},{' '}
-                    {selectedClient.address.state}
-                  </div>
-                </div>
-              )}
-
-              <div className='space-y-3 mb-6'>
-                <label className='block text-sm font-medium text-gray-700'>
-                  Select Technician:
-                </label>
-                {technicians
-                  .filter((t) => t.isActive && t.role === 'technician')
-                  .map((tech) => (
-                    <div
-                      key={tech._id}
-                      className='flex items-center justify-between p-3 border rounded'>
-                      <div>
-                        <div className='font-medium'>{tech.name}</div>
-                        <div className='text-sm text-gray-500'>
-                          {tech.assignedClients.length} clients assigned
                         </div>
+                        <button
+                          onClick={() =>
+                            selectedClient &&
+                            assignClientToTechnician(
+                              tech._id,
+                              selectedClient._id
+                            )
+                          }
+                          disabled={actionLoading}
+                          className='bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700 disabled:opacity-50'
+                        >
+                          {actionLoading ? 'Assigning...' : 'Assign'}
+                        </button>
                       </div>
-                      <button
-                        onClick={() =>
-                          selectedClient &&
-                          assignClientToTechnician(tech._id, selectedClient._id)
-                        }
-                        disabled={actionLoading}
-                        className='bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700 disabled:opacity-50'>
-                        {actionLoading ? 'Assigning...' : 'Assign'}
-                      </button>
-                    </div>
-                  ))}
-              </div>
+                    ))}
+                </div>
 
                 <div className='flex justify-end space-x-3'>
                   <Button
@@ -985,8 +831,9 @@ export default function AssignmentsPage() {
                       setShowAssignModal(false)
                       setSelectedClient(null)
                     }}
-                    variant="outline"
-                    className='border-blue-200 dark:border-blue-700'>
+                    variant='outline'
+                    className='border-blue-200 dark:border-blue-700'
+                  >
                     Cancel
                   </Button>
                 </div>

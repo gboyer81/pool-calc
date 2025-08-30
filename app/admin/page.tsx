@@ -50,7 +50,7 @@ export default function AdminPanel() {
 
   useEffect(() => {
     setBreadcrumbs([
-      { label: 'Dashboard', href: '/dashboard' },
+      { label: 'Dashboard', href: '/' },
       { label: 'Admin Panel' }
     ])
     fetchTechnicians()

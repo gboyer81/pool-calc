@@ -11,7 +11,7 @@ export default function CalculatorPage() {
 
   useEffect(() => {
     setBreadcrumbs([
-      { label: 'Dashboard', href: '/dashboard' },
+      { label: 'Dashboard', href: '/' },
       { label: 'Pool Calculator' },
     ])
   }, [setBreadcrumbs])

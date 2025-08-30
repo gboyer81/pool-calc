@@ -151,7 +151,7 @@ export default function ClientManagement() {
   // Fetch clients and technicians on component mount
   useEffect(() => {
     setBreadcrumbs([
-      { label: 'Dashboard', href: '/dashboard' },
+      { label: 'Dashboard', href: '/' },
       { label: 'Client Management' }
     ])
     fetchClients()
